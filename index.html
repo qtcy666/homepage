@@ -273,6 +273,42 @@
   .also-contact{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
   .also-contact input{flex:1;min-width:200px}
 
+  /* ---------- 查看反馈（作者面板） ---------- */
+  .fb-viewer{margin-top:22px;border-top:1px dashed var(--line);padding-top:16px}
+  .fb-viewer-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .fb-viewer-hint{font-size:12px;color:var(--ink-soft)}
+  .fb-viewer-body{margin-top:14px}
+  .fb-lock{display:grid;gap:7px;max-width:420px}
+  .fb-lock label{font-size:13px;font-weight:700;color:var(--ink)}
+  .fb-lock-input{display:flex;gap:8px}
+  .fb-lock-input input{
+    flex:1;border:1px solid var(--line);border-radius:12px;padding:10px 14px;
+    font-size:14px;outline:none;background:#f8fbfe;color:var(--ink);
+  }
+  .fb-lock-input input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(58,123,213,.12)}
+  .fb-lock-input .btn{padding:10px 18px}
+  .fb-viewer-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:14px 0 10px}
+  .fb-viewer-count{font-size:13px;font-weight:700;color:var(--blue-deep)}
+  .btn.ghost.small{padding:6px 12px;font-size:12px}
+  .fb-viewer-list{display:grid;gap:10px;max-height:520px;overflow:auto;padding-right:4px}
+  .fv-item{
+    border:1px solid var(--line);border-radius:12px;padding:12px 14px;
+    background:#f8fbfe;display:grid;gap:6px;
+  }
+  .fv-item .fv-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px;color:var(--ink-soft)}
+  .fv-item .fv-time{font-weight:700;color:var(--blue-deep)}
+  .fv-item .fv-tags{display:flex;gap:6px;flex-wrap:wrap}
+  .fv-item .tag{
+    font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;
+    background:#eaf2fd;color:#2f6fdb;border:1px solid #d5e5fa;
+  }
+  .fv-item .tag.dev-mobile{background:#f0efff;color:#5b4bd6;border-color:#dddbfc}
+  .fv-item .tag.dev-desktop{background:#eef6ee;color:#2c8a45;border-color:#d4ecd9}
+  .fv-item .fv-msg{margin:0;font-size:14px;line-height:1.7;color:var(--ink);white-space:pre-wrap}
+  .fv-item .fv-meta{font-size:12px;color:var(--ink-soft)}
+  .fv-item .fv-rating{color:#f5b942;font-size:13px;letter-spacing:1px}
+  .fv-empty{font-size:13px;color:var(--ink-soft);text-align:center;padding:24px 8px}
+
   /* ---------- 数字分身 ---------- */
   .chat-box{
     display:flex;flex-direction:column;height:540px;
@@ -688,6 +724,28 @@
           </div>
           <div class="fb-status" id="fbStatus" role="status" aria-live="polite"></div>
         </form>
+
+        <div class="fb-viewer" id="fbViewer">
+          <div class="fb-viewer-head">
+            <button type="button" class="btn ghost" id="fbViewerToggle">🔐 查看反馈（作者）</button>
+            <span class="fb-viewer-hint" id="fbViewerHint">仅作者可见，需口令</span>
+          </div>
+          <div class="fb-viewer-body" id="fbViewerBody" hidden>
+            <form class="fb-lock" id="fbLock">
+              <label for="fb-viewer-pwd">访问口令</label>
+              <div class="fb-lock-input">
+                <input type="password" id="fb-viewer-pwd" placeholder="请输入口令" autocomplete="off" />
+                <button type="submit" class="btn primary">解锁</button>
+              </div>
+              <div class="fb-field-error" id="fbViewerErr"></div>
+            </form>
+            <div class="fb-viewer-toolbar" hidden id="fbViewerToolbar">
+              <span class="fb-viewer-count" id="fbViewerCount"></span>
+              <button type="button" class="btn ghost small" id="fbViewerReload">↻ 刷新</button>
+            </div>
+            <div class="fb-viewer-list" id="fbViewerList"></div>
+          </div>
+        </div>
       </div>
     </div>
   </section>
@@ -1164,6 +1222,112 @@
       try {
         console.info("[feedback] " + (isDemo ? "本地演示模式（未配置 Supabase" + SUPABASE_URL + "）" : "已写入 Supabase"));
       } catch (e) {}
+    }
+  })();
+
+  /* ---------- 查看反馈（作者面板 · 口令保护） ---------- */
+  (function () {
+    // ★ 访问口令：请改成便于自己记忆的字符串（仅前端校验，建议发布后修改）
+    const VIEWER_PWD = "l2026view";
+    const SUPABASE_URL = "https://pgzwxnnnrnwqeoahrpoc.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_u2YnD8QOwDjRnRUjmZeaFQ_IUUL8I2y";
+
+    const toggle = document.getElementById("fbViewerToggle");
+    const body = document.getElementById("fbViewerBody");
+    if (!toggle || !body) return;
+
+    const errEl = document.getElementById("fbViewerErr");
+    const pwdInput = document.getElementById("fb-viewer-pwd");
+    const lockForm = document.getElementById("fbLock");
+    const listEl = document.getElementById("fbViewerList");
+    const toolbar = document.getElementById("fbViewerToolbar");
+    const countEl = document.getElementById("fbViewerCount");
+
+    let unlocked = false;
+
+    toggle.addEventListener("click", function () {
+      const show = body.hidden;
+      body.hidden = !show;
+      toggle.textContent = show ? "🙈 收起反馈" : "🔐 查看反馈（作者）";
+      toggle.scrollIntoView({ block: "nearest", behavior: "smooth" });
+      if (show && unlocked) load();
+    });
+
+    lockForm.addEventListener("submit", function (e) {
+      e.preventDefault();
+      const v = (pwdInput.value || "").trim();
+      if (v !== VIEWER_PWD) {
+        errEl.textContent = "口令不正确，请重试。";
+        pwdInput.select();
+        return;
+      }
+      errEl.textContent = "";
+      unlocked = true;
+      lockForm.hidden = true;
+      toolbar.hidden = false;
+      load();
+    });
+
+    document.getElementById("fbViewerReload").addEventListener("click", load);
+
+    function esc(s) {
+      return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+        return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+      });
+    }
+
+    function stars(n) {
+      n = Number(n) || 0;
+      return "★".repeat(Math.max(0, Math.min(5, n))) + "☆".repeat(Math.max(0, 5 - Math.min(5, n)));
+    }
+
+    function fmtTime(iso) {
+      if (!iso) return "-";
+      const d = new Date(iso);
+      const p = function (x) { return String(x).padStart(2, "0"); };
+      return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate())
+        + " " + p(d.getHours()) + ":" + p(d.getMinutes()) + ":" + p(d.getSeconds());
+    }
+
+    async function load() {
+      listEl.innerHTML = '<div class="fv-empty">⏳ 加载中…</div>';
+      try {
+        const headers = { "apikey": SUPABASE_ANON_KEY };
+        if (/^eyJ/i.test(SUPABASE_ANON_KEY)) headers["Authorization"] = "Bearer " + SUPABASE_ANON_KEY;
+        const res = await fetch(
+          SUPABASE_URL.replace(/\/$/, "") + "/rest/v1/feedback?select=*&order=created_at.desc",
+          { headers: headers }
+        );
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        const rows = await res.json();
+        countEl.textContent = "共 " + rows.length + " 条反馈";
+        if (!rows.length) {
+          listEl.innerHTML = '<div class="fv-empty">还没有收到任何反馈。</div>';
+          return;
+        }
+        listEl.innerHTML = rows.map(function (r) {
+          const devTag = (r.device === "手机端")
+            ? '<span class="tag dev-mobile">📱 ' + esc(r.device || "手机端") + '</span>'
+            : '<span class="tag dev-desktop">💻 ' + esc(r.device || "电脑端") + '</span>';
+          return '<div class="fv-item">'
+            + '<div class="fv-top"><span class="fv-time">🕒 ' + esc(fmtTime(r.created_at)) + '</span><span class="fv-tags">' + devTag + '</span></div>'
+            + '<div class="fv-tags">'
+            + '<span class="tag">' + esc(r.relation || "暂无") + '</span>'
+            + '<span class="tag">' + esc(r.category || "其他") + '</span>'
+            + '</div>'
+            + '<p class="fv-msg">' + esc(r.message) + '</p>'
+            + '<div class="fv-meta">'
+            + (r.nickname ? "👤 " + esc(r.nickname) + " · " : "")
+            + (r.contact ? "✉️ " + esc(r.contact) + " · " : "")
+            + '<span class="fv-rating">' + stars(r.rating) + '</span>'
+            + (r.rating ? "（" + r.rating + " 星）" : "（未评分）")
+            + '</div>'
+            + '</div>';
+        }).join("");
+      } catch (err) {
+        console.error(err);
+        listEl.innerHTML = '<div class="fv-empty">⚠️ 加载失败：' + esc(err.message) + '</div>';
+      }
     }
   })();
 </script>

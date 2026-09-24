@@ -32,7 +32,7 @@
     --card:rgba(255,255,255,.80);
     --line:rgba(213,231,248,.95);
     --ai-msg:#eef5fd;
-    --me-msg:#3a7bd5;
+    --me-msg:#2563c9;
     --radius:24px;
     --nav-h:62px;
     --shadow:0 22px 48px -22px rgba(37,99,201,.40);
@@ -88,7 +88,7 @@
     text-decoration:none;white-space:nowrap}
   .brand .bd{
     width:30px;height:30px;border-radius:9px;display:grid;place-items:center;
-    color:#fff;font-size:14px;background:linear-gradient(135deg,#3a7bd5,#2563c9);
+    color:#fff;font-size:14px;background:var(--blue-deep);
     box-shadow:0 6px 14px -8px rgba(37,99,201,.9);
   }
   .nav{margin-left:auto;display:flex;align-items:center;gap:2px;overflow-x:auto;scrollbar-width:none}
@@ -99,7 +99,7 @@
     transition:color .18s,background .18s;
   }
   .nav a:hover{color:var(--blue-deep);background:var(--blue-soft)}
-  .nav a.active{color:#fff;background:linear-gradient(135deg,#3a7bd5,#2563c9);
+  .nav a.active{color:#fff;background:var(--blue-deep);
     box-shadow:0 6px 14px -8px rgba(37,99,201,.9)}
   section[id],header[id]{scroll-margin-top:calc(var(--nav-h) + 16px)}
 
@@ -189,7 +189,7 @@
     transition:transform .18s,filter .18s;
   }
   .btn:hover{transform:translateY(-1px)}
-  .btn.primary{background:linear-gradient(135deg,#3a7bd5,#2563c9);color:#fff;
+  .btn.primary{background:var(--blue-deep);color:#fff;
     box-shadow:0 10px 22px -12px rgba(37,99,201,.95)}
   .btn.ghost{background:#fff;color:var(--blue-deep);border:1px solid var(--line)}
 
@@ -208,7 +208,10 @@
     border-radius:999px;padding:5px 13px;font-size:13px;font-weight:600;
     box-shadow:0 4px 10px -8px rgba(37,99,201,.8);
   }
-  .ph{color:#b9c7d7;font-weight:400}
+  /* 占位文字（待补充等）：#5f7185 在白底 5.02:1 / kv 浅蓝底 4.69~5.02:1 / blue-soft 4.50:1，均 ≥4.5:1 */
+  .ph{color:#5f7185;font-weight:400}
+  /* 表单输入占位文字：#5f7185 在输入框 #f8fbfe 上 4.83:1（Chrome 默认 #757575 仅 4.44:1 不达标） */
+  input::placeholder,textarea::placeholder{color:#5f7185;opacity:1}
 
   /* ---------- 技能 ---------- */
   .skills .row{
@@ -258,7 +261,7 @@
   .fb-chips .fc-pick:hover{transform:translateY(-1px)}
   .fb-chips .fc-pick input{position:absolute;opacity:0;pointer-events:none}
   .fb-chips .fc-pick:has(input:checked){
-    background:linear-gradient(135deg,#3a7bd5,#2563c9);color:#fff;
+    background:var(--blue-deep);color:#fff;
     box-shadow:0 8px 18px -10px rgba(37,99,201,.9);
   }
   .fb-row textarea,.fb-row input[type=text]{
@@ -371,7 +374,7 @@
   .chat-input input:focus{border-color:var(--blue);background:#fff;box-shadow:0 0 0 3px rgba(58,123,213,.12)}
   .chat-input button{
     cursor:pointer;border:none;border-radius:12px;padding:0 22px;
-    background:linear-gradient(135deg,#3a7bd5,#2563c9);color:#fff;font-size:14px;font-weight:700;
+    background:var(--blue-deep);color:#fff;font-size:14px;font-weight:700;
     box-shadow:0 8px 18px -10px rgba(37,99,201,.9);
   }
   .chat-input button:hover{filter:brightness(1.05)}

@@ -1241,10 +1241,15 @@
     }
   })();
 
-  /* ---------- 查看反馈（作者面板 · 服务器端口令校验） ---------- */
+  /* ---------- 查看反馈（作者面板 · 前端口令校验 + 匿名直读） ---------- */
   (function () {
-    // 查看反馈改为调用服务器端 Edge Function（口令校验 + 读取都在服务器完成）
-    const FB_FN_URL = "https://pgzwxnnnrnwqeoahrpoc.supabase.co/functions/v1/view-feedback";
+    // 口令在前端比对（V3 起验证过的稳妥方案；读取走 Supabase 匿名直读）。
+    // 说明：早期曾改为调用服务器端 Edge Function 校验，但该函数在线上未部署
+    // （返回 404），导致"校验中"卡住；经确认回退为前端口令比对方案。
+    const VIEWER_PWD = "Liu080202";
+    // 与反馈提交区共用同一 Supabase 项目；这里在独立 IIFE 内各自声明（避免跨作用域引用）
+    const SUPABASE_URL = "https://pgzwxnnnrnwqeoahrpoc.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_u2YnD8QOwDjRnRUjmZeaFQ_IUUL8I2y";
 
     const toggle = document.getElementById("fbViewerToggle");
     const body = document.getElementById("fbViewerBody");
@@ -1276,23 +1281,14 @@
         return;
       }
       errEl.textContent = "⏳ 校验中…";
-      submitBtn && (submitBtn.disabled = true);
       try {
-        // 口令交给服务器校验：Edge Function 在 Deno 上读取环境变量 VIEWER_PWD 比对
-        const res = await fetch(FB_FN_URL, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            "x-viewer-pwd": v
-          }
-        });
-        if (res.status === 401) {
+        // 前端比对口令（与任务 21 方案一致）
+        if (v !== VIEWER_PWD) {
           errEl.textContent = "口令不正确，请重试。";
           errEl.className = "fb-status err";
           pwdInput.select();
           return;
         }
-        if (!res.ok) throw new Error("HTTP " + res.status);
         errEl.textContent = "";
         unlocked = true;
         lockForm.hidden = true;
@@ -1300,9 +1296,7 @@
         load();
       } catch (err) {
         console.error(err);
-        errEl.textContent = "⚠️ 校验失败：" + String(err && err.message || err) + "（请确认 Edge Function 已部署）";
-      } finally {
-        submitBtn && (submitBtn.disabled = false);
+        errEl.textContent = "⚠️ 校验失败：" + String(err && err.message || err);
       }
     });
 

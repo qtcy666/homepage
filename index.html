@@ -65,15 +65,62 @@
     -webkit-font-smoothing:antialiased;
     text-rendering:optimizeLegibility;
   }
-  /* 柔和背景光斑 */
-  body::before,body::after{
-    content:"";position:fixed;z-index:-1;border-radius:50%;
-    filter:blur(80px);opacity:.6;pointer-events:none;
+  /* ---- 极光背景层：3 个径向渐变光斑，内容之下，纯 CSS 漂移 ---- */
+  .aurora{
+    position:fixed;inset:0;z-index:-2;overflow:hidden;
+    pointer-events:none;isolation:isolate;
   }
-  body::before{width:560px;height:560px;top:-200px;left:-140px;
-    background:radial-gradient(circle,#bfe0ff,#e9f4ff 70%)}
-  body::after{width:600px;height:600px;top:160px;right:-220px;
-    background:radial-gradient(circle,#d8ecff,#f1f9ff 70%)}
+  .aurora i{
+    position:absolute;border-radius:50%;
+    filter:blur(80px);
+    will-change:transform;
+  }
+  /* 光斑实际叠底有效α约 0.68×名义α（radial 渐增 + blur 80px 摊薄）
+     名义α取 0.12（规格下限）：等效叠底≈0.08，单光斑中心下背景L≈0.90+；
+     任两光斑中心重叠处背景L≈0.83，暴露在 body 背景上的最浅文字
+     (次文字#5b6b80)仍有≈4.5:1 ✅ */
+  .aurora .b1{
+    width:66vmax;height:66vmax;left:-18vmax;top:-24vmax;
+    background:radial-gradient(circle at 38% 40%,rgba(58,123,213,.12),rgba(58,123,213,0) 62%);
+    animation:aur1 34s ease-in-out infinite alternate;
+  }
+  .aurora .b2{
+    width:52vmax;height:52vmax;right:-16vmax;top:6vmax;
+    background:radial-gradient(circle at 60% 34%,rgba(56,189,248,.12),rgba(56,189,248,0) 62%);
+    animation:aur2 40s ease-in-out infinite alternate;
+  }
+  .aurora .b3{
+    width:60vmax;height:60vmax;left:12vmax;bottom:-26vmax;
+    background:radial-gradient(circle at 52% 30%,rgba(120,170,255,.12),rgba(120,170,255,0) 58%);
+    animation:aur3 26s ease-in-out infinite alternate;
+  }
+  @keyframes aur1{
+    from{transform:translate3d(0,0,0) scale(1)}
+    to{transform:translate3d(9vmax,7vmax,0) scale(1.18)}
+  }
+  @keyframes aur2{
+    from{transform:translate3d(0,0,0) scale(1.1)}
+    to{transform:translate3d(-7vmax,9vmax,0) scale(.94)}
+  }
+  @keyframes aur3{
+    from{transform:translate3d(0,0,0) scale(.95)}
+    to{transform:translate3d(-9vmax,-6vmax,0) scale(1.15)}
+  }
+  /* 移动端（≤768px）降级：静态光斑，不做动画省电
+     注意：必须命中 .b1/.b2/.b3（其 animation 特异性 0,2,0 高于 .aurora i） */
+  @media (max-width:768px){
+    .aurora .b1,.aurora .b2,.aurora .b3{animation:none;will-change:auto}
+    .aurora .b1{opacity:.55}
+    .aurora .b2{opacity:.5}
+    .aurora .b3{opacity:.45}
+  }
+  /* 减少动效偏好：完全静止 */
+  @media (prefers-reduced-motion:reduce){
+    .aurora .b1,.aurora .b2,.aurora .b3{animation:none!important;will-change:auto}
+  }
+
+  /* 背景光感由 .aurora 极光层统一提供（任务29：动态极光取代旧静态光斑，
+     避免两层叠加把背景压暗、击穿暴露文字对比度） */
 
   .wrap{max-width:1180px;margin:0 auto;padding:24px 24px 64px}
 
@@ -478,7 +525,10 @@
   }
   .gate-hint{margin-top:18px;font-size:12.5px;letter-spacing:1px;color:#7f97b8}
 
-  footer{text-align:center;color:var(--text-soft);font-size:12px;padding-top:8px;line-height:1.9}
+  footer{text-align:center;color:var(--text-soft);font-size:12px;padding:8px 14px;line-height:1.9;
+    /* 极淡白底保底：即使罕见双光斑中心重合压到 footer，文字对比度仍≥4.5:
+       最暗 L0.79*0.55 + 白1.0*0.45 ≈0.886 → 次文字4.88:1 */
+    background:rgba(255,255,255,.45);border-radius:14px;display:inline-block;width:100%}
   footer .ver{color:var(--text-link);font-weight:700}
 
   @media (max-width:900px){
@@ -517,6 +567,9 @@
 </style>
 </head>
 <body>
+
+<!-- 极光背景层：3 个径向渐变光斑，内容之下，纯 CSS 漂移 -->
+<div class="aurora" aria-hidden="true"><i class="b1"></i><i class="b2"></i><i class="b3"></i></div>
 
 <!-- 首屏星空入口：点击"启动"后进入网页主体 -->
 <div class="gate" id="gate" hidden>

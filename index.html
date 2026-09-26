@@ -231,6 +231,43 @@
   }
   .avatar svg{width:64px;height:64px}
   .hero h1{font-size:34px;font-weight:800;letter-spacing:.6px}
+  /* 任务30：姓名=首屏焦点+质感入场。渐变文字+缓慢高光扫过+逐字上浮淡入；
+     渐进增强：默认/reduced-motion/不支持background-clip时为最终态（静止完整姓名） */
+  .hero h1 .ch{display:inline-block} /* 逐字节点：HTML 紧贴无空格，不产生 inline 间隙 */
+  @supports ((background-clip:text) or (-webkit-background-clip:text)){
+    .hero h1{
+      background-image:
+        linear-gradient(100deg,var(--blue-deep),#0284c7),
+        linear-gradient(100deg,transparent 44%,rgba(255,255,255,.85) 50%,transparent 56%);
+      background-size:100% 100%,240% 100%;
+      background-repeat:no-repeat;
+      background-position:0 0,140% 0;
+      background-clip:text;-webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;color:transparent;
+      animation:txtSheen 6.5s ease-in-out infinite;
+    }
+    /* 逐字上浮淡入：进入主页(hero.in)时播，delay递增60ms(.05/.11/.17) */
+    .hero.in h1 .ch{opacity:0;transform:translateY(20px);filter:blur(6px);
+      animation:chRise .85s cubic-bezier(.22,.8,.3,1) forwards}
+    .hero.in h1 .ch:nth-child(1){animation-delay:.05s}
+    .hero.in h1 .ch:nth-child(2){animation-delay:.11s}
+    .hero.in h1 .ch:nth-child(3){animation-delay:.17s}
+    /* reduced-motion：直接展示最终态（渐变静止，无逐字、无高光扫动） */
+    @media (prefers-reduced-motion:reduce){
+      .hero h1{animation:none;background-image:linear-gradient(100deg,var(--blue-deep),#0284c7);background-position:0 0}
+      .hero h1 .ch,.hero.in h1 .ch{animation:none;opacity:1;transform:none;filter:none}
+    }
+  }
+  @keyframes chRise{
+    from{opacity:0;transform:translateY(20px);filter:blur(6px)}
+    to{opacity:1;transform:translateY(0);filter:blur(0)}
+  }
+  /* 缓慢高光扫过：6.5s 循环，扫完即停（幅度克制） */
+  @keyframes txtSheen{
+    0%{background-position:0 0,140% 0}
+    60%{background-position:0 0,-40% 0}
+    100%{background-position:0 0,-40% 0}
+  }
   .tagline{
     display:inline-flex;align-items:center;gap:6px;margin-top:11px;
     padding:6px 15px;background:var(--blue-soft);color:var(--text-link);
@@ -615,7 +652,7 @@
           </svg>
         </div>
         <div>
-          <h1>刘一鸣</h1>
+          <h1 aria-label="刘一鸣"><span class="ch">刘</span><span class="ch">一</span><span class="ch">鸣</span></h1>
           <span class="tagline">🎓 天津大学 · 智能医学工程</span>
           <div class="hero-meta">把复杂问题简单化 · 大学生</div>
         </div>

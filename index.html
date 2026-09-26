@@ -339,6 +339,18 @@
     .hero-cta .btn::after{animation:none!important;opacity:0!important}
   }
 
+  /* === 任务33：光标光晕（柔蓝 + 1px 描边，lerp≈80ms 延迟跟随；绝不隐藏系统光标，pointer-events:none 不拦截） === */
+  .cursor-halo{position:fixed;left:0;top:0;width:0;height:0;pointer-events:none;z-index:99999;
+    transform:translate3d(-200px,-200px,0);will-change:transform}
+  .cursor-halo-dot{position:absolute;left:-12px;top:-12px;width:24px;height:24px;border-radius:50%;
+    border:1px solid rgba(56,132,255,.55);
+    background:radial-gradient(circle,rgba(56,132,255,.42) 0%,rgba(56,132,255,.10) 50%,rgba(56,132,255,0) 72%);
+    transform:scale(1);
+    transition:transform .18s cubic-bezier(.2,.8,.2,1),background .18s ease,border-color .18s ease}
+  .cursor-halo.is-hot .cursor-halo-dot{transform:scale(1.4);
+    border-color:rgba(147,197,253,.95);
+    background:radial-gradient(circle,rgba(125,211,252,.5) 0%,rgba(56,132,255,.15) 50%,rgba(56,132,255,0) 72%)}
+
   /* ---------- 信息栅格 ---------- */
   .info{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px}
   .info .kv{
@@ -1611,6 +1623,41 @@
     cta.addEventListener('pointerleave', resetAll);
     window.addEventListener('scroll', resetAll, { passive: true });
     window.addEventListener('resize', resetAll);
+  })();
+
+  // ---------- 任务33：光标光晕（24px 柔蓝 + 1px 描边；rAF + lerp τ≈80ms 延迟跟随；不隐藏系统光标；pointer-events:none） ----------
+  (function () {
+    if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;  // 触屏 / 非鼠标设备：不启用
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;     // 系统减弱动态：禁用
+    var halo = document.createElement('div');
+    halo.className = 'cursor-halo';
+    halo.setAttribute('aria-hidden', 'true');
+    halo.innerHTML = '<span class="cursor-halo-dot"></span>';
+    document.body.appendChild(halo);
+    var SEL = 'a, button, [role="button"], .btn, input, select, textarea, label, summary, [tabindex], [onclick]';
+    var x = -200, y = -200, tx = -200, ty = -200, raf = 0, last = '';
+    function step(now) {
+      raf = 0;
+      var dt = Math.min(64, now - (step.t || now));          // 限帧差值，防低帧率数值突变
+      step.t = now;
+      var k = 1 - Math.exp(-dt / 80);                        // τ≈80ms 缓动
+      x += (tx - x) * k; y += (ty - y) * k;
+      var t = 'translate3d(' + x.toFixed(1) + 'px,' + y.toFixed(1) + 'px,0)';
+      if (t !== last) { halo.style.transform = t; last = t; }
+      raf = requestAnimationFrame(step);
+    }
+    document.addEventListener('mousemove', function (e) { tx = e.clientX; ty = e.clientY; }, { passive: true });
+    document.addEventListener('mouseover', function (e) {
+      var t = e.target;
+      if (t && t.closest && t.closest(SEL)) halo.classList.add('is-hot');
+    }, { passive: true });
+    document.addEventListener('mouseout', function (e) {
+      var n = e.relatedTarget;
+      if (!(n && n.closest && n.closest(SEL))) halo.classList.remove('is-hot');
+    }, { passive: true });
+    window.addEventListener('blur', function () { if (raf) { cancelAnimationFrame(raf); raf = 0; } }, { passive: true });
+    window.addEventListener('focus', function () { if (!raf) { step.t = 0; raf = requestAnimationFrame(step); } }, { passive: true });
+    step.t = 0; raf = requestAnimationFrame(step);
   })();
 </script>
 </body>

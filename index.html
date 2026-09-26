@@ -69,13 +69,32 @@
   body{
     font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Segoe UI",sans-serif;
     color:var(--text-strong);
-    background:#eef6ff;
+    /* 同色系微渐变：让"纯色平面"变成有方向的浅色空间（顶部略亮、底部略沉） */
+    background:linear-gradient(180deg,#f3f9ff 0%,#eef6ff 38%,#e9f1fe 100%);
+    background-attachment:fixed;
     min-height:100vh;
     padding-top:var(--nav-h);
     line-height:1.5;
     -webkit-font-smoothing:antialiased;
     text-rendering:optimizeLegibility;
   }
+  /* 四角轻微压深：中心明亮、四周微蓝下沉，把背景从"平面"变成"有深度的舞台" */
+  body::after{
+    content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;
+    background:radial-gradient(120% 90% at 50% 42%,transparent 42%,rgba(37,99,201,.07) 100%);
+  }
+  /* 细网格纹理：极淡，且只在画面中上部可见（mask 让边缘淡出，避免"格子铺满"的廉价感） */
+  body::before{
+    content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;
+    background-image:
+      linear-gradient(rgba(37,99,201,.045) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(37,99,201,.045) 1px,transparent 1px);
+    background-size:32px 32px;
+    -webkit-mask-image:radial-gradient(120% 80% at 50% 30%,#000 30%,transparent 78%);
+    mask-image:radial-gradient(120% 80% at 50% 30%,#000 30%,transparent 78%);
+  }
+
+
   /* ---- 极光背景层：3 个径向渐变光斑，内容之下，纯 CSS 漂移 ---- */
   .aurora{
     position:fixed;inset:0;z-index:-2;overflow:hidden;
@@ -92,19 +111,33 @@
      (次文字#5b6b80)仍有≈4.5:1 ✅ */
   .aurora .b1{
     width:66vmax;height:66vmax;left:-18vmax;top:-24vmax;
-    background:radial-gradient(circle at 38% 40%,rgba(58,123,213,.12),rgba(58,123,213,0) 62%);
+    background:radial-gradient(circle at 38% 40%,rgba(58,123,213,.15),rgba(58,123,213,0) 62%);
     animation:aur1 34s ease-in-out infinite alternate;
   }
   .aurora .b2{
     width:52vmax;height:52vmax;right:-16vmax;top:6vmax;
-    background:radial-gradient(circle at 60% 34%,rgba(56,189,248,.12),rgba(56,189,248,0) 62%);
+    background:radial-gradient(circle at 60% 34%,rgba(56,189,248,.15),rgba(56,189,248,0) 62%);
     animation:aur2 40s ease-in-out infinite alternate;
   }
   .aurora .b3{
     width:60vmax;height:60vmax;left:12vmax;bottom:-26vmax;
-    background:radial-gradient(circle at 52% 30%,rgba(120,170,255,.12),rgba(120,170,255,0) 58%);
+    background:radial-gradient(circle at 52% 30%,rgba(120,170,255,.15),rgba(120,170,255,0) 58%);
     animation:aur3 26s ease-in-out infinite alternate;
   }
+  /* 色相跨度：蓝为主，紫与薄荷作点缀 —— 打破"一片蓝"，让背景产生层次 */
+  .aurora .b4{
+    width:46vmax;height:46vmax;right:-10vmax;top:34vmax;
+    background:radial-gradient(circle at 50% 50%,rgba(139,124,255,.17),rgba(139,124,255,0) 64%);
+    filter:blur(56px);
+    animation:aur2 46s ease-in-out infinite alternate;
+  }
+  .aurora .b5{
+    width:54vmax;height:54vmax;left:-12vmax;top:86vmax;
+    background:radial-gradient(circle at 46% 44%,rgba(94,214,190,.14),rgba(94,214,190,0) 60%);
+    filter:blur(56px);
+    animation:aur1 38s ease-in-out infinite alternate;
+  }
+
   @keyframes aur1{
     from{transform:translate3d(0,0,0) scale(1)}
     to{transform:translate3d(9vmax,7vmax,0) scale(1.18)}
@@ -124,16 +157,47 @@
     .aurora .b1{opacity:.55}
     .aurora .b2{opacity:.5}
     .aurora .b3{opacity:.45}
+    .aurora .b4{opacity:.55}
+    .aurora .b5{opacity:.55}
   }
   /* 减少动效偏好：完全静止 */
   @media (prefers-reduced-motion:reduce){
     .aurora .b1,.aurora .b2,.aurora .b3{animation:none!important;will-change:auto}
+    .aurora .b4,.aurora .b5{animation:none!important;will-change:auto}
   }
 
   /* 背景光感由 .aurora 极光层统一提供（任务29：动态极光取代旧静态光斑，
      避免两层叠加把背景压暗、击穿暴露文字对比度） */
 
-  .wrap{max-width:1180px;margin:0 auto;padding:24px 24px 64px}
+  .wrap{max-width:1180px;margin:0 auto;padding:24px 24px 64px;position:relative}
+  /* 星空余晖：与入口 .gate 同色系（#0a1230），从屏幕顶端向下渐隐；
+     放在 .card 之下（z-index:0），卡片像浮在星空余温上 */
+  .wrap::before{
+    content:'';position:absolute;left:50%;transform:translateX(-50%);
+    top:calc(-1 * var(--nav-h));          /* 顶到屏幕 y=0，而不是 body padding 之后 */
+    width:100vw;height:360px;
+    pointer-events:none;z-index:0;
+    background:
+      radial-gradient(2.2px 2.2px at 12% 26%,rgba(207,230,255,.95),transparent 60%),
+      radial-gradient(1.6px 1.6px at 28% 48%,rgba(138,180,255,.85),transparent 60%),
+      radial-gradient(1.8px 1.8px at 46% 20%,rgba(207,230,255,.75),transparent 60%),
+      radial-gradient(1.4px 1.4px at 63% 56%,rgba(138,180,255,.80),transparent 60%),
+      radial-gradient(2px 2px   at 78% 30%,rgba(207,230,255,.90),transparent 60%),
+      radial-gradient(1.5px 1.5px at 90% 50%,rgba(138,180,255,.70),transparent 60%),
+      linear-gradient(180deg,
+        rgba(10,18,48,.62) 0%,
+        rgba(10,18,48,.34) 34%,
+        rgba(16,32,74,.12) 66%,
+        rgba(16,32,74,0) 100%);
+  }
+  @media (max-width:1180px){
+    .wrap::before{height:250px;
+      background:
+        radial-gradient(2px 2px at 16% 32%,rgba(207,230,255,.85),transparent 60%),
+        radial-gradient(1.6px 1.6px at 72% 46%,rgba(138,180,255,.75),transparent 60%),
+        linear-gradient(180deg,rgba(10,18,48,.58) 0%,rgba(10,18,48,.30) 36%,rgba(16,32,74,0) 100%);
+    }
+  }
 
   /* ---------- 顶部阅读进度条（任务31：导航下方、--blue-deep→--cyan 渐变、scaleX 跟随 rAF 绘制）---------- */
   .progress{
@@ -191,9 +255,18 @@
     background:linear-gradient(135deg,rgba(255,255,255,.98) 0%,rgba(244,249,255,.88) 48%,rgba(223,238,252,.80) 100%);
     border:1px solid rgba(255,255,255,.9);
     border-radius:var(--radius);box-shadow:var(--shadow-sm);
-    padding:32px 34px;margin-bottom:26px;
+    padding:32px 34px;margin-bottom:44px;
     backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
   }
+  /* 区块连接器：在卡片之间的空隙里放一个居中的淡圆点，形成路径感 */
+  .card{position:relative}
+  .card:not(.hero)::before{
+    content:'';position:absolute;left:50%;transform:translateX(-50%);
+    bottom:-25px;width:6px;height:6px;border-radius:50%;
+    background:rgba(37,99,201,.18);
+  }
+  .card:last-of-type::before{display:none}
+
   /* 玻璃折射：鼠标扫过的淡高光（上层玻璃反光），reduced 下关闭 */
   .card::after{
     content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
@@ -209,6 +282,18 @@
     box-shadow:inset 0 0 0 1px rgba(255,255,255,.8);
   }
   .card-head h2{font-size:22px;font-weight:800;letter-spacing:.3px}
+  /* 区块叙事编号：自动生成 01–06，让内容读起来有章节感（hero 不参与编号） */
+  .wrap{counter-reset:sec}
+  .card:not(.hero){counter-increment:sec}
+  .card-head h2::before{
+    content:counter(sec,decimal-leading-zero);
+    display:inline-block;margin-right:10px;
+    font-size:13px;font-weight:700;letter-spacing:.06em;
+    color:var(--blue-deep);opacity:.34;
+    font-variant-numeric:tabular-nums;
+    vertical-align:.16em;
+  }
+
   .card-head .sub{margin-left:auto;font-size:12px;color:var(--text-soft)}
 
   /* ---------- 板块放大：左侧照片位 + 右侧文字（宽屏左右交替，手机堆叠） ---------- */
@@ -260,6 +345,30 @@
     content:"";position:absolute;inset:0 0 auto 0;height:4px;
     background:linear-gradient(90deg,var(--blue),var(--cyan));
   }
+  /* 首屏滚动引导：细光丝 + 缓慢下沉的圆点，提示"下面还有内容" */
+  .scroll-cue{
+    display:flex;flex-direction:column;align-items:center;gap:8px;
+    margin:-8px auto 22px;width:max-content;pointer-events:none;
+  }
+  .scroll-cue .line{
+    width:2px;height:56px;border-radius:2px;
+    background:linear-gradient(180deg,rgba(37,99,201,.35),rgba(37,99,201,0));
+  }
+  .scroll-cue .dot{
+    width:7px;height:7px;border-radius:50%;
+    background:var(--blue-deep);opacity:.55;
+    animation:cueDrop 2.4s cubic-bezier(.4,0,.2,1) infinite;
+  }
+  @keyframes cueDrop{
+    0%{transform:translateY(-6px);opacity:0}
+    35%{opacity:.6}
+    70%{transform:translateY(8px);opacity:0}
+    100%{opacity:0}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .scroll-cue .dot{animation:none;opacity:.4;transform:none}
+  }
+
   .avatar{
     width:106px;height:106px;flex-shrink:0;border-radius:50%;
     background:linear-gradient(135deg,#6fb1f3,#2f6fdb);
@@ -720,6 +829,7 @@
     .nav a{font-size:13px;padding:7px 10px}
     .wrap{padding:14px 12px 48px}
     .card{padding:22px 18px;border-radius:20px}
+    .card{margin-bottom:32px}
     .card-head{margin-bottom:18px}
     .card-head .ico{width:38px;height:38px;font-size:18px;border-radius:12px}
     .card-head h2{font-size:20px}
@@ -807,7 +917,7 @@
 </svg>
 
 <!-- 极光背景层：3 个径向渐变光斑，内容之下，纯 CSS 漂移 -->
-<div class="aurora" aria-hidden="true"><i class="b1"></i><i class="b2"></i><i class="b3"></i></div>
+<div class="aurora" aria-hidden="true"><i class="b1"></i><i class="b2"></i><i class="b3"></i><i class="b4"></i><i class="b5"></i></div>
 
 <!-- 首屏星空入口：点击"启动"后进入网页主体 -->
 <div class="gate" id="gate" hidden>
@@ -883,6 +993,9 @@
       <img src="assets/hero.webp" alt="窗边书桌上的笔记本电脑、绿植与一杯热茶" loading="eager" fetchpriority="high" decoding="async"/>
     </figure>
   </header>
+
+  <!-- 首屏滚动引导 -->
+  <div class="scroll-cue" aria-hidden="true"><span class="line"></span><span class="dot"></span></div>
 
   <!-- 关于我 -->
   <section class="card reveal" id="about">

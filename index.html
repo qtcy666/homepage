@@ -761,6 +761,9 @@
   .gate[hidden]{display:none}
   .gate.lift{transform:translateY(-100%)}
   .gate canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+  /* 星野整体明暗呼吸：让星空"活"起来（用 opacity 而不是 filter，更省性能） */
+  .gate canvas{animation:starGlow 9s ease-in-out infinite alternate}
+  @keyframes starGlow{from{opacity:.78}to{opacity:1}}
   .gate .neb{position:absolute;border-radius:50%;filter:blur(72px);pointer-events:none}
   .gate .neb.a{width:54vmax;height:54vmax;left:-16vmax;top:-18vmax;opacity:.55;
     background:radial-gradient(circle,#2f6fdb,transparent 68%);
@@ -770,6 +773,10 @@
     animation:neb2 34s ease-in-out infinite alternate}
   @keyframes neb1{from{transform:translate3d(0,0,0) scale(1)}to{transform:translate3d(6vmax,4vmax,0) scale(1.14)}}
   @keyframes neb2{from{transform:translate3d(0,0,0) scale(1.06)}to{transform:translate3d(-6vmax,-4vmax,0) scale(1)}}
+  .gate .neb.c{width:40vmax;height:40vmax;left:24vmax;bottom:-12vmax;opacity:.34;
+    background:radial-gradient(circle,#8b7cff,transparent 68%);
+    animation:neb3 41s ease-in-out infinite alternate}
+  @keyframes neb3{from{transform:translate3d(0,0,0) scale(1.1)}to{transform:translate3d(-5vmax,-5vmax,0) scale(.98)}}
 
   .gate-inner{
     position:relative;z-index:2;max-width:760px;padding:0 26px;text-align:center;
@@ -799,6 +806,38 @@
     50%{box-shadow:0 0 0 1px rgba(255,255,255,.75) inset,0 20px 62px -6px rgba(150,205,255,1)}
   }
   .gate-hint{margin-top:18px;font-size:12.5px;letter-spacing:1px;color:#7f97b8}
+  /* ---------- 入场编排：元素依次浮起，让"打开页面"像一次登场 ---------- */
+  @keyframes gateRise{
+    from{opacity:0;transform:translateY(22px);filter:blur(6px)}
+    to{opacity:1;transform:none;filter:none}
+  }
+  @keyframes gateFade{ from{opacity:0} to{opacity:1} }
+
+  /* 一律用 backwards（不是 both）：动画结束后释放 transform，
+     否则会一直占着 transform，把 .gate-btn:hover 的抬升覆盖掉。 */
+  .gate.ready .gate-kicker{animation:gateRise .9s var(--ease-out) .18s backwards}
+  .gate.ready .gate-inner h1{animation:gateRise 1s var(--ease-out) .34s backwards}
+  .gate.ready .gate-inner p{animation:gateRise .9s var(--ease-out) .5s backwards}
+  .gate.ready .gate-btn{animation:gateRise .9s var(--ease-out) .66s backwards,
+                                   breathe 3.2s ease-in-out 1.6s infinite}
+  .gate.ready .gate-hint{animation:gateFade .9s var(--ease-out) .84s backwards}
+
+  /* 标题光晕呼吸：让大标题的光晕缓慢起伏（与入场动画并存；会覆盖上面的 h1 规则） */
+  .gate.ready .gate-inner h1{
+    animation:gateRise 1s var(--ease-out) .34s backwards,
+              haloBreathe 5.2s ease-in-out 1.4s infinite;
+  }
+  @keyframes haloBreathe{
+    0%,100%{text-shadow:0 0 30px rgba(120,190,255,.55),0 0 76px rgba(80,140,255,.35)}
+    50%    {text-shadow:0 0 44px rgba(140,205,255,.80),0 0 104px rgba(95,160,255,.50)}
+  }
+
+  /* 底部提示轻微脉动（会覆盖上面的 .gate-hint 规则） */
+  .gate.ready .gate-hint{
+    animation:gateFade .9s var(--ease-out) .84s backwards,
+              hintPulse 2.6s ease-in-out 1.8s infinite;
+  }
+  @keyframes hintPulse{0%,100%{opacity:.7}50%{opacity:1}}
 
   /* 幕布底缘光带：开始上推时亮起，作为"帘子"下边缘的实体提示 */
   .gate::after{
@@ -807,6 +846,19 @@
     opacity:0;transition:opacity var(--dur-base) var(--ease-out);
   }
   .gate.leaving::after{opacity:1}
+  /* 启动冲击波：从按钮位置扩散一圈光环 */
+  .gate-wave{
+    position:absolute;z-index:3;width:40px;height:40px;margin:-20px 0 0 -20px;
+    border-radius:50%;pointer-events:none;
+    border:2px solid rgba(160,205,255,.85);
+    background:radial-gradient(circle,rgba(160,205,255,.22),transparent 62%);
+    box-shadow:0 0 40px 8px rgba(130,195,255,.5);
+    animation:gateWave .85s cubic-bezier(.2,.7,.3,1) forwards;
+  }
+  @keyframes gateWave{
+    from{transform:scale(.4);opacity:1}
+    to{transform:scale(30);opacity:0}
+  }
 
   footer{text-align:center;color:var(--text-soft);font-size:12px;padding:8px 14px;line-height:1.9;
     /* 极淡白底保底：即使罕见双光斑中心重合压到 footer，文字对比度仍≥4.5:
@@ -924,6 +976,7 @@
   <canvas id="stars" aria-hidden="true"></canvas>
   <div class="neb a" aria-hidden="true"></div>
   <div class="neb b" aria-hidden="true"></div>
+  <div class="neb c" aria-hidden="true"></div>
   <div class="gate-inner">
     <div class="gate-kicker">天津大学 · 智能医学工程</div>
     <h1>你好，我是 刘一鸣</h1>
@@ -1599,8 +1652,9 @@
           amp: 0.15 + Math.random() * 0.45,
           sp: 0.4 + Math.random() * 1.6,
           ph: Math.random() * Math.PI * 2,
-          vx: (Math.random() - 0.5) * 0.06,
-          vy: (Math.random() - 0.5) * 0.06,
+          // 星野整体缓缓向右下流动（像在宇宙中前行），每颗星再叠一点随机扰动
+          vx: 0.16 + (Math.random() - 0.5) * 0.10,
+          vy: 0.06 + (Math.random() - 0.5) * 0.10,
           hue: Math.random() < 0.2 ? 195 + Math.random() * 45 : 212,
           big: big
         });
@@ -1669,10 +1723,29 @@
     function start() { if (running) return; running = true; raf = requestAnimationFrame(loop); }
     function stop() { running = false; if (raf) cancelAnimationFrame(raf); raf = null; }
 
+    // 启动冲击波：从按钮中心扩散一圈光环
+    function spawnWave() {
+      const r = btn.getBoundingClientRect();
+      const wave = document.createElement('span');
+      wave.className = 'gate-wave';
+      wave.style.left = (r.left + r.width / 2) + 'px';
+      wave.style.top = (r.top + r.height / 2) + 'px';
+      gate.appendChild(wave);
+      setTimeout(function () { wave.remove(); }, 900);
+    }
+
+    // 星野上涌：所有星星加速向上 + 闪得更快，与幕布上移同向，像一次跃迁
+    function surge() {
+      for (let i = 0; i < stars.length; i++) {
+        const s = stars[i];
+        s.vy -= 1.6 + Math.random() * 2.0;
+        s.sp += 1.2;
+      }
+    }
+
     function enter() {
       if (entered) return;
       entered = true;
-      stop();
       window.scrollTo(0, 0);
       const hero = document.querySelector(".hero");
       if (hero) { hero.setAttribute("tabindex", "-1"); hero.focus({ preventScroll: true }); }
@@ -1689,6 +1762,9 @@
       document.body.classList.add("gate-open");   // 幕布期间继续锁滚动
       document.body.classList.remove("gated");    // 放行主体（幕布遮着，看不到）
       gate.classList.add("leaving");              // 入口内容开始淡出上移
+      // 启动瞬间：冲击波 + 星野上涌；星野继续跑满整个揭幕过程，掀完再停
+      if (!reduce) { spawnWave(); surge(); }
+      setTimeout(stop, T.hideGate + 60);
 
       setTimeout(function () { gate.classList.add("lift"); }, T.lift);
       setTimeout(function () {
@@ -1702,6 +1778,12 @@
     gate.hidden = false;
     document.body.classList.add("gated");
     resize();
+    // 入场编排：等一帧让浏览器先完成布局，再加 .ready 触发依次浮起
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        if (!entered) gate.classList.add("ready");
+      });
+    });
     window.addEventListener("resize", resize);
     if (reduce) render(0); else start();
     btn.addEventListener("click", enter);

@@ -61,6 +61,8 @@
     --dur-enter:660ms;    /* .wrap 淡入 —— 必须与 JS 里 ENTER_MS 一致 */
     --ease-out:cubic-bezier(.22,.61,.36,1);
     --ease-spring:cubic-bezier(.2,.7,.3,1);
+    --dur-lift:660ms;                        /* 幕布上推 */
+    --ease-lift:cubic-bezier(.7,0,.2,1);     /* 幕布推移：起步柔和、中段果断、收尾柔顺 */
   }
   *{box-sizing:border-box;margin:0;padding:0}
   html{scroll-behavior:smooth;overscroll-behavior-y:none}
@@ -233,9 +235,12 @@
   .card.in .sec-fig img{clip-path:inset(0 0 0 0)}
   .sec-body{min-width:0}
 
-  /* 入场动效 */
-  .reveal{opacity:0;transform:translateY(20px);
-    transition:opacity .7s ease,transform .7s cubic-bezier(.2,.7,.3,1)}
+  /* 入场：远景推近感（位移稍大 + 曲线更"重"），不使用 filter:blur 以避免大面积重绘 */
+  .reveal{
+    opacity:0;transform:translateY(26px);
+    transition:opacity var(--dur-slow) var(--ease-out),
+               transform var(--dur-enter) var(--ease-spring);
+  }
   .reveal.in{opacity:1;transform:none}
 
   /* 渐进式显现：区块进入视口后，块内元素按顺序依次浮现（--d 控制逐个延迟） */
@@ -619,24 +624,33 @@
     .nav a.active{background:var(--blue-deep)}
     /* 玻璃折射层关闭 */
     .card::after{display:none}
+    /* 折射滤镜在低端设备会持续重绘，低动效偏好下退回纯模糊（!important 压过文件末尾的 @supports 规则） */
+    .topbar{
+      backdrop-filter:blur(14px) !important;-webkit-backdrop-filter:blur(14px) !important;
+    }
   }
 
   /* ================= 首屏星空入口 ================= */
   body.gated{overflow:hidden}
+  /* gated 会在 t=0 就被移除（为了放行幕布后的主体），所以滚动锁要单独保留到幕布推完 */
+  body.gate-open{overflow:hidden}
   .topbar{transition:opacity var(--dur-gate) var(--ease-out)}
   body.gated .topbar{opacity:0;pointer-events:none}
-  .wrap{transition:opacity var(--dur-enter) var(--ease-out) .12s,
-                     transform var(--dur-enter) var(--ease-spring) .12s}
-  body.gated .wrap{opacity:0;transform:translateY(16px)}
+  /* 幕布上移方案下，主体的淡入发生在幕布**背后**，看不见；
+     所以只要保证它在幕布开始移动前（t=220ms）已经完全不透明即可，无需长过渡与位移。 */
+  .wrap{transition:opacity var(--dur-base) var(--ease-out)}
+  body.gated .wrap{opacity:0}
 
   .gate{
     position:fixed;inset:0;z-index:200;overflow:hidden;
     display:grid;place-items:center;color:#eaf2ff;
     background:radial-gradient(125% 95% at 50% 8%,#16264f 0%,#0a1230 44%,#04060f 100%);
-    transition:opacity var(--dur-gate) ease,transform var(--dur-gate) var(--ease-spring);
+    /* 幕布上移：只推 transform，不再淡出 —— 是“揭幕”而不是“交叉淡入” */
+    transition:transform var(--dur-lift) var(--ease-lift);
+    will-change:transform;
   }
   .gate[hidden]{display:none}
-  .gate.gone{opacity:0;transform:scale(1.07);pointer-events:none}
+  .gate.lift{transform:translateY(-100%)}
   .gate canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
   .gate .neb{position:absolute;border-radius:50%;filter:blur(72px);pointer-events:none}
   .gate .neb.a{width:54vmax;height:54vmax;left:-16vmax;top:-18vmax;opacity:.55;
@@ -648,7 +662,12 @@
   @keyframes neb1{from{transform:translate3d(0,0,0) scale(1)}to{transform:translate3d(6vmax,4vmax,0) scale(1.14)}}
   @keyframes neb2{from{transform:translate3d(0,0,0) scale(1.06)}to{transform:translate3d(-6vmax,-4vmax,0) scale(1)}}
 
-  .gate-inner{position:relative;z-index:2;max-width:760px;padding:0 26px;text-align:center}
+  .gate-inner{
+    position:relative;z-index:2;max-width:760px;padding:0 26px;text-align:center;
+    transition:opacity var(--dur-base) var(--ease-out),transform var(--dur-base) var(--ease-out);
+  }
+  /* 入口内容先于幕布淡出上移：给“门要开了”一个预告，让幕布的启动不突兀 */
+  .gate.leaving .gate-inner{opacity:0;transform:translateY(-24px)}
   .gate-kicker{display:inline-block;margin-bottom:22px;padding:7px 17px;border-radius:999px;
     font-size:12.5px;letter-spacing:3px;color:#a8caff;
     background:var(--alpha-tint);border:1px solid rgba(157,196,255,.35)}
@@ -671,6 +690,14 @@
     50%{box-shadow:0 0 0 1px rgba(255,255,255,.75) inset,0 20px 62px -6px rgba(150,205,255,1)}
   }
   .gate-hint{margin-top:18px;font-size:12.5px;letter-spacing:1px;color:#7f97b8}
+
+  /* 幕布底缘光带：开始上推时亮起，作为"帘子"下边缘的实体提示 */
+  .gate::after{
+    content:'';position:absolute;left:0;right:0;bottom:0;height:140px;pointer-events:none;
+    background:linear-gradient(to top,rgba(130,195,255,.45),rgba(130,195,255,.12) 45%,transparent);
+    opacity:0;transition:opacity var(--dur-base) var(--ease-out);
+  }
+  .gate.leaving::after{opacity:1}
 
   footer{text-align:center;color:var(--text-soft);font-size:12px;padding:8px 14px;line-height:1.9;
     /* 极淡白底保底：即使罕见双光斑中心重合压到 footer，文字对比度仍≥4.5:
@@ -756,9 +783,28 @@
     background:linear-gradient(180deg,rgba(58,123,213,.8),rgba(56,189,248,.7));
     background-clip:content-box;border:3px solid transparent;
   }
+  /* ===== 顶部导航玻璃折射 ===== */
+  .svg-defs{position:absolute;width:0;height:0;overflow:hidden}
+  @supports (backdrop-filter: blur(1px)) {
+    .topbar{
+      backdrop-filter:url(#glassRefract) blur(14px) saturate(1.35);
+      -webkit-backdrop-filter:url(#glassRefract) blur(14px) saturate(1.35);
+    }
+  }
 </style>
 </head>
 <body>
+
+<!-- 玻璃折射滤镜（被 .topbar 的 backdrop-filter 引用；不可用 display:none 隐藏） -->
+<svg class="svg-defs" width="0" height="0" aria-hidden="true" focusable="false">
+  <defs>
+    <filter id="glassRefract">
+      <feTurbulence type="fractalNoise" baseFrequency="0.009 0.013" numOctaves="2" seed="7" result="n"/>
+      <feGaussianBlur in="n" stdDeviation="1.5" result="nb"/>
+      <feDisplacementMap in="SourceGraphic" in2="nb" scale="42" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+  </defs>
+</svg>
 
 <!-- 极光背景层：3 个径向渐变光斑，内容之下，纯 CSS 漂移 -->
 <div class="aurora" aria-hidden="true"><i class="b1"></i><i class="b2"></i><i class="b3"></i></div>
@@ -1514,21 +1560,28 @@
       if (entered) return;
       entered = true;
       stop();
-      gate.classList.add("gone");
       window.scrollTo(0, 0);
       const hero = document.querySelector(".hero");
       if (hero) { hero.setAttribute("tabindex", "-1"); hero.focus({ preventScroll: true }); }
 
-      // 三拍接力（时间与 CSS 里的 --dur-gate / --dur-enter 对齐）：
-      //   t=0    入口开始淡出（600ms，scale 1 → 1.07）
-      //   t=120  放行主体：.wrap 从 240ms 开始淡入、900ms 结束 —— 与入口形成交叉淡入
-      //   t=640  入口彻底移除；t=720 才通知块内梯次入场（比主体收尾早 180ms，有交叠但接缝不可见）
+      // 幕布上移（四拍）：
+      //   t=0     入口内容淡出上移；同时放行主体（此时被幕布完全遮住，看不见这次就位）
+      //   t=240   幕布整体上推 660ms（星空/星云随幕布一起被掀走）
+      //   t=920   幕布移除
+      //   t=980   派发 home:entered → 块内 .rv 梯次登场
       const T = reduce
-        ? { handoff: 0, hideGate: 0, reveal: 0 }
-        : { handoff: 120, hideGate: 640, reveal: 720 };
+        ? { lift: 0, hideGate: 0, reveal: 0 }
+        : { lift: 240, hideGate: 920, reveal: 980 };
 
-      setTimeout(function () { document.body.classList.remove("gated"); }, T.handoff);
-      setTimeout(function () { gate.hidden = true; }, T.hideGate);
+      document.body.classList.add("gate-open");   // 幕布期间继续锁滚动
+      document.body.classList.remove("gated");    // 放行主体（幕布遮着，看不到）
+      gate.classList.add("leaving");              // 入口内容开始淡出上移
+
+      setTimeout(function () { gate.classList.add("lift"); }, T.lift);
+      setTimeout(function () {
+        gate.hidden = true;
+        document.body.classList.remove("gate-open");
+      }, T.hideGate);
       setTimeout(function () { window.dispatchEvent(new Event("home:entered")); }, T.reveal);
     }
 

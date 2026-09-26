@@ -989,6 +989,48 @@
     </div>
   </section>
 
+  <!-- 数字分身聊天 -->
+  <section class="card reveal" id="twin">
+    <div class="card-head">
+      <div class="ico">🤖</div>
+      <h2>数字分身 · 聊聊天</h2>
+    </div>
+    <div class="split twin-split">
+      <figure class="sec-fig">
+        <img src="assets/twin.webp" alt="友好的 AI 助手形象与漂浮的对话气泡" loading="lazy" decoding="async"/>
+      </figure>
+      <div class="sec-body">
+        <div class="chat-box">
+          <div class="chat-head">
+            <div class="av"><svg viewBox="0 0 64 64" fill="none"><circle cx="32" cy="24" r="11" fill="#fff"/><path d="M14 52c1.5-10 9-16 18-16s16.5 6 18 16" fill="#fff" opacity=".95"/></svg></div>
+            <div>
+              <b>AI 数字分身</b>
+              <div class="status"><span class="dot"></span><span>在线 · 代表刘一鸣回答</span></div>
+            </div>
+            <button class="reset" id="reset" title="清空对话，重新开始">↺ 重新开始</button>
+          </div>
+          <div class="msgs" id="msgs" role="log" aria-live="polite" aria-label="与数字分身的对话"></div>
+          <div class="suggest" id="suggest">
+            <button>你是谁</button>
+            <button>你在干什么</button>
+            <button>你的特点</button>
+            <button>你的兴趣</button>
+            <button>你的学校专业</button>
+            <button>你的技能</button>
+            <button>你的学习目标</button>
+            <button>怎么联系你</button>
+          </div>
+          <div class="chat-input">
+            <label class="sr-only" for="q">向数字分身提问</label>
+            <input id="q" placeholder="试着问我一个问题…" autocomplete="off"
+                   onkeydown="if(event.key==='Enter')send()" />
+            <button type="button" onclick="send()" aria-label="发送问题">发送</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- 访客反馈 -->
   <section class="card reveal" id="feedback">
     <div class="card-head">
@@ -1081,48 +1123,6 @@
               <button type="button" class="btn ghost small" id="fbViewerReload">↻ 刷新</button>
             </div>
             <div class="fb-viewer-list" id="fbViewerList"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- 数字分身聊天 -->
-  <section class="card reveal" id="twin">
-    <div class="card-head">
-      <div class="ico">🤖</div>
-      <h2>数字分身 · 聊聊天</h2>
-    </div>
-    <div class="split twin-split">
-      <figure class="sec-fig">
-        <img src="assets/twin.webp" alt="友好的 AI 助手形象与漂浮的对话气泡" loading="lazy" decoding="async"/>
-      </figure>
-      <div class="sec-body">
-        <div class="chat-box">
-          <div class="chat-head">
-            <div class="av"><svg viewBox="0 0 64 64" fill="none"><circle cx="32" cy="24" r="11" fill="#fff"/><path d="M14 52c1.5-10 9-16 18-16s16.5 6 18 16" fill="#fff" opacity=".95"/></svg></div>
-            <div>
-              <b>AI 数字分身</b>
-              <div class="status"><span class="dot"></span><span>在线 · 代表刘一鸣回答</span></div>
-            </div>
-            <button class="reset" id="reset" title="清空对话，重新开始">↺ 重新开始</button>
-          </div>
-          <div class="msgs" id="msgs" role="log" aria-live="polite" aria-label="与数字分身的对话"></div>
-          <div class="suggest" id="suggest">
-            <button>你是谁</button>
-            <button>你在干什么</button>
-            <button>你的特点</button>
-            <button>你的兴趣</button>
-            <button>你的学校专业</button>
-            <button>你的技能</button>
-            <button>你的学习目标</button>
-            <button>怎么联系你</button>
-          </div>
-          <div class="chat-input">
-            <label class="sr-only" for="q">向数字分身提问</label>
-            <input id="q" placeholder="试着问我一个问题…" autocomplete="off"
-                   onkeydown="if(event.key==='Enter')send()" />
-            <button type="button" onclick="send()" aria-label="发送问题">发送</button>
           </div>
         </div>
       </div>

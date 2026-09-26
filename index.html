@@ -292,6 +292,53 @@
     box-shadow:0 10px 22px -12px rgba(37,99,201,.95)}
   .btn.ghost{background:#fff;color:var(--text-link);border:1px solid var(--line)}
 
+  /* === 任务32：Hero 按钮微交互（仅 hero-cta 两钮）——磁吸 / hover 上浮变亮 / 按压涟漪；尺寸与文字不变 === */
+  .hero-cta{--mx:0px;--my:0px;position:relative}    /* 磁吸感应容器（CSS 变量由 JS 写入） */
+  /* 磁吸感应区：不可见外扩 80px（不占布局），让按钮四周 80px 的 pointermove 都能路由到父容器 */
+  .hero-cta::before{content:'';position:absolute;inset:-80px;z-index:-1;pointer-events:auto}
+  .hero-cta .btn{
+    position:relative;overflow:hidden;will-change:transform;
+    transform:translate(var(--mx,0px),var(--my,0px));
+    transition:transform .2s cubic-bezier(.2,.8,.2,1),filter .2s cubic-bezier(.2,.8,.2,1),
+               box-shadow .2s cubic-bezier(.2,.8,.2,1),background-color .2s;
+  }
+  /* 涟漪层：:active 时从中心一圈放大扩散（被圆角+overflow 裁剪） */
+  .hero-cta .btn::after{
+    content:'';position:absolute;left:50%;top:50%;width:200%;aspect-ratio:1;border-radius:50%;
+    transform:translate(-50%,-50%) scale(0);opacity:0;pointer-events:none;
+    background:radial-gradient(circle,rgba(255,255,255,.55) 0%,rgba(255,255,255,.25) 48%,transparent 72%);
+  }
+  .hero-cta .btn.ghost::after{
+    background:radial-gradient(circle,rgba(37,99,201,.32) 0%,rgba(37,99,201,.14) 48%,transparent 72%);
+  }
+  /* hover（仅可悬停设备）：磁吸基础上浮 2px + 底色变亮 + 阴影增强 */
+  @media (hover:hover){
+    .hero-cta .btn:hover{
+      transform:translate(var(--mx,0px),calc(var(--my,0px) - 2px));
+      filter:brightness(1.07);
+      box-shadow:0 14px 26px -12px rgba(37,99,201,.55);
+    }
+    .hero-cta .btn.ghost:hover{
+      filter:none;background:#eef5ff;
+      box-shadow:0 12px 24px -12px rgba(37,99,201,.38);
+    }
+  }
+  /* 按下：scale(.97) + 涟漪；放最后保证覆盖 hover 上浮 */
+  .hero-cta .btn:active{
+    transform:translate(var(--mx,0px),var(--my,0px)) scale(.97) !important;
+  }
+  .hero-cta .btn:active::after{animation:heroRipple .5s ease-out}
+  @keyframes heroRipple{
+    0%{transform:translate(-50%,-50%) scale(.15);opacity:.6}
+    100%{transform:translate(-50%,-50%) scale(1.9);opacity:0}
+  }
+  /* reduce / 触屏：不做磁吸与上浮运动，只保留按压缩放反馈（涟漪瞬时） */
+  @media (prefers-reduced-motion:reduce){
+    .hero-cta .btn{transition-duration:.05s}
+    .hero-cta .btn:hover:not(:active){transform:none}
+    .hero-cta .btn::after{animation:none!important;opacity:0!important}
+  }
+
   /* ---------- 信息栅格 ---------- */
   .info{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px}
   .info .kv{
@@ -1509,6 +1556,61 @@
         listEl.innerHTML = '<div class="fv-empty">⚠️ 加载失败：' + esc(err.message) + '</div>';
       }
     }
+  })();
+
+  // ---------- 任务32：Hero 按钮磁吸（CSS 变量 + transform；监听绑在 .hero-cta 父容器） ----------
+  (function () {
+    var cta = document.querySelector('.hero-cta');
+    if (!cta) return;
+    // 触屏 / reduce：关闭磁吸与靠近位移，保留 CSS 端按压反馈（scale + 涟漪）
+    var fine = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+    var coarse = window.matchMedia('(pointer: coarse)').matches;
+    var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!fine || coarse || reduce) return;
+    var BTNS = [].slice.call(cta.querySelectorAll('.btn'));
+    var R = 80, M = 6, pending = false, lastX = 0, lastY = 0, rafId = 0;
+    function toPx(v) { return v.toFixed(1) + 'px'; }
+    function clearOf(b) { b.style.removeProperty('--mx'); b.style.removeProperty('--my'); }
+    // 静态几何基准：快照“无磁吸/无 hover”的按钮位置。之后不再读带自身 transform 的 rect，
+    // 避免 hover 上浮 -2px 与磁吸位移造成正反馈震荡（中心 hover 被误判出 6px 位移的根因）。
+    var BASES = null;
+    function snapBase() {
+      BASES = BTNS.map(function (b) {
+        var R = b.getBoundingClientRect();
+        return { left: R.left, top: R.top, width: R.width, height: R.height };
+      });
+    }
+    function ensureBase() { if (!BASES) snapBase(); }
+    function paint(x, y) {
+      pending = false;
+      for (var i = 0; i < BTNS.length; i++) {
+        var r = BASES[i], b = BTNS[i];
+        var dx = Math.max(r.left - x, 0, x - r.left - r.width);
+        var dy = Math.max(r.top - y, 0, y - r.top - r.height);
+        var d = Math.hypot(dx, dy);
+        // d<=R 且光标在按钮外（d>0.5）才吸附；进入按钮本体即归零，避免子像素抖动把
+        // 方向归一化放大成满幅 6px（中心 hover 被拉偏的根因）
+        if (d <= R && d > 0.5) {
+          var cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+          var vx = x - cx, vy = y - cy, mag = Math.hypot(vx, vy) || 1;
+          var k = (R - d) / R;                              // 越近吸得越足，最大 6px
+          b.style.setProperty('--mx', toPx(vx / mag * M * k));
+          b.style.setProperty('--my', toPx(vy / mag * M * k));
+        } else clearOf(b);
+      }
+    }
+    function queue(x, y) {
+      lastX = x; lastY = y;
+      if (!pending) { pending = true; rafId = requestAnimationFrame(function () { ensureBase(); paint(lastX, lastY); }); }
+    }
+    function resetAll() {
+      if (pending) cancelAnimationFrame(rafId);
+      pending = false; BASES = null; BTNS.forEach(clearOf);
+    }
+    cta.addEventListener('pointermove', function (e) { queue(e.clientX, e.clientY); }, { passive: true });
+    cta.addEventListener('pointerleave', resetAll);
+    window.addEventListener('scroll', resetAll, { passive: true });
+    window.addEventListener('resize', resetAll);
   })();
 </script>
 </body>

@@ -86,7 +86,18 @@
   /* 深空晕影：中心透气、四角沉入更深的黑，把视线的焦点留在地平线以上 */
   body::after{
     content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;
-    background:radial-gradient(120% 90% at 50% 36%,transparent 38%,rgba(2,4,10,.55) 100%);
+    background-image:
+      radial-gradient(120% 90% at 50% 36%,transparent 38%,rgba(2,4,10,.55) 100%),
+      linear-gradient(102deg,transparent 44%,rgba(186,216,255,.18) 48%,rgba(232,244,255,.75) 50%,transparent 56%);
+    background-size:100% 100%,260px 2.5px;
+    background-repeat:no-repeat,no-repeat;
+    will-change:background-position;
+    animation:meteorSweep 19s linear infinite;
+  }
+  /* 流星：19 秒一圈，大部分时间在屏幕外，斜扫一次约 1.5 秒，偶然而不抢眼 */
+  @keyframes meteorSweep{
+    from{background-position:0 0,-24vw -14vh}
+    to  {background-position:0 0,124vw 86vh}
   }
   /* 星点层：两层不同周期的星野叠加，错开重复感（取代原来的 32px 格纹） */
   body::before{
@@ -104,6 +115,22 @@
                     311px 311px,311px 311px,311px 311px,311px 311px;
     -webkit-mask-image:linear-gradient(180deg,#000 0%,rgba(0,0,0,.55) 46%,transparent 88%);
     mask-image:linear-gradient(180deg,#000 0%,rgba(0,0,0,.55) 46%,transparent 88%);
+    /* inset:-90px 必须：原本 inset:0 铺满视口，开始 translate 漂移后边界跟着移走，
+       右/下会露空白带；外扩 90px（漂移量最大 62px）就永远吃不满。 */
+    inset:-90px;
+    will-change:transform,opacity;
+    animation:starDrift 110s ease-in-out infinite alternate,
+              starBreath 14s ease-in-out infinite alternate;
+  }
+  /* 星野缓慢斜向浮动：110 秒一个来回，几乎察觉不到在动，过几秒回头看会发现换过位置 */
+  @keyframes starDrift{
+    from{transform:translate3d(0,0,0)}
+    to  {transform:translate3d(-46px,-62px,0)}
+  }
+  /* 明暗呼吸：14s 与 110s 不成整数倍，避免整片同时变亮的机械感 */
+  @keyframes starBreath{
+    from{opacity:.62}
+    to  {opacity:1}
   }
 
 
@@ -197,6 +224,15 @@
       radial-gradient(2px 2px   at 78% 30%,rgba(207,230,255,.90),transparent 60%),
       radial-gradient(1.5px 1.5px at 90% 50%,rgba(138,180,255,.70),transparent 60%),
       radial-gradient(120% 100% at 50% 0%,rgba(120,170,255,.14) 0%,rgba(120,170,255,0) 72%);
+    will-change:transform,opacity;
+    animation:starDriftNear 78s ease-in-out infinite alternate;
+  }
+  /* 最容易改坏的一处：.wrap::before 靠 transform:translateX(-50%) 居中，
+     keyframes 里必须原样保留这一段，否则整条余晖带跳到屏幕左边。
+     位移方向刻意与远处 starDrift 相反（+20/+28 vs -46/-62）造纵深。 */
+  @keyframes starDriftNear{
+    from{transform:translateX(-50%) translate3d(0,0,0)}
+    to  {transform:translateX(-50%) translate3d(20px,28px,0)}
   }
   @media (max-width:1180px){
     .wrap::before{height:250px;
@@ -206,7 +242,47 @@
         radial-gradient(120% 100% at 50% 0%,rgba(120,170,255,.12) 0%,rgba(120,170,255,0) 74%);
     }
   }
+  /* 上浮星尘：第三层星野，独立周期 271px，与 body::before 的 487/311 互不整除。
+     单向向上流动 46 秒走完一个周期 —— 页面上唯一有明确方向的星空运动。 */
+  .wrap::after{
+    content:'';position:fixed;pointer-events:none;z-index:-1;
+    /* inset:-271px 0 0 0：向下多留一整周期高度作滚动余量，
+       动画结束正好上移 271px 底部严丝合缝（图案本身 271px 周期重复，无缝循环）。 */
+    inset:-271px 0 0 0;
+    opacity:.62;
+    background-image:
+      radial-gradient(1.7px 1.7px at 9% 14%,rgba(206,230,255,.92),transparent 60%),
+      radial-gradient(1.2px 1.2px at 27% 39%,rgba(150,196,255,.72),transparent 60%),
+      radial-gradient(2px 2px     at 44% 8%,rgba(226,240,255,.85),transparent 60%),
+      radial-gradient(1.3px 1.3px at 61% 56%,rgba(150,196,255,.66),transparent 60%),
+      radial-gradient(1.8px 1.8px at 78% 26%,rgba(206,230,255,.88),transparent 60%),
+      radial-gradient(1.1px 1.1px at 92% 68%,rgba(180,214,255,.62),transparent 60%);
+    background-size:271px 271px,271px 271px,271px 271px,
+                    271px 271px,271px 271px,271px 271px;
+    will-change:transform;
+    animation:starFlow 46s linear infinite;
+  }
+  @keyframes starFlow{
+    from{transform:translate3d(0,0,0)}
+    to  {transform:translate3d(0,-271px,0)}
+  }
 
+  /* 新增背景层的降级：位置必须在这里（.progress 前），不能挪到文件顶部那两个 @media 里。
+     .wrap::before/.wrap::after 基础规则都定义在顶部 @media 之后，
+     同特异性下写在前面的媒体查询会被反向覆盖。 */
+  @media (max-width:768px){
+    /* 手机上只保留 starBreath（仅 opacity，不吃性能），位移类动画全停 */
+    body::before{animation:starBreath 14s ease-in-out infinite alternate;will-change:opacity}
+    .wrap::before{animation:none;will-change:auto}
+    .wrap::after{animation:none;will-change:auto}
+    body::after{animation:none;will-change:auto}
+  }
+  @media (prefers-reduced-motion:reduce){
+    body::before{animation:none!important;will-change:auto}
+    .wrap::before{animation:none!important;will-change:auto}
+    .wrap::after{animation:none!important;will-change:auto}
+    body::after{animation:none!important;will-change:auto}
+  }
   /* ---------- 顶部阅读进度条（任务31：导航下方、--blue-deep→--cyan 渐变、scaleX 跟随 rAF 绘制）---------- */
   .progress{
     position:fixed;top:var(--nav-h);left:0;right:0;height:3px;z-index:49;

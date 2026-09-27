@@ -1206,6 +1206,36 @@ body::after{
     linear-gradient(102deg,transparent 44%,rgba(120,185,255,.20) 48%,rgba(178,222,255,.78) 50%,transparent 56%);
 }
 </style>
+<style id="starnight-3-meteor">
+/* 流星增密：主页那条光条的周期 19s → 10s，出现频率约 ×1.9，划过速度也更快 */
+body::after{
+animation:meteorSweep 10s linear infinite;
+}
+</style>
+<style id="starnight-4-legible">
+/* 文字更清晰（4 组）：
+   ① 深色背景下关掉 antialiased —— 它会让浅色字变细变淡（"发虚"的主因）
+   ② 把原「去方框 · 第 3 层」那条文字微阴影加强 —— 抵消星点/流星从字缝里透出来的干扰
+   ③ 最弱的两档文字各提亮一档 —— 抬高全站最弱处的对比度
+   ④ 首屏姓名是「渐变文字」，阴影会画在渐变之上 —— 钉住它当前的观感，不受本包影响 */
+body{
+  -webkit-font-smoothing:subpixel-antialiased;
+  -moz-osx-font-smoothing:auto;
+}
+.card,footer{
+  text-shadow:
+    0 0 1px rgba(2,5,14,.85),
+    0 1px 2px rgba(2,5,14,.60),
+    0 0 6px rgba(3,7,20,.35);
+}
+:root{
+  --text-soft:#b3c6e0;
+  --text-muted:#a6bcd8;
+}
+.hero h1{
+  text-shadow:0 1px 2px rgba(2,4,10,.45); /* 钉住姓名的渐变文字，保持原观感 */
+}
+</style>
 </head>
 <body>
 
@@ -1955,7 +1985,7 @@ body::after{
         ctx.fillStyle = s.warm ? "rgba(255,214,158," + a + ")" : "rgba(150,212,255," + a + ")";
         ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2); ctx.fill();
       }
-      if (!reduce && Math.random() < 0.008 && shots.length < 3) spawnShot();
+      if (!reduce && Math.random() < 0.016 && shots.length < 6) spawnShot();
       for (let i = shots.length - 1; i >= 0; i--) {
         const m = shots[i];
         m.x += m.vx; m.y += m.vy; m.life -= 0.012;

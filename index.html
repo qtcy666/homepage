@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>刘一鸣 · 个人主页</title>
 <meta name="description" content="刘一鸣的个人主页：天津大学智能医学工程，一个喜欢把复杂问题简单化的大学生。" />
-<meta name="theme-color" content="#0d1738" />
+<meta name="theme-color" content="#17305f" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://qtcy666.github.io/homepage/" />
 <meta property="og:title" content="刘一鸣 · 个人主页" />
@@ -1115,318 +1115,97 @@
 
   .card{text-shadow:0 1px 2px rgba(2,4,10,.45)}
 </style>
-<style id="day-ly1-tokens">
-/* ===================================================================
-   浅蓝日间化 · 第 1 层：token 反转
-   -------------------------------------------------------------------
-   只追加，不改原 :root。CSS 变量同名同特异性 -> 后声明覆盖先声明。
-   对比度基准 = 背景最深处 #d2e6ff（相对亮度 0.7752），这是最不利底色：
-   背景往顶部走会更亮，对比度只会更好。
-   下列 7 档文字色全部按 #d2e6ff 实测 ≥4.5:1（正文标准），主文字 11.31:1。
-   =================================================================== */
-:root{
-  /* ---- 正文文字 4 档：亮 -> 深（完全翻转）---- */
-  --text-strong:#0f2a4d;   /* 主文字  11.31:1 */
-  --text-soft:#35577e;     /* 次文字   5.86:1 */
-  --text-muted:#4a6789;    /* 弱文字/占位 4.59:1 */
-  --text-link:#0f5cb8;     /* 链接/交互  5.09:1 */
-
-  /* ---- 语义色 3 档（浅底适配）---- */
-  --success:#0e6b34;       /* 成功  5.20:1 */
-  --danger:#b3261e;        /* 错误  5.14:1 */
-  --accent:#8a5200;        /* 星级/关键数字  5.02:1（琥珀 -> 深铜，浅底上仍读作“金”） */
-
-  /* ---- 半透明层 3 档：原先是“深底提亮”，现在是“浅底白玻璃”---- */
-  --alpha-card:rgba(255,255,255,.62);
-  --alpha-float:rgba(255,255,255,.72);   /* 顶部导航底板走这个变量 */
-  --alpha-tint:rgba(255,255,255,.35);
-  --card:rgba(255,255,255,.62);
-
-  /* ---- 线与气泡 ---- */
-  --line:rgba(20,55,100,.16);            /* 原 rgba(157,196,255,.16) 在浅底上等于消失 */
-  --ai-msg:rgba(255,255,255,.78);        /* 数字分身气泡 -> 白气泡 */
-  --me-msg:#2563c9;                      /* 保持：白字靠它 5.67:1 达标 */
-
-  /* ---- 品牌 / 结构 ---- */
-  --blue:#2f7ae0;
-  --blue-deep:#2563c9;                   /* 保持：这是“蓝底白字”按钮的底 */
-  --blue-soft:rgba(37,99,201,.10);
-  --cyan:#0e7490;                        /* 天蓝 -> 深青，浅底上才看得见 */
-  --ink:#0f2a4d;
-  --ink-soft:#35577e;
-
-  /* ---- 阴影：纯黑 -> 蓝灰（浅底上纯黑投影会发脏）---- */
-  --shadow:0 22px 48px -22px rgba(24,58,112,.30);
-  --shadow-sm:0 12px 26px -16px rgba(24,58,112,.26);
-}
-/* 配套：深色主题曾给 .card 加了一层“深色文字投影”，那是为了让文字压住星点。
-   浅底上它是逆光，会让字发灰 -> 直接撤掉。 */
-.card{text-shadow:none}
-</style>
-<style id="day-ly2-sky">
-/* ===================================================================
-   浅蓝日间化 · 第 2 层：天空 + 日间元素
-   -------------------------------------------------------------------
-   六处，全部只覆盖【颜色/形状】，不碰尺寸、位置、不碰 background-size
-   （background-size 决定星点平铺密度：body::before 是 487/311 交错两档，
-     .wrap::after 是 271 一格。所以下面每个 background-image 的光点数量
-     必须和原 background-size 的档数一一对应，多一个少一个都会错位。）
-   =================================================================== */
-
-/* ---- 1) 天蓝天空：顶部近白（迎光）-> 底部清透天蓝 ------------------
-   用 background-image 而非 background 简写：原规则有独立的
-   background-attachment:fixed，简写会把它重置掉，天空会跟着滚动。 */
+<style id="starnight-1-sky">
+/* 更蓝的深夜空：只覆盖 body 的 background-image。
+   background-color 与「背景固定」(background-attachment) 一律不动 —— 天空层只能用 background-image。 */
 body{
   background-image:
-    radial-gradient(125% 88% at 50% -6%,rgba(255,255,255,.92) 0%,rgba(255,255,255,0) 58%),
-    linear-gradient(180deg,#eaf5ff 0%,#dfeefe 42%,#d2e6ff 100%);
+    radial-gradient(125% 88% at 50% -6%,rgba(34,72,140,.95) 0%,rgba(34,72,140,0) 58%),
+    linear-gradient(180deg,#17305f 0%,#112048 42%,#091434 100%);
 }
-
-/* ---- 2) 星野 -> 日光微尘（8 点，对应原 487×4 + 311×4 共 8 档平铺）---- */
+</style>
+<style id="starnight-2-css-stars">
+/* body::before 8 档 → 16 档（487px×8 + 311px×8）；mask / inset / 动画全部沿用原值 */
 body::before{
   background-image:
-    radial-gradient(2.6px 2.6px at 12% 18%,rgba(255,255,255,.95),transparent 60%),
-    radial-gradient(1.9px 1.9px at 34% 41%,rgba(255,255,255,.78),transparent 60%),
-    radial-gradient(3.2px 3.2px at 57% 12%,rgba(255,250,235,.98),transparent 60%),
-    radial-gradient(2px   2px   at 76% 33%,rgba(255,255,255,.72),transparent 60%),
-    radial-gradient(2.8px 2.8px at 91% 62%,rgba(255,255,255,.90),transparent 60%),
-    radial-gradient(2.2px 2.2px at 22% 73%,rgba(255,255,255,.70),transparent 60%),
-    radial-gradient(2.6px 2.6px at 64% 84%,rgba(255,250,235,.88),transparent 60%),
-    radial-gradient(1.8px 1.8px at 44% 58%,rgba(255,255,255,.66),transparent 60%);
+    radial-gradient(1.4px 1.4px at 12% 18%,rgba(152,214,255,.85),transparent 60%),
+    radial-gradient(1px 1px at 34% 41%,rgba(112,184,255,.62),transparent 60%),
+    radial-gradient(1.7px 1.7px at 57% 12%,rgba(152,214,255,.92),transparent 60%),
+    radial-gradient(1.1px 1.1px at 76% 33%,rgba(112,184,255,.58),transparent 60%),
+    radial-gradient(1.4px 1.4px at 91% 62%,rgba(255,206,140,.80),transparent 60%),
+    radial-gradient(1.2px 1.2px at 22% 73%,rgba(152,214,255,.66),transparent 60%),
+    radial-gradient(1.3px 1.3px at 64% 84%,rgba(112,184,255,.70),transparent 60%),
+    radial-gradient(1px 1px at 44% 58%,rgba(86,150,232,.56),transparent 60%),
+    radial-gradient(1.2px 1.2px at 7% 46%,rgba(112,184,255,.60),transparent 60%),
+    radial-gradient(1.5px 1.5px at 27% 9%,rgba(152,214,255,.80),transparent 60%),
+    radial-gradient(1px 1px at 40% 29%,rgba(86,150,232,.52),transparent 60%),
+    radial-gradient(1.5px 1.5px at 51% 67%,rgba(255,206,140,.74),transparent 60%),
+    radial-gradient(1.1px 1.1px at 68% 48%,rgba(112,184,255,.64),transparent 60%),
+    radial-gradient(1.3px 1.3px at 82% 17%,rgba(152,214,255,.82),transparent 60%),
+    radial-gradient(1px 1px at 88% 79%,rgba(86,150,232,.56),transparent 60%),
+    radial-gradient(1.3px 1.3px at 33% 88%,rgba(255,206,140,.70),transparent 60%);
+  background-size:487px 487px,487px 487px,487px 487px,487px 487px,487px 487px,487px 487px,487px 487px,487px 487px,
+                  311px 311px,311px 311px,311px 311px,311px 311px,311px 311px,311px 311px,311px 311px,311px 311px;
 }
 
-/* ---- 3) 暗角+流星 -> 高光角+光带 -----------------------------------
-   暗角 rgba(2,4,10,.55) 在浅底上会糊成脏灰 -> 换成白色高光角（四周更亮 = 雾感）。
-   流星 2.5px 细线 -> 3.4px 宽光带，并把 19s 放慢到 34s，
-   从“划过”变成“云隙光缓缓移过”。meteorSweep 的位移量不变，仍会完整进出画面。 */
-body::after{
+/* .wrap::after 6 档 → 12 档（271px×12）；inset / opacity / 动画沿用原值 */
+.wrap::after{
   background-image:
-    radial-gradient(120% 90% at 50% 36%,transparent 38%,rgba(255,255,255,.60) 100%),
-    linear-gradient(102deg,transparent 44%,rgba(255,255,255,.45) 48%,
-                    rgba(255,255,255,.92) 50%,rgba(255,255,255,.45) 52%,transparent 56%);
-  background-size:100% 100%,420px 3.4px;
-  animation:meteorSweep 34s linear infinite;
+    radial-gradient(1.6px 1.6px at 9% 14%,rgba(152,214,255,.92),transparent 60%),
+    radial-gradient(1.1px 1.1px at 27% 39%,rgba(112,184,255,.72),transparent 60%),
+    radial-gradient(1.9px 1.9px at 44% 8%,rgba(255,206,140,.86),transparent 60%),
+    radial-gradient(1.2px 1.2px at 61% 56%,rgba(112,184,255,.66),transparent 60%),
+    radial-gradient(1.7px 1.7px at 78% 26%,rgba(152,214,255,.88),transparent 60%),
+    radial-gradient(1px 1px at 92% 68%,rgba(86,150,232,.62),transparent 60%),
+    radial-gradient(1.3px 1.3px at 17% 77%,rgba(112,184,255,.58),transparent 60%),
+    radial-gradient(1.5px 1.5px at 35% 22%,rgba(152,214,255,.80),transparent 60%),
+    radial-gradient(1px 1px at 52% 41%,rgba(86,150,232,.54),transparent 60%),
+    radial-gradient(1.8px 1.8px at 69% 9%,rgba(255,206,140,.78),transparent 60%),
+    radial-gradient(1.2px 1.2px at 84% 52%,rgba(112,184,255,.70),transparent 60%),
+    radial-gradient(1.4px 1.4px at 94% 83%,rgba(152,214,255,.64),transparent 60%);
+  background-size:271px 271px,271px 271px,271px 271px,271px 271px,271px 271px,271px 271px,
+                  271px 271px,271px 271px,271px 271px,271px 271px,271px 271px,271px 271px;
 }
 
-/* ---- 4) 星空余晖 -> 顶部太阳光晕（新版 7 项 = 新增 1 个大光晕 + 原有 6 个星点逐一对位）---------- */
-/* 注意：.wrap::before 原版没有 background-size（6 个星点各铺满整块一次），
-   所以这里用 background 简写是安全的；但 6 个星点必须一个不少。 */
+/* .wrap::before 6 档星点 + 1 光晕 → 12 档星点 + 1 光晕。
+   注意：这一层原文没有 background-size，靠元素本身尺寸定位（每颗星只出现一次），
+   所以新层同样【不许】写 background-size，否则会变成密铺、观感全变。 */
 .wrap::before{
-  background:
-    radial-gradient(70% 62% at 78% -12%,rgba(255,236,196,.85) 0%,rgba(255,236,196,0) 62%),
-    radial-gradient(2.6px 2.6px at 12% 26%,rgba(255,255,255,.95),transparent 60%),
-    radial-gradient(2px   2px   at 28% 48%,rgba(255,255,255,.80),transparent 60%),
-    radial-gradient(2.2px 2.2px at 46% 20%,rgba(255,250,235,.90),transparent 60%),
-    radial-gradient(1.9px 1.9px at 63% 56%,rgba(255,255,255,.78),transparent 60%),
-    radial-gradient(2.4px 2.4px at 78% 30%,rgba(255,255,255,.92),transparent 60%),
-    radial-gradient(1.8px 1.8px at 90% 50%,rgba(255,255,255,.74),transparent 60%);
+  background-image:
+    radial-gradient(2px 2px at 12% 26%,rgba(152,214,255,.95),transparent 60%),
+    radial-gradient(1.5px 1.5px at 28% 48%,rgba(112,184,255,.85),transparent 60%),
+    radial-gradient(1.7px 1.7px at 46% 20%,rgba(152,214,255,.76),transparent 60%),
+    radial-gradient(1.3px 1.3px at 63% 56%,rgba(112,184,255,.80),transparent 60%),
+    radial-gradient(1.9px 1.9px at 78% 30%,rgba(255,206,140,.90),transparent 60%),
+    radial-gradient(1.4px 1.4px at 90% 50%,rgba(112,184,255,.70),transparent 60%),
+    radial-gradient(1.6px 1.6px at 6% 68%,rgba(86,150,232,.66),transparent 60%),
+    radial-gradient(1.5px 1.5px at 20% 12%,rgba(152,214,255,.88),transparent 60%),
+    radial-gradient(1.3px 1.3px at 35% 62%,rgba(112,184,255,.60),transparent 60%),
+    radial-gradient(1.8px 1.8px at 56% 34%,rgba(255,206,140,.82),transparent 60%),
+    radial-gradient(1.5px 1.5px at 70% 72%,rgba(152,214,255,.74),transparent 60%),
+    radial-gradient(1.7px 1.7px at 85% 16%,rgba(86,150,232,.68),transparent 60%),
+    radial-gradient(120% 100% at 50% 0%,rgba(74,138,238,.16) 0%,rgba(74,138,238,0) 72%);
 }
-/* 窄屏版本（原文件在 max-width:1180px 里另有一份，档数 3：1 光晕 + 2 浮尘）*/
+
+/* 窄屏（≤1180px）：2 档星点 + 1 光晕 → 4 档星点 + 1 光晕。height:250px 沿用原值，这里不写。 */
 @media (max-width:1180px){
   .wrap::before{
-    background:
-      radial-gradient(80% 70% at 80% -14%,rgba(255,236,196,.80) 0%,rgba(255,236,196,0) 64%),
-      radial-gradient(2.4px 2.4px at 16% 32%,rgba(255,255,255,.92),transparent 60%),
-      radial-gradient(2px   2px   at 72% 46%,rgba(255,255,255,.78),transparent 60%);
+    background-image:
+      radial-gradient(1.9px 1.9px at 16% 32%,rgba(152,214,255,.85),transparent 60%),
+      radial-gradient(1.5px 1.5px at 72% 46%,rgba(112,184,255,.75),transparent 60%),
+      radial-gradient(1.4px 1.4px at 40% 68%,rgba(86,150,232,.64),transparent 60%),
+      radial-gradient(1.7px 1.7px at 88% 22%,rgba(255,206,140,.78),transparent 60%),
+      radial-gradient(120% 100% at 50% 0%,rgba(74,138,238,.14) 0%,rgba(74,138,238,0) 74%);
   }
 }
 
-/* ---- 5) 上浮星尘 -> 上浮光尘（6 档，对应原 271×6 平铺）-------------- */
-.wrap::after{
+/* body::after 流星：只把白色换成冷青蓝（暗角层必须一起重写，否则会被整组顶掉） */
+body::after{
   background-image:
-    radial-gradient(2.6px 2.6px at 9%  14%,rgba(255,255,255,.95),transparent 60%),
-    radial-gradient(2px   2px   at 27% 39%,rgba(255,255,255,.80),transparent 60%),
-    radial-gradient(3px   3px   at 44% 8%, rgba(255,250,235,.92),transparent 60%),
-    radial-gradient(2.1px 2.1px at 61% 56%,rgba(255,255,255,.76),transparent 60%),
-    radial-gradient(2.7px 2.7px at 78% 26%,rgba(255,255,255,.90),transparent 60%),
-    radial-gradient(1.9px 1.9px at 92% 68%,rgba(255,255,255,.72),transparent 60%);
-  opacity:.78;   /* 原 .62：白色在浅底上比亮星在深底上弱，稍微加一点 */
-}
-
-/* ---- 6) 极光 -> 柔和云团（5 档，只换颜色，aur1/2/3 漂移原样在跑）---- */
-.aurora .b1{background:radial-gradient(circle at 38% 40%,rgba(255,255,255,.72),rgba(255,255,255,0) 62%)}
-.aurora .b2{background:radial-gradient(circle at 60% 34%,rgba(214,235,255,.85),rgba(214,235,255,0) 62%)}
-.aurora .b3{background:radial-gradient(circle at 52% 30%,rgba(255,255,255,.62),rgba(255,255,255,0) 58%)}
-.aurora .b4{background:radial-gradient(circle at 50% 50%,rgba(255,244,214,.60),rgba(255,244,214,0) 64%)}
-.aurora .b5{background:radial-gradient(circle at 46% 44%,rgba(226,240,255,.70),rgba(226,240,255,0) 60%)}
-</style>
-<style id="day-ly3-chrome">
-/* ===================================================================
-   浅蓝日间化 · 第 3 层：结构件
-   =================================================================== */
-
-/* ---- 1) 顶部导航：深色毛玻璃 -> 浅色毛玻璃 --------------------------
-   底板颜色其实已由 --alpha-float 自动跟着变（投喂 1），这里补描边和投影。
-   @supports (backdrop-filter: blur(1px)) 里的 backdrop-filter 一行不动。 */
-.topbar{
-  background:rgba(255,255,255,.74);
-  border-bottom:1px solid rgba(20,55,100,.10);
-  box-shadow:0 8px 24px -18px rgba(24,58,112,.45);
-}
-
-/* ---- 2) 页脚底板（按决定：保留底板，只换颜色）--------------------- */
-footer{background:rgba(255,255,255,.60)}
-
-/* ---- 3) 滚动条：浅底上原来的亮蓝几乎看不见 -> 整体调暗 ------------ */
-html{scrollbar-color:rgba(37,99,201,.42) transparent}
-::-webkit-scrollbar-thumb{
-  background:linear-gradient(180deg,rgba(37,99,201,.55),rgba(14,116,144,.45));
-}
-::-webkit-scrollbar-thumb:hover{
-  background:linear-gradient(180deg,rgba(37,99,201,.78),rgba(14,116,144,.65));
-}
-
-/* ---- 4) 板块配图：底衬 + 四边渐隐从“吃进深色”改成“吃进天空色”------
-   照片本身是明亮的浅蓝室内照，原来靠四边压深融进深色星空；
-   浅蓝底上必须反过来 —— 四边渐隐成天空色，才叫“无框融入”。 */
-.sec-fig{background:linear-gradient(160deg,#dcecff,#c7e0ff)}
-.sec-fig img{filter:brightness(1.04) saturate(1.04)}
-.sec-fig::after{
-  background:
-    linear-gradient(180deg,rgba(226,240,255,.72) 0%,rgba(226,240,255,0) 20%,
-                    rgba(226,240,255,0) 70%,rgba(226,240,255,.80) 100%),
-    linear-gradient(90deg,rgba(226,240,255,.64) 0%,rgba(226,240,255,0) 17%,
-                    rgba(226,240,255,0) 83%,rgba(226,240,255,.64) 100%);
-  box-shadow:none;
-}
-
-/* ---- 5) 首屏姓名渐变：亮蓝 -> 深蓝 ---------------------------------
-   原 #8fc4ff -> #4a9df5 是给深底用的“发光蓝”，白底上会糊掉。
-   34px/800 属大字号，WCAG 大字号门槛 3:1；实测两端分别为 8.48:1 与 4.09:1。
-   只覆盖 background-image，@supports 块里的 background-clip:text /
-   -webkit-text-fill-color:transparent 全部沿用，文字不会被“洗掉”。 */
-.hero h1{
-  background-image:
-    linear-gradient(100deg,#123c78,#1f6ad0),
-    linear-gradient(100deg,transparent 44%,rgba(255,255,255,.55) 50%,transparent 56%);
-}
-
-/* ---- 6) 头像光圈：原来的“深色分离环”在浅底上是黑圈 -> 换白环 ------- */
-.avatar{
-  box-shadow:0 14px 30px -10px rgba(24,58,112,.35),
-             0 0 0 5px rgba(255,255,255,.92),
-             0 0 0 7px rgba(37,99,201,.28);
-}
-.chat-head .av{box-shadow:0 0 0 3px rgba(255,255,255,.92)}
-
-/* ---- 7) 区块之间的连接淡点 ----------------------------------------- */
-.card:not(.hero)::before{background:rgba(20,55,100,.28)}
-
-/* ---- 8) 板块图标底 ------------------------------------------------- */
-.card-head .ico{
-  background:linear-gradient(135deg,rgba(37,99,201,.14),rgba(37,99,201,.06));
-  box-shadow:inset 0 0 0 1px rgba(37,99,201,.20);
+    radial-gradient(120% 90% at 50% 36%,transparent 38%,rgba(2,4,10,.55) 100%),
+    linear-gradient(102deg,transparent 44%,rgba(120,185,255,.20) 48%,rgba(178,222,255,.78) 50%,transparent 56%);
 }
 </style>
-<style id="day-ly4-controls">
-/* ===================================================================
-   浅蓝日间化 · 第 4 层：内容块与控件
-   原则：形状一律不动（无框/淡线/圆角全部沿用），只把“深底提亮”换成“浅底白玻璃”，
-         把“极淡浅蓝线”换成“极淡深蓝线”。
-   =================================================================== */
-
-/* ---- 1) 去方框留下的分隔线：浅蓝 -> 深蓝（形状不变，只是看得见了）---- */
-.info .kv,.contact,.skills .row,.fv-item{border-top:1px solid rgba(20,55,100,.16)}
-
-/* ---- 2) 小标签 / 徽标 ---------------------------------------------- */
-.chip{background:rgba(255,255,255,.62);border-color:rgba(20,55,100,.16)}
-.fv-item .tag{background:rgba(37,99,201,.10);border-color:rgba(37,99,201,.26)}
-.fv-item .tag.dev-mobile{background:rgba(124,58,237,.10);border-color:rgba(124,58,237,.28)}
-.tagline{box-shadow:inset 0 0 0 1px rgba(37,99,201,.22)}
-
-/* ---- 3) 技能条 ----------------------------------------------------- */
-.bar{background:rgba(20,55,100,.10)}
-.bar i{background:linear-gradient(90deg,transparent 0%,#7fb2ff 42%,#2563c9 50%,#7fb2ff 58%,transparent 100%)}
-.progress i{box-shadow:0 0 10px rgba(37,99,201,.35)}
-
-/* ---- 4) 幽灵按钮：原来的 rgba(255,255,255,.07) 是“深底提亮”，
-        浅底上等于没有 -> 换成白色实板；并补回 hover（因为本规则的
-        优先级会盖掉原 @media(hover:hover) 里那条，必须自带一个更具体的 :hover）---- */
-.btn.ghost{background:rgba(255,255,255,.70)}
-.btn.ghost:hover{background:rgba(255,255,255,.92)}
-@media (hover:hover){.btn.ghost:hover{background:rgba(255,255,255,.92)}}
-
-/* ---- 5) 反馈表单 --------------------------------------------------- */
-.fb-chips .fc-pick{background:rgba(255,255,255,.70)}
-.fb-row textarea,.fb-row input[type=text]{
-  background:rgba(255,255,255,.82);
-  border-color:rgba(20,55,100,.16);
-}
-.fb-row textarea:focus,.fb-row input[type=text]:focus{
-  background:#fff;
-  box-shadow:0 0 0 3px rgba(37,99,201,.16);
-}
-.fb-stars .star{color:rgba(37,99,201,.28)}
-.fb-lock-input input{background:rgba(255,255,255,.82)}
-.fb-lock-input input:focus{box-shadow:0 0 0 3px rgba(37,99,201,.14)}
-
-/* ---- 6) 数字分身（按决定：这个框保留，只换色）---------------------- */
-.chat-box{
-  background:rgba(255,255,255,.62);
-  box-shadow:inset 0 1px 0 rgba(20,55,100,.08);
-  border:1px solid rgba(20,55,100,.14);
-}
-.chat-head{background:linear-gradient(180deg,rgba(37,99,201,.12),rgba(37,99,201,.05))}
-.msg .bubble{box-shadow:0 8px 20px -12px rgba(24,58,112,.22)}
-.suggest{background:rgba(255,255,255,.55)}
-.suggest button{background:rgba(255,255,255,.72)}
-.chat-input{background:rgba(255,255,255,.50)}
-.chat-input input{background:rgba(255,255,255,.82)}
-.chat-input input:focus{background:#fff;box-shadow:0 0 0 3px rgba(37,99,201,.16)}
-.typing-b span{background:rgba(37,99,201,.45)}
-.chat-head .reset{background:rgba(255,255,255,.70)}
-
-/* ---- 7) 回到顶部 --------------------------------------------------- */
-.to-top .ring-bg{stroke:rgba(20,55,100,.22)}
-.to-top.solid .ring-bg{stroke:rgba(255,255,255,.30)}
-</style>
-<style id="day-ly5-gate">
-/* ===================================================================
-   浅蓝日间化 · 第 5 层：入口幕布（CSS 部分）
-   只覆盖颜色。幕布的上推动效、gateRise、gateWave、haloBreathe、breathe
-   全部原样保留（它们负责“揭幕”的手感）。
-   =================================================================== */
-
-/* 1) 幕布底色：深空 -> 夏日晴空（比正文底色更饱和一档，白尘才看得出来） */
-.gate{
-  color:#0f2a4d;
-  background:radial-gradient(125% 95% at 50% 8%,#e6f3ff 0%,#c6e2ff 44%,#a9d2ff 100%);
-}
-
-/* 2) 两团星云（.gate .neb 的 width/height/blur(72px)/动画全部不动）-> 云团 */
-.gate .neb.a{background:radial-gradient(circle,rgba(255,255,255,.96),rgba(255,255,255,0) 68%)}
-.gate .neb.b{background:radial-gradient(circle,rgba(255,246,224,.88),rgba(255,246,224,0) 68%)}
-
-/* 3) 顶部小徽章：只改颜色，不写 border 简写（避免把原 border 宽度/样式一起丢掉）*/
-.gate-kicker{color:#1a4a86;border-color:rgba(20,55,100,.26)}
-
-/* 4) 副标题 */
-.gate-inner p{color:#35577e}
-
-/* 5) 启动按钮：原来是“浅蓝渐变 + 深色字”（深底上的发光感），
-      浅底上它会整体消失 -> 换成蓝底白字（白字与 #2563c9 实测 5.67:1）。
-      注意 box-shadow 由 @keyframes breathe 接管，这里不设 box-shadow。 */
-.gate-btn{
-  color:#fff;
-  background:linear-gradient(135deg,#3d8bfd 0%,#2563c9 58%,#1d4ed8 100%);
-}
-
-/* 6) 底部提示文字 */
-.gate-hint{color:#4a6789}
-
-/* 7) 幕布底缘光带：亮蓝 -> 蓝（浅底上才能作为“帘子下边缘”的实体提示）*/
-.gate::after{
-  background:linear-gradient(to top,rgba(37,99,201,.30),rgba(37,99,201,.08) 45%,transparent);
-}
-
-/* 8) 启动冲击波：浅蓝光环 -> 蓝色光环 */
-.gate-wave{
-  border:2px solid rgba(37,99,201,.55);
-  background:radial-gradient(circle,rgba(37,99,201,.18),transparent 62%);
-  box-shadow:0 0 40px 8px rgba(37,99,201,.30);
-}
-</style>
-
 </head>
 <body>
 
@@ -2049,7 +1828,7 @@ html{scrollbar-color:rgba(37,99,201,.42) transparent}
 
     let W = 0, H = 0, dpr = 1, stars = [], raf = 0, running = false;
     const DPR_CAP = 1.5;
-    const COUNT_CAP = 72;
+    const COUNT_CAP = 144;
 
     function build() {
       dpr = Math.min(window.devicePixelRatio || 1, DPR_CAP);
@@ -2057,7 +1836,7 @@ html{scrollbar-color:rgba(37,99,201,.42) transparent}
       canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
       canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      const n = Math.min(COUNT_CAP, Math.max(26, Math.round(W * H / 22000)));
+      const n = Math.min(COUNT_CAP, Math.max(52, Math.round(W * H / 11000)));
       stars = [];
       for (let i = 0; i < n; i++) {
         stars.push({
@@ -2066,7 +1845,8 @@ html{scrollbar-color:rgba(37,99,201,.42) transparent}
           a: 0.35 + Math.random() * 0.5,
           phase: Math.random() * Math.PI * 2,
           speed: 0.02 + Math.random() * 0.05,
-          drift: 0.06 + Math.random() * 0.12
+          drift: 0.06 + Math.random() * 0.12,
+          warm: Math.random() < 0.2
         });
       }
     }
@@ -2077,7 +1857,7 @@ html{scrollbar-color:rgba(37,99,201,.42) transparent}
       for (const s of stars) {
         const alpha = s.a * (0.5 + 0.5 * Math.sin(t * s.speed + s.phase));
         ctx.globalAlpha = Math.max(0, Math.min(.95, alpha));
-        ctx.fillStyle = '#cfe6ff';
+        ctx.fillStyle = s.warm ? '#ffce8c' : '#98d6ff';
         ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2); ctx.fill();
         s.y -= s.drift;
         if (s.y < -3) { s.y = H + 3; s.x = Math.random() * W; }
@@ -2114,7 +1894,7 @@ html{scrollbar-color:rgba(37,99,201,.42) transparent}
     let W = 0, H = 0, stars = [], shots = [], raf = null, running = false, entered = false;
 
     function build() {
-      const count = Math.round(Math.min(360, Math.max(150, (W * H) / 5200)));
+      const count = Math.round(Math.min(720, Math.max(300, (W * H) / 2600)));
       stars = [];
       for (let i = 0; i < count; i++) {
         const big = Math.random() > 0.86;
@@ -2128,9 +1908,7 @@ html{scrollbar-color:rgba(37,99,201,.42) transparent}
           // 星野整体缓缓向右下流动（像在宇宙中前行），每颗星再叠一点随机扰动
           vx: 0.16 + (Math.random() - 0.5) * 0.10,
           vy: 0.06 + (Math.random() - 0.5) * 0.10,
-          // 日间：不再画“星点”而画“日光微尘”。浅蓝天空上必须【比底色更亮】，
-          // 用深色会读成脏点。22% 暖金（阳光颗粒），78% 冷白（云隙光）。
-          warm: Math.random() < 0.22,
+          warm: Math.random() < 0.2,
           big: big
         });
       }
@@ -2147,14 +1925,14 @@ html{scrollbar-color:rgba(37,99,201,.42) transparent}
 
     function spawnShot() {
       const ltr = Math.random() < 0.55;
-      const speed = 3.2 + Math.random() * 2.6;
+      const speed = 7 + Math.random() * 6;
       const ang = 0.18 + Math.random() * 0.3;
       shots.push({
         x: ltr ? -60 : W + 60,
         y: Math.random() * H * 0.55,
         vx: (ltr ? 1 : -1) * Math.cos(ang) * speed,
         vy: Math.sin(ang) * speed,
-        w: 2.8 + Math.random() * 2.4,
+        w: 1.5 + Math.random() * 1.4,
         life: 1
       });
     }
@@ -2169,24 +1947,24 @@ html{scrollbar-color:rgba(37,99,201,.42) transparent}
         const a = Math.max(0, Math.min(1, s.base + Math.sin(t * s.sp + s.ph) * s.amp));
         if (s.big) {
           const g = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, s.r * 8);
-          g.addColorStop(0, s.warm ? "rgba(255,238,196," + (a * 0.60) + ")" : "rgba(255,255,255," + (a * 0.55) + ")");
-          g.addColorStop(1, s.warm ? "rgba(255,238,196,0)" : "rgba(255,255,255,0)");
+          g.addColorStop(0, s.warm ? "rgba(255,206,140," + (a * 0.55) + ")" : "rgba(118,182,255," + (a * 0.55) + ")");
+          g.addColorStop(1, s.warm ? "rgba(255,206,140,0)" : "rgba(118,182,255,0)");
           ctx.fillStyle = g;
           ctx.beginPath(); ctx.arc(s.x, s.y, s.r * 8, 0, Math.PI * 2); ctx.fill();
         }
-        ctx.fillStyle = s.warm ? "rgba(255,228,158," + a + ")" : "rgba(255,255,255," + a + ")";
+        ctx.fillStyle = s.warm ? "rgba(255,214,158," + a + ")" : "rgba(150,212,255," + a + ")";
         ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2); ctx.fill();
       }
       if (!reduce && Math.random() < 0.008 && shots.length < 3) spawnShot();
       for (let i = shots.length - 1; i >= 0; i--) {
         const m = shots[i];
-        m.x += m.vx; m.y += m.vy; m.life -= 0.008;
+        m.x += m.vx; m.y += m.vy; m.life -= 0.012;
         if (m.life <= 0) { shots.splice(i, 1); continue; }
-        const g = ctx.createLinearGradient(m.x, m.y, m.x - m.vx * 30, m.y - m.vy * 30);
-        g.addColorStop(0, "rgba(255,255,255," + m.life + ")");
-        g.addColorStop(1, "rgba(255,255,255,0)");
+        const g = ctx.createLinearGradient(m.x, m.y, m.x - m.vx * 9, m.y - m.vy * 9);
+        g.addColorStop(0, "rgba(190,226,255," + m.life + ")");
+        g.addColorStop(1, "rgba(190,226,255,0)");
         ctx.strokeStyle = g; ctx.lineWidth = m.w; ctx.lineCap = "round";
-        ctx.beginPath(); ctx.moveTo(m.x, m.y); ctx.lineTo(m.x - m.vx * 30, m.y - m.vy * 30); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(m.x, m.y); ctx.lineTo(m.x - m.vx * 9, m.y - m.vy * 9); ctx.stroke();
       }
     }
 

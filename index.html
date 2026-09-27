@@ -475,7 +475,7 @@
   @supports ((background-clip:text) or (-webkit-background-clip:text)){
     .hero h1{
       background-image:
-        linear-gradient(100deg,#8fc4ff,#4a9df5),
+        linear-gradient(100deg,#f2f7ff,#cfe2ff 30%,#9cc8ff 62%,#c4b0ff),
         linear-gradient(100deg,transparent 44%,rgba(255,255,255,.60) 50%,transparent 56%);
       background-size:100% 100%,240% 100%;
       background-repeat:no-repeat;
@@ -492,7 +492,7 @@
     .hero.in h1 .ch:nth-child(3){animation-delay:.17s}
     /* reduced-motion：直接展示最终态（渐变静止，无逐字、无高光扫动） */
     @media (prefers-reduced-motion:reduce){
-      .hero h1{animation:none;background-image:linear-gradient(100deg,#8fc4ff,#4a9df5);background-position:0 0}
+      .hero h1{animation:none;background-image:linear-gradient(100deg,#f2f7ff,#cfe2ff 30%,#9cc8ff 62%,#c4b0ff);background-position:0 0}
       .hero h1 .ch,.hero.in h1 .ch{animation:none;opacity:1;transform:none;filter:none}
     }
   }
@@ -1236,6 +1236,213 @@ body{
   text-shadow:0 1px 2px rgba(2,4,10,.45); /* 钉住姓名的渐变文字，保持原观感 */
 }
 </style>
+<style id="palette-1-text">
+/* ── 文字配色 · 背景同源分层上色 ─────────────────────────────
+   所有色相都取自背景里【已经存在】的光斑，不凭空引入新颜色：
+     青   ← .aurora .b2  rgba(56,189,248)
+     紫   ← .aurora .b4  rgba(139,124,255)
+     薄荷 ← .aurora .b5  rgba(94,214,190)
+     冰蓝 ← .aurora .b1 / .b3 蓝
+     暖金 ← 星点 rgba(255,206,140)
+     月白 ← 流星 / 亮星 rgba(232,244,255)
+   每个色相都提亮到「压在卡片底（文字真正所在的底）前 ≥4.5:1」，
+   且亮度全部高于现有 --text-soft，所以是纯增益改动：
+   没有任何一处文字会比现在更难读。 */
+:root{
+  --c-moon:#e0ebff;
+  --c-cyan:#7fd9f2;
+  --c-violet:#c4b0ff;
+  --c-mint:#7fdcc2;
+  --c-ice:#9cc8ff;
+  --c-gold:#ffd08a;
+}
+
+/* ── 6 个区块「标题 + 序号 + 图标方块」各一个色相 ── */
+/* 关于我（流星 / 亮星 rgba(232,244,255)） */
+#about .card-head h2,
+#about .card-head h2::before{color:var(--c-moon)}
+#about .card-head .ico{
+  color:var(--c-moon);
+  background:linear-gradient(135deg,rgba(224,235,255,.22),rgba(224,235,255,.10));
+  box-shadow:inset 0 0 0 1px rgba(224,235,255,.24);
+}
+/* 技能（.aurora .b2 rgba(56,189,248)） */
+#skills .card-head h2,
+#skills .card-head h2::before{color:var(--c-cyan)}
+#skills .card-head .ico{
+  color:var(--c-cyan);
+  background:linear-gradient(135deg,rgba(127,217,242,.22),rgba(127,217,242,.10));
+  box-shadow:inset 0 0 0 1px rgba(127,217,242,.24);
+}
+/* 学习记录 / 目标（.aurora .b4 rgba(139,124,255)） */
+#goals .card-head h2,
+#goals .card-head h2::before{color:var(--c-violet)}
+#goals .card-head .ico{
+  color:var(--c-violet);
+  background:linear-gradient(135deg,rgba(196,176,255,.22),rgba(196,176,255,.10));
+  box-shadow:inset 0 0 0 1px rgba(196,176,255,.24);
+}
+/* 联系方式（.aurora .b5 rgba(94,214,190)） */
+#contact .card-head h2,
+#contact .card-head h2::before{color:var(--c-mint)}
+#contact .card-head .ico{
+  color:var(--c-mint);
+  background:linear-gradient(135deg,rgba(127,220,194,.22),rgba(127,220,194,.10));
+  box-shadow:inset 0 0 0 1px rgba(127,220,194,.24);
+}
+/* 数字分身 · 聊聊天（.aurora .b1 / .b3 蓝） */
+#twin .card-head h2,
+#twin .card-head h2::before{color:var(--c-ice)}
+#twin .card-head .ico{
+  color:var(--c-ice);
+  background:linear-gradient(135deg,rgba(156,200,255,.22),rgba(156,200,255,.10));
+  box-shadow:inset 0 0 0 1px rgba(156,200,255,.24);
+}
+/* 访客反馈（星点 rgba(255,206,140)） */
+#feedback .card-head h2,
+#feedback .card-head h2::before{color:var(--c-gold)}
+#feedback .card-head .ico{
+  color:var(--c-gold);
+  background:linear-gradient(135deg,rgba(255,208,138,.22),rgba(255,208,138,.10));
+  box-shadow:inset 0 0 0 1px rgba(255,208,138,.24);
+}
+
+/* 序号原本 .55 太淡，色相看不出来；提到 .7（仍是装饰性弱化） */
+.card-head h2::before{opacity:.7}
+
+/* ── 兴趣标签：3 个三种色 ── */
+.chips .chip:nth-of-type(1){color:var(--c-cyan)}
+.chips .chip:nth-of-type(2){color:var(--c-violet)}
+.chips .chip:nth-of-type(3){color:var(--c-mint)}
+
+/* ── 零散点缀：每个色相在页面各处再露一次脸 ── */
+.tagline{color:var(--c-cyan)}
+.hero-hello .hi{color:var(--c-gold)}
+.skills .name{color:var(--c-cyan)}
+.contact .cv .clink{color:var(--c-mint)}
+footer .ver{color:var(--c-violet)}
+</style>
+<style id="skyblue-1-lift">
+/* 夜空提亮一档：把【中段与底部】从近黑提到明朗的蓝。
+
+   只覆盖 body 的 background-image —— background-color 与 background-attachment:fixed
+   一律不动（沿用 starnight-1-sky 的做法，天空层只由 background-image 表达）。
+
+   只改第二层线性渐变，第一层顶部径向光晕原样保留。原因：
+   页面顶部本来就被那层光晕主导（y=0 处 alpha≈.84），它正是"上亮下暗"里"亮"的那一头，
+   再提它只会压低首屏文字的对比度，却不会让页面更"明朗"。
+   真正发闷的是中段和底部 —— 那里原来已经沉到 near-black（#091434），所以只抬这两头。
+
+   提亮前后：中段 L .015 → .036，底部 L .008 → .024（约 3 倍）。
+   页面整体仍是深蓝夜空，银河与繁星照常可见。 */
+body{
+  background-image:
+    radial-gradient(125% 88% at 50% -6%,rgba(34,72,140,.95) 0%,rgba(34,72,140,0) 58%),
+    linear-gradient(180deg,#25477f 0%,#1b3763 42%,#122a4e 100%);
+}
+</style>
+<style id="starnight-5-milkyway">
+/* 银河 · 左低右高（11deg）斜贯全屏的柔光带。
+   载体是 .aurora::after：它夹在极光光斑之上、星点之下，
+   所以原有星点会从银河上穿过去，观感自然，也【不需要动 DOM】。
+
+   几何：11deg 渐变的中心线正穿过视口中心，在 x=63% 处落在 y≈46%
+   （不是 36%，那里会飘到带子外面），银心按这条线摆。
+
+   四层叠加：
+     ① 银心    —— 带上偏右的一段更亮的椭圆亮核
+     ② 内芯    —— 宽而柔的主带（11deg）。刻意【不做细亮线】：
+                  细而亮的斜线会和流星那条 102deg 光条撞脸
+     ③ 外晕    —— 更宽更淡，给带子厚度，避免"发光条"的描边感
+     ④ 暗尘带  —— 银河暗纹，平行且略偏离中心，不压掉内芯
+
+   末尾两条 mask 让带子的左右两端淡出，不会硬切在屏幕边缘。 */
+.aurora::after{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background-image:
+    radial-gradient(34% 11% at 63% 46%,rgba(202,224,255,.065) 0%,rgba(202,224,255,.025) 48%,rgba(202,224,255,0) 100%),
+    linear-gradient(11deg,transparent 30%,rgba(150,190,255,.04) 40%,rgba(198,224,255,.075) 50%,rgba(150,190,255,.04) 60%,transparent 70%),
+    linear-gradient(11deg,transparent 16%,rgba(110,155,255,.02) 33%,rgba(142,182,255,.035) 50%,rgba(110,155,255,.02) 67%,transparent 84%),
+    linear-gradient(11deg,transparent 51%,rgba(4,8,20,.16) 57%,transparent 63%);
+  -webkit-mask-image:linear-gradient(75deg,transparent 0%,#000 20%,#000 80%,transparent 100%);
+  mask-image:linear-gradient(75deg,transparent 0%,#000 20%,#000 80%,transparent 100%);
+  animation:milkyBreath 30s ease-in-out infinite alternate;
+}
+/* 极缓慢的明暗呼吸：30s 一个来回，与 .aurora 光斑的 26~46s 不成整数倍 */
+@keyframes milkyBreath{from{opacity:.84} to{opacity:1}}
+@media (prefers-reduced-motion:reduce){
+  .aurora::after{animation:none!important}
+}
+</style>
+<style id="starnight-6-stars">
+/* 繁星再加厚一档「远星」：比原有星点更小更暗，只增加密度感，不抬高背景亮度。
+   body::before 16 档 → 24 档，新增的 8 档用第三个周期 389px
+   （与 487 / 311 互不整除，进一步错开重复感）。
+   .wrap::after 12 档 → 18 档：这一层必须【全部】保持 271px 周期，
+   否则 starFlow「上移 271px」的无缝循环会在接缝处露馅。
+   inset / mask / opacity / 动画一律沿用原值，这里只重写两条 background-* 列表。 */
+body::before{
+  background-image:
+    radial-gradient(1.4px 1.4px at 12% 18%,rgba(152,214,255,.85),transparent 60%),
+    radial-gradient(1px 1px at 34% 41%,rgba(112,184,255,.62),transparent 60%),
+    radial-gradient(1.7px 1.7px at 57% 12%,rgba(152,214,255,.92),transparent 60%),
+    radial-gradient(1.1px 1.1px at 76% 33%,rgba(112,184,255,.58),transparent 60%),
+    radial-gradient(1.4px 1.4px at 91% 62%,rgba(255,206,140,.80),transparent 60%),
+    radial-gradient(1.2px 1.2px at 22% 73%,rgba(152,214,255,.66),transparent 60%),
+    radial-gradient(1.3px 1.3px at 64% 84%,rgba(112,184,255,.70),transparent 60%),
+    radial-gradient(1px 1px at 44% 58%,rgba(86,150,232,.56),transparent 60%),
+    radial-gradient(1.2px 1.2px at 7% 46%,rgba(112,184,255,.60),transparent 60%),
+    radial-gradient(1.5px 1.5px at 27% 9%,rgba(152,214,255,.80),transparent 60%),
+    radial-gradient(1px 1px at 40% 29%,rgba(86,150,232,.52),transparent 60%),
+    radial-gradient(1.5px 1.5px at 51% 67%,rgba(255,206,140,.74),transparent 60%),
+    radial-gradient(1.1px 1.1px at 68% 48%,rgba(112,184,255,.64),transparent 60%),
+    radial-gradient(1.3px 1.3px at 82% 17%,rgba(152,214,255,.82),transparent 60%),
+    radial-gradient(1px 1px at 88% 79%,rgba(86,150,232,.56),transparent 60%),
+    radial-gradient(1.3px 1.3px at 33% 88%,rgba(255,206,140,.70),transparent 60%),
+    radial-gradient(.9px .9px at 18% 27%,rgba(152,214,255,.40),transparent 60%),
+    radial-gradient(.8px .8px at 41% 63%,rgba(112,184,255,.34),transparent 60%),
+    radial-gradient(1px 1px at 66% 21%,rgba(152,214,255,.42),transparent 60%),
+    radial-gradient(.85px .85px at 87% 47%,rgba(86,150,232,.30),transparent 60%),
+    radial-gradient(.95px .95px at 8% 58%,rgba(112,184,255,.36),transparent 60%),
+    radial-gradient(.8px .8px at 29% 84%,rgba(152,214,255,.38),transparent 60%),
+    radial-gradient(1px 1px at 54% 39%,rgba(86,150,232,.28),transparent 60%),
+    radial-gradient(.9px .9px at 75% 72%,rgba(255,206,140,.34),transparent 60%);
+  background-size:487px 487px,487px 487px,487px 487px,487px 487px,487px 487px,487px 487px,487px 487px,487px 487px,
+                  311px 311px,311px 311px,311px 311px,311px 311px,311px 311px,311px 311px,311px 311px,311px 311px,389px 389px, 389px 389px, 389px 389px, 389px 389px, 389px 389px, 389px 389px, 389px 389px, 389px 389px;
+}
+
+.wrap::after{
+  background-image:
+    radial-gradient(1.6px 1.6px at 9% 14%,rgba(152,214,255,.92),transparent 60%),
+    radial-gradient(1.1px 1.1px at 27% 39%,rgba(112,184,255,.72),transparent 60%),
+    radial-gradient(1.9px 1.9px at 44% 8%,rgba(255,206,140,.86),transparent 60%),
+    radial-gradient(1.2px 1.2px at 61% 56%,rgba(112,184,255,.66),transparent 60%),
+    radial-gradient(1.7px 1.7px at 78% 26%,rgba(152,214,255,.88),transparent 60%),
+    radial-gradient(1px 1px at 92% 68%,rgba(86,150,232,.62),transparent 60%),
+    radial-gradient(1.3px 1.3px at 17% 77%,rgba(112,184,255,.58),transparent 60%),
+    radial-gradient(1.5px 1.5px at 35% 22%,rgba(152,214,255,.80),transparent 60%),
+    radial-gradient(1px 1px at 52% 41%,rgba(86,150,232,.54),transparent 60%),
+    radial-gradient(1.8px 1.8px at 69% 9%,rgba(255,206,140,.78),transparent 60%),
+    radial-gradient(1.2px 1.2px at 84% 52%,rgba(112,184,255,.70),transparent 60%),
+    radial-gradient(1.4px 1.4px at 94% 83%,rgba(152,214,255,.64),transparent 60%),
+    radial-gradient(.9px .9px at 21% 44%,rgba(152,214,255,.46),transparent 60%),
+    radial-gradient(.8px .8px at 38% 71%,rgba(112,184,255,.38),transparent 60%),
+    radial-gradient(1px 1px at 55% 19%,rgba(152,214,255,.48),transparent 60%),
+    radial-gradient(.85px .85px at 72% 58%,rgba(86,150,232,.34),transparent 60%),
+    radial-gradient(.95px .95px at 13% 88%,rgba(112,184,255,.40),transparent 60%),
+    radial-gradient(.8px .8px at 88% 33%,rgba(255,206,140,.38),transparent 60%);
+  background-size:271px 271px,271px 271px,271px 271px,271px 271px,271px 271px,271px 271px,
+                  271px 271px,271px 271px,271px 271px,271px 271px,271px 271px,271px 271px,271px 271px, 271px 271px, 271px 271px, 271px 271px, 271px 271px, 271px 271px;
+}
+</style>
+<style id="skyblue-2-gate">
+/* 幕布同步提亮：与 skyblue-1-lift 配对的揭幕动画幕布。
+   不做，揭幕时会从近黑的幕布跳到提亮后的页面；做了则前后同色系。
+   只加到刚好不越线：#182a58 顶部；.gate-hint 4.93:1 -> 4.65:1 仍在 4.5 以上。 */
+.gate{
+  background:radial-gradient(125% 95% at 50% 8%,#182a58 0%,#0c1538 44%,#080c1e 100%);
+}
+</style>
 </head>
 <body>
 
@@ -1858,7 +2065,7 @@ body{
 
     let W = 0, H = 0, dpr = 1, stars = [], raf = 0, running = false;
     const DPR_CAP = 1.5;
-    const COUNT_CAP = 144;
+    const COUNT_CAP = 240;
 
     function build() {
       dpr = Math.min(window.devicePixelRatio || 1, DPR_CAP);
@@ -1866,7 +2073,7 @@ body{
       canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
       canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      const n = Math.min(COUNT_CAP, Math.max(52, Math.round(W * H / 11000)));
+      const n = Math.min(COUNT_CAP, Math.max(64, Math.round(W * H / 7200)));
       stars = [];
       for (let i = 0; i < n; i++) {
         stars.push({
@@ -1924,7 +2131,7 @@ body{
     let W = 0, H = 0, stars = [], shots = [], raf = null, running = false, entered = false;
 
     function build() {
-      const count = Math.round(Math.min(720, Math.max(300, (W * H) / 2600)));
+      const count = Math.round(Math.min(1050, Math.max(430, (W * H) / 1800)));
       stars = [];
       for (let i = 0; i < count; i++) {
         const big = Math.random() > 0.86;

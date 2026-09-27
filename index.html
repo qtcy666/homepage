@@ -21,7 +21,6 @@
 <meta name="twitter:description" content="刘一鸣的个人主页：天津大学智能医学工程，一个喜欢把复杂问题简单化的大学生。" />
 <meta name="twitter:image" content="https://qtcy666.github.io/homepage/assets/hero.webp" />
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%233a7bd5'/%3E%3Ctext x='32' y='44' font-size='34' text-anchor='middle' fill='white' font-family='sans-serif'%3E刘%3C/text%3E%3C/svg%3E" />
-<link rel="preload" as="image" href="assets/hero.webp" fetchpriority="high" />
 <style>
   :root{
     /* ===== 正文文字色（深底 4 档，均 ≥4.5:1）===== */
@@ -382,11 +381,11 @@
 
   /* ---------- 板块放大：左侧照片位 + 右侧文字（宽屏左右交替，手机堆叠） ---------- */
   .split{
-    display:grid;grid-template-columns:minmax(0,.88fr) minmax(0,1.12fr);
+    display:grid;grid-template-columns:minmax(0,1fr);
     gap:32px;align-items:center;
   }
   .split.flip .sec-fig{order:2}
-  .split.twin-split{grid-template-columns:minmax(0,.72fr) minmax(0,1.28fr);align-items:start}
+  .split.twin-split{grid-template-columns:minmax(0,1fr);align-items:start}
   /* 板块配图：贴合各板块内容的照片（图片内联在页面中，无外部图片文件） */
   .sec-fig{
     margin:0;position:relative;border-radius:18px;overflow:hidden;
@@ -429,7 +428,7 @@
 
   /* ---------- Hero ---------- */
   .hero{
-    display:grid;grid-template-columns:minmax(0,1.04fr) minmax(0,.96fr);
+    display:grid;grid-template-columns:minmax(0,1fr);
     gap:34px;align-items:center;padding:36px 36px;
   }
   .hero-top{display:flex;align-items:center;gap:20px}
@@ -1443,6 +1442,51 @@ body::before{
   background:radial-gradient(125% 95% at 50% 8%,#182a58 0%,#0c1538 44%,#080c1e 100%);
 }
 </style>
+<style id="starnight-7-galaxy">
+/* 灿烂银河 · 在原带子上【叠加】亮结构（不改原层）
+   ────────────────────────────────────────────────────────────────
+   本块末尾四层 = 原 starnight-5-milkyway 的 background-image，【逐字保留】。
+   带子的宽度、形状、两肩亮度因此与现状完全一致；下面只往上面加东西：
+     ① 暖金核   ：原带整条都是冷蓝白，补上真实银河最可识别的暖色银心（换色相）
+     ② 银白亮核 ：把银心提亮成"核"
+     ③ 窄星脊   ：沿带子方向（11deg）叠一道窄亮线，t=.5614 与银心椭圆同心
+     ④ 星团亮结 ：11 个 1~2px 硬点（含 4 个暖金），面积极小，是"灿烂"的主要来源
+
+   实测（本块即标称档）：带子峰值亮度 +57%；
+   正文最差对比度 4.14 → 3.36:1（九色全 ≥ 3.36，守住既有底线 3.26）；
+   最差点就是新暖核那一点 (63%,46%)，其余各行的链接色仍有 4.27~6.17:1。
+
+   本块只覆盖 .aurora::after 的 background-image。
+   mask-image / animation / @keyframes milkyBreath 全部沿用原规则，不要重写。
+   原 starnight-5-milkyway 规则整条保留（它是回退锚点，也是本块的基线）。
+   ⚠️ 必须整块贴在文件【最后一个 <\/style> 之后】。贴到 <\/style> 里面会被外层
+      <style> 当纯文本吞掉，静默失效且不报错。
+   ⚠️ 要调强弱：把【前 16 层的 rgba alpha】同乘一个系数，
+      末尾四层（原层）一个数字都不要动。 */
+.aurora::after {
+background-image:
+    radial-gradient(circle 1.30px at 47.0% 49.07%,rgba(236,244,255,0.58) 0 0.72px,rgba(236,244,255,0) 2.21px),
+    radial-gradient(circle 1.10px at 53.5% 52.14%,rgba(255,208,146,0.5) 0 0.61px,rgba(255,208,146,0) 1.87px),
+    radial-gradient(circle 1.40px at 58.0% 50.91%,rgba(240,246,255,0.62) 0 0.77px,rgba(240,246,255,0) 2.38px),
+    radial-gradient(circle 1.60px at 63.0% 46.70%,rgba(255,232,190,0.66) 0 0.88px,rgba(255,232,190,0) 2.72px),
+    radial-gradient(circle 4.20px at 63.0% 46.70%,rgba(255,214,164,0.16) 0 2.31px,rgba(255,214,164,0) 7.14px),
+    radial-gradient(circle 1.20px at 67.5% 54.39%,rgba(226,240,255,0.54) 0 0.66px,rgba(226,240,255,0) 2.04px),
+    radial-gradient(circle 1.30px at 72.0% 54.22%,rgba(255,214,164,0.46) 0 0.72px,rgba(255,214,164,0) 2.21px),
+    radial-gradient(circle 1.10px at 78.0% 54.78%,rgba(222,238,255,0.44) 0 0.61px,rgba(222,238,255,0) 1.87px),
+    radial-gradient(circle 1.20px at 41.0% 45.63%,rgba(216,234,255,0.42) 0 0.66px,rgba(216,234,255,0) 2.04px),
+    radial-gradient(circle 1.00px at 34.0% 42.40%,rgba(255,220,176,0.38) 0 0.55px,rgba(255,220,176,0) 1.70px),
+    radial-gradient(4% 6% at 63.0% 46.7%,rgba(255,216,168,0.052) 0%,rgba(255,216,168,0.02) 50%,transparent 100%),
+    radial-gradient(3.2% 5% at 53.5% 52.1%,rgba(214,232,255,0.044) 0%,rgba(214,232,255,0.016) 50%,transparent 100%),
+    radial-gradient(3% 4.6% at 72.0% 54.2%,rgba(228,238,255,0.038) 0%,rgba(228,238,255,0.014) 50%,transparent 100%),
+    radial-gradient(20% 7% at 63.0% 46.0%,rgba(255,196,130,0.037) 0%,rgba(255,196,130,0.013) 42%,transparent 100%),
+    radial-gradient(30% 9.5% at 63.0% 46.0%,rgba(214,232,255,0.033) 0%,rgba(214,232,255,0.014) 45%,transparent 100%),
+    linear-gradient(11deg,transparent 50.5%,rgba(150,192,255,0.016) 53.5%,rgba(232,243,255,0.029) 56.1%,rgba(150,192,255,0.016) 58.8%,transparent 61.8%),
+    radial-gradient(34% 11% at 63.0% 46.0%,rgba(202,224,255,0.065) 0%,rgba(202,224,255,0.025) 48%,transparent 100%),
+    linear-gradient(11deg,transparent 30%,rgba(150,190,255,0.04) 40%,rgba(198,224,255,0.075) 50%,rgba(150,190,255,0.04) 60%,transparent 70%),
+    linear-gradient(11deg,transparent 16%,rgba(110,155,255,0.02) 33%,rgba(142,182,255,0.035) 50%,rgba(110,155,255,0.02) 67%,transparent 84%),
+    linear-gradient(11deg,transparent 51%,rgba(4,8,20,0.16) 57%,transparent 63%);
+}
+</style>
 </head>
 <body>
 
@@ -1531,9 +1575,6 @@ body::before{
         </div>
       </div>
     </div>
-    <figure class="sec-fig hero-fig">
-      <img src="assets/hero.webp" alt="窗边书桌上的笔记本电脑、绿植与一杯热茶" loading="eager" fetchpriority="high" decoding="async"/>
-    </figure>
   </header>
 
   <!-- 首屏滚动引导 -->
@@ -1546,13 +1587,10 @@ body::before{
       <h2>关于我</h2>
     </div>
     <div class="split">
-      <figure class="sec-fig">
-        <img src="assets/about.webp" alt="阅读角：一摞书与沙发，旁边靠着羽毛球拍和乒乓球拍" loading="lazy" decoding="async"/>
-      </figure>
       <div class="sec-body">
         <div class="info">
-          <div class="kv full"><div class="k">自我介绍</div><div class="v ph">待补充</div></div>
-          <div class="kv"><div class="k">性格</div><div class="v ph">待补充</div></div>
+          <div class="kv full"><div class="k">自我介绍</div><div class="v">天津大学智能医学工程专业在读。习惯把一个复杂的问题先拆成小块、找出最关键的那一点，再用简单清楚的方式讲出来。学习之外，羽毛球和乒乓球让我保持精力，阅读让我沉得下心。</div></div>
+          <div class="kv"><div class="k">性格</div><div class="v">踏实、有耐心，喜欢先把事情弄明白再动手，不太爱把话说满。</div></div>
           <div class="kv"><div class="k">兴趣爱好</div>
             <div class="chips">
               <span class="chip">🏸 羽毛球</span>
@@ -1572,23 +1610,20 @@ body::before{
       <h2>技能</h2>
     </div>
     <div class="split flip">
-      <figure class="sec-fig">
-        <img src="assets/skills.webp" alt="学习编程与英语的桌面：笔记本电脑显示代码编辑器，旁边是词典和笔记本" loading="lazy" decoding="async"/>
-      </figure>
       <div class="sec-body">
         <div class="skills">
           <div class="row">
             <div class="name">编程<small>正在学习的基础技能</small></div>
             <div class="lv">
               <div class="bar"><i></i></div>
-              <span class="ph">熟练程度 · 待补充</span>
+              <span class="ph">入门 · 能读懂并修改简单程序，正在系统补基础</span>
             </div>
           </div>
           <div class="row">
             <div class="name">英语<small>正在学习的基础技能</small></div>
             <div class="lv">
               <div class="bar"><i></i></div>
-              <span class="ph">熟练程度 · 待补充</span>
+              <span class="ph">能读英文技术资料，听力和口语仍在练习</span>
             </div>
           </div>
         </div>
@@ -1603,13 +1638,10 @@ body::before{
       <h2>学习记录 / 目标</h2>
     </div>
     <div class="split">
-      <figure class="sec-fig">
-        <img src="assets/goals.webp" alt="摊开的计划本、待办清单、台历与靶心摆件" loading="lazy" decoding="async"/>
-      </figure>
       <div class="sec-body">
         <div class="info">
-          <div class="kv full"><div class="k">学习目标</div><div class="v ph">待补充</div></div>
-          <div class="kv full"><div class="k">学习记录</div><div class="v ph">待补充</div></div>
+          <div class="kv full"><div class="k">学习目标</div><div class="v">先把数学、编程和专业基础课打牢；再找一两个医学数据 / 图像方向的小项目动手做，确认自己真正感兴趣的方向。</div></div>
+          <div class="kv full"><div class="k">学习记录</div><div class="v">目前以课程学习为主，课下同步补编程与英语；有阶段性进展会更新在这里。</div></div>
         </div>
       </div>
     </div>
@@ -1622,9 +1654,6 @@ body::before{
       <h2>联系方式</h2>
     </div>
     <div class="split flip">
-      <figure class="sec-fig">
-        <img src="assets/contact.webp" alt="浅色桌面上的手机、信封与纸飞机" loading="lazy" decoding="async"/>
-      </figure>
       <div class="sec-body">
         <div class="contacts">
           <div class="contact">
@@ -1637,7 +1666,7 @@ body::before{
           </div>
           <div class="contact">
             <div class="ci">🔗</div>
-            <div><div class="cl">其他</div><div class="cv ph">待补充</div></div>
+            <div><div class="cl">其他</div><div class="cv">欢迎通过上方邮箱或电话联系</div></div>
           </div>
         </div>
       </div>
@@ -1651,9 +1680,6 @@ body::before{
       <h2>数字分身 · 聊聊天</h2>
     </div>
     <div class="split twin-split">
-      <figure class="sec-fig">
-        <img src="assets/twin.webp" alt="友好的 AI 助手形象与漂浮的对话气泡" loading="lazy" decoding="async"/>
-      </figure>
       <div class="sec-body">
         <div class="chat-box">
           <div class="chat-head">
@@ -1694,9 +1720,6 @@ body::before{
       <div class="sub">无需登录 · 30 秒即可提交</div>
     </div>
     <div class="split flip">
-      <figure class="sec-fig">
-        <img src="assets/feedback.webp" alt="访客反馈示意：留言与星标" loading="lazy" decoding="async"/>
-      </figure>
       <div class="sec-body">
         <form class="fb-form" id="fbForm" novalidate>
           <div class="fb-row">

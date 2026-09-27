@@ -1045,6 +1045,75 @@
       -webkit-backdrop-filter:url(#glassRefract) blur(14px) saturate(1.35);
     }
   }
+  /* ================= 去方框 · 第 1 层：区块大卡片 =================
+      目标：删掉“卡片 = 一块玻璃板”的隐喻，让内容直接落在星空上。
+      做法：只撤“表面”（底色 / 描边 / 投影 / 毛玻璃），不动盒模型尺寸。
+      左右内边距归零：没有框之后，内容必须和顶部导航左对齐，否则看着像错位。
+       （.wrap 与 .topbar .inner 的宽度和内边距原本就是同一套值，
+          所以把 .card 的左右内边距归零，内容会自动落回同一条栏线。）
+     ⚠️ 必须放在 <\/style> 之前：靠“同特异性 + 更靠后”压过文件中部
+        .card(约 336 行) / .hero(约 431 行) 的 padding，
+        以及两处媒体查询里 .card{padding:26px 24px} / {padding:22px 18px} 的水平内边距。 */
+
+  .card{
+    background:none;
+    border:0;
+    box-shadow:none;
+    backdrop-filter:none;-webkit-backdrop-filter:none;
+    border-radius:0;
+    /* ⚠️ 只写左右，不写 padding 简写：纵向内边距必须留给各断点各自生效 */
+    padding-left:0;padding-right:0;
+  }
+
+  /* 玻璃折射高光：玻璃没了，这层淡光会变成飘在正文上的光斑 → 关闭 */
+  .card::after{display:none}
+
+  /* Hero 顶部那条 4px 光带：两端渐隐，避免它读成“卡片的上边框” */
+  .hero::after{
+    -webkit-mask-image:linear-gradient(90deg,transparent 0%,#000 16%,#000 84%,transparent 100%);
+            mask-image:linear-gradient(90deg,transparent 0%,#000 16%,#000 84%,transparent 100%);
+  }
+  /* ================= 去方框 · 第 2 层：内容块 + 照片 =================
+      原则：撤掉“包围感”，只留“分隔感”——
+      内容块用【一条极淡上边线】代替原先的【四周描边 + 底色】。 */
+
+  /* 个人信息格 / 联系方式格 / 技能行 / 作者面板条目：
+      去底色、去四边框，只留一条 12% 透明度的上边线（分隔线，而不是包围框） */
+  .info .kv,
+  .contact,
+  .skills .row,
+  .fv-item{
+    background:none;
+    border:0;
+    border-top:1px solid rgba(157,196,255,.12);
+    border-radius:0;
+    box-shadow:none;
+  }
+  .info .kv,
+  .contact{padding:12px 0 2px}
+  .skills .row{padding:16px 0}
+  .fv-item{padding:12px 0}
+
+  /* 内联小标签：保留“极淡描边”当形状线索，只撤掉填色 */
+  .chip{background:none;box-shadow:none;border-color:rgba(157,196,255,.12)}
+  .tagline{background:none;box-shadow:inset 0 0 0 1px rgba(140,185,255,.22)}
+  .fv-item .tag{border-color:rgba(120,170,255,.22)}
+
+  /* 照片：去描边与投影，四边用渐变吃进背景，不再像“贴上来的灯箱” */
+  .sec-fig{border:0;box-shadow:none}
+  .sec-fig::after{
+    box-shadow:none;
+    background:
+      linear-gradient(180deg,rgba(6,10,26,.66) 0%,rgba(6,10,26,0) 20%,
+                             rgba(6,10,26,0) 70%,rgba(6,10,26,.72) 100%),
+      linear-gradient(90deg, rgba(6,10,26,.60) 0%,rgba(6,10,26,0) 17%,
+                             rgba(6,10,26,0) 83%,rgba(6,10,26,.60) 100%);
+  }
+  /* ================= 去方框 · 第 3 层（推荐）：文字微阴影 =================
+      让文字在星点上仍然清晰。 1px 下偏移 + 45% 深色，正常看几乎察觉不到，
+     只在文字正好压到亮星点/极光时起作用。 text-shadow 会被子元素继承。 */
+
+  .card{text-shadow:0 1px 2px rgba(2,4,10,.45)}
 </style>
 </head>
 <body>

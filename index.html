@@ -1375,7 +1375,7 @@ body{
 </style>
 <style id="starnight-6-stars">
 /* 繁星再加厚一档「远星」：比原有星点更小更暗，只增加密度感，不抬高背景亮度。
-   body::before 16 档 → 24 档，新增的 8 档用第三个周期 389px
+   body::before 16 档 → 24 档，新增的 8 档用第三个周期 300px（增强：389→300，更密）
    （与 487 / 311 互不整除，进一步错开重复感）。
    .wrap::after 12 档 → 18 档：这一层必须【全部】保持 271px 周期，
    否则 starFlow「上移 271px」的无缝循环会在接缝处露馅。
@@ -1407,7 +1407,7 @@ body::before{
     radial-gradient(1px 1px at 54% 39%,rgba(86,150,232,.28),transparent 60%),
     radial-gradient(.9px .9px at 75% 72%,rgba(255,206,140,.34),transparent 60%);
   background-size:487px 487px,487px 487px,487px 487px,487px 487px,487px 487px,487px 487px,487px 487px,487px 487px,
-                  311px 311px,311px 311px,311px 311px,311px 311px,311px 311px,311px 311px,311px 311px,311px 311px,389px 389px, 389px 389px, 389px 389px, 389px 389px, 389px 389px, 389px 389px, 389px 389px, 389px 389px;
+                  311px 311px,311px 311px,311px 311px,311px 311px,311px 311px,311px 311px,311px 311px,311px 311px,300px 300px, 300px 300px, 300px 300px, 300px 300px, 300px 300px, 300px 300px, 300px 300px, 300px 300px;
 }
 
 .wrap::after{
@@ -1455,6 +1455,11 @@ body::before{
    实测（本块即标称档）：带子峰值亮度 +57%；
    正文最差对比度 4.14 → 3.36:1（九色全 ≥ 3.36，守住既有底线 3.26）；
    最差点就是新暖核那一点 (63%,46%)，其余各行的链接色仍有 4.27~6.17:1。
+   二阶增强（2026-09-28）：为让"银河元素"更醒目，在守住文字对比度红线的
+   前提下：① 带面三亮层（银心/内芯/外晕）alpha 提至 ~1.5–1.7x，带面峰值
+   明显可见；② 三团星云、暖金核、冷云、星脊全提亮 1.5–2x，银河带更有色彩
+   层次；③ 11 个星团硬点再抬一点，暖金点更亮。
+   暗尘带（最深那层）保持 0.16 不动，作为文字对比度的保护层。
 
    本块只覆盖 .aurora::after 的 background-image。
    mask-image / animation / @keyframes milkyBreath 全部沿用原规则，不要重写。
@@ -1465,25 +1470,25 @@ body::before{
       末尾四层（原层）一个数字都不要动。 */
 .aurora::after {
 background-image:
-    radial-gradient(circle 1.30px at 47.0% 49.07%,rgba(236,244,255,0.58) 0 0.72px,rgba(236,244,255,0) 2.21px),
-    radial-gradient(circle 1.10px at 53.5% 52.14%,rgba(255,208,146,0.5) 0 0.61px,rgba(255,208,146,0) 1.87px),
-    radial-gradient(circle 1.40px at 58.0% 50.91%,rgba(240,246,255,0.62) 0 0.77px,rgba(240,246,255,0) 2.38px),
-    radial-gradient(circle 1.60px at 63.0% 46.70%,rgba(255,232,190,0.66) 0 0.88px,rgba(255,232,190,0) 2.72px),
-    radial-gradient(circle 4.20px at 63.0% 46.70%,rgba(255,214,164,0.16) 0 2.31px,rgba(255,214,164,0) 7.14px),
-    radial-gradient(circle 1.20px at 67.5% 54.39%,rgba(226,240,255,0.54) 0 0.66px,rgba(226,240,255,0) 2.04px),
-    radial-gradient(circle 1.30px at 72.0% 54.22%,rgba(255,214,164,0.46) 0 0.72px,rgba(255,214,164,0) 2.21px),
-    radial-gradient(circle 1.10px at 78.0% 54.78%,rgba(222,238,255,0.44) 0 0.61px,rgba(222,238,255,0) 1.87px),
-    radial-gradient(circle 1.20px at 41.0% 45.63%,rgba(216,234,255,0.42) 0 0.66px,rgba(216,234,255,0) 2.04px),
-    radial-gradient(circle 1.00px at 34.0% 42.40%,rgba(255,220,176,0.38) 0 0.55px,rgba(255,220,176,0) 1.70px),
-    radial-gradient(4% 6% at 63.0% 46.7%,rgba(255,216,168,0.052) 0%,rgba(255,216,168,0.02) 50%,transparent 100%),
-    radial-gradient(3.2% 5% at 53.5% 52.1%,rgba(214,232,255,0.044) 0%,rgba(214,232,255,0.016) 50%,transparent 100%),
-    radial-gradient(3% 4.6% at 72.0% 54.2%,rgba(228,238,255,0.038) 0%,rgba(228,238,255,0.014) 50%,transparent 100%),
-    radial-gradient(20% 7% at 63.0% 46.0%,rgba(255,196,130,0.037) 0%,rgba(255,196,130,0.013) 42%,transparent 100%),
-    radial-gradient(30% 9.5% at 63.0% 46.0%,rgba(214,232,255,0.033) 0%,rgba(214,232,255,0.014) 45%,transparent 100%),
-    linear-gradient(11deg,transparent 50.5%,rgba(150,192,255,0.016) 53.5%,rgba(232,243,255,0.029) 56.1%,rgba(150,192,255,0.016) 58.8%,transparent 61.8%),
-    radial-gradient(34% 11% at 63.0% 46.0%,rgba(202,224,255,0.065) 0%,rgba(202,224,255,0.025) 48%,transparent 100%),
-    linear-gradient(11deg,transparent 30%,rgba(150,190,255,0.04) 40%,rgba(198,224,255,0.075) 50%,rgba(150,190,255,0.04) 60%,transparent 70%),
-    linear-gradient(11deg,transparent 16%,rgba(110,155,255,0.02) 33%,rgba(142,182,255,0.035) 50%,rgba(110,155,255,0.02) 67%,transparent 84%),
+    radial-gradient(circle 1.30px at 47.0% 49.07%,rgba(236,244,255,0.95) 0 0.72px,rgba(236,244,255,0.0) 2.21px),
+    radial-gradient(circle 1.10px at 53.5% 52.14%,rgba(255,208,146,0.85) 0 0.61px,rgba(255,208,146,0.0) 1.87px),
+    radial-gradient(circle 1.40px at 58.0% 50.91%,rgba(240,246,255,0.96) 0 0.77px,rgba(240,246,255,0.0) 2.38px),
+    radial-gradient(circle 1.60px at 63.0% 46.70%,rgba(255,232,190,1.00) 0 0.88px,rgba(255,232,190,0.0) 2.72px),
+    radial-gradient(circle 4.20px at 63.0% 46.70%,rgba(255,214,164,0.38) 0 2.31px,rgba(255,214,164,0.0) 7.14px),
+    radial-gradient(circle 1.20px at 67.5% 54.39%,rgba(226,240,255,0.90) 0 0.66px,rgba(226,240,255,0.0) 2.04px),
+    radial-gradient(circle 1.30px at 72.0% 54.22%,rgba(255,214,164,0.80) 0 0.72px,rgba(255,214,164,0.0) 2.21px),
+    radial-gradient(circle 1.10px at 78.0% 54.78%,rgba(222,238,255,0.78) 0 0.61px,rgba(222,238,255,0.0) 1.87px),
+    radial-gradient(circle 1.20px at 41.0% 45.63%,rgba(216,234,255,0.76) 0 0.66px,rgba(216,234,255,0.0) 2.04px),
+    radial-gradient(circle 1.00px at 34.0% 42.40%,rgba(255,220,176,0.70) 0 0.55px,rgba(255,220,176,0.0) 1.70px),
+    radial-gradient(4% 6% at 63.0% 46.7%,rgba(255,216,168,0.13) 0%,rgba(255,216,168,0.05) 50%,transparent 100%),
+    radial-gradient(3.2% 5% at 53.5% 52.1%,rgba(214,232,255,0.10) 0%,rgba(214,232,255,0.038) 50%,transparent 100%),
+    radial-gradient(3% 4.6% at 72.0% 54.2%,rgba(228,238,255,0.085) 0%,rgba(228,238,255,0.032) 50%,transparent 100%),
+    radial-gradient(20% 7% at 63.0% 46.0%,rgba(255,196,130,0.088) 0%,rgba(255,196,130,0.03) 42%,transparent 100%),
+    radial-gradient(30% 9.5% at 63.0% 46.0%,rgba(214,232,255,0.075) 0%,rgba(214,232,255,0.029) 45%,transparent 100%),
+    linear-gradient(11deg,transparent 50.5%,rgba(150,192,255,0.038) 53.5%,rgba(232,243,255,0.07) 56.1%,rgba(150,192,255,0.038) 58.8%,transparent 61.8%),
+    radial-gradient(34% 11% at 63.0% 46.0%,rgba(202,224,255,0.095) 0%,rgba(202,224,255,0.038) 48%,transparent 100%),
+    linear-gradient(11deg,transparent 30%,rgba(150,190,255,0.055) 40%,rgba(198,224,255,0.10) 50%,rgba(150,190,255,0.055) 60%,transparent 70%),
+    linear-gradient(11deg,transparent 16%,rgba(110,155,255,0.028) 33%,rgba(142,182,255,0.05) 50%,rgba(110,155,255,0.028) 67%,transparent 84%),
     linear-gradient(11deg,transparent 51%,rgba(4,8,20,0.16) 57%,transparent 63%);
 }
 </style>

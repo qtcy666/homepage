@@ -515,9 +515,8 @@
   .hero-hello{margin-top:22px}
   .hero-hello .hi{font-weight:700;color:var(--text-link);font-size:15.5px}
   .hero-hello .hi-sub{font-size:13.5px;color:var(--text-soft);margin-top:6px}
-  .hero-fig{min-height:340px}
-  /* 星尘层：hero 配图上的轻量氛围星点（仅增强，reduced 下不创建） */
-  .hero-fig canvas.hero-stars{position:absolute;inset:0;width:100%;height:100%;z-index:2;pointer-events:none}
+  /* 星尘层（任务34）：hero 视差星野 —— 复活原 .hero-fig canvas 为 hero 主体；screen 叠加，z 夹在背景与内容之间 */
+  .hero canvas.hero-stars{position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none;mix-blend-mode:screen}
 
   /* 行动入口按钮 */
   .hero-cta{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
@@ -537,7 +536,7 @@
   .hero-cta::before{content:'';position:absolute;inset:-80px;z-index:-1;pointer-events:auto}
   .hero-cta .btn{
     position:relative;overflow:hidden;will-change:transform;
-    transform:translate(var(--mx,0px),var(--my,0px));
+    transform:translate(var(--mx,0px),var(--my,0px)) translateZ(42px); /* 任务34：内容浮起 */
     transition:transform .2s cubic-bezier(.2,.8,.2,1),filter .2s cubic-bezier(.2,.8,.2,1),
                box-shadow .2s cubic-bezier(.2,.8,.2,1),background-color .2s;
   }
@@ -553,7 +552,7 @@
   /* hover（仅可悬停设备）：磁吸基础上浮 2px + 底色变亮 + 阴影增强 */
   @media (hover:hover){
     .hero-cta .btn:hover{
-      transform:translate(var(--mx,0px),calc(var(--my,0px) - 2px));
+      transform:translate(var(--mx,0px),calc(var(--my,0px) - 2px)) translateZ(42px);
       filter:brightness(1.07);
       box-shadow:0 14px 26px -12px rgba(37,99,201,.55);
     }
@@ -564,7 +563,7 @@
   }
   /* 按下：scale(.97) + 涟漪；放最后保证覆盖 hover 上浮 */
   .hero-cta .btn:active{
-    transform:translate(var(--mx,0px),var(--my,0px)) scale(.97) !important;
+    transform:translate(var(--mx,0px),var(--my,0px)) scale(.97) translateZ(42px) !important;
   }
   .hero-cta .btn:active::after{animation:heroRipple .5s ease-out}
   @keyframes heroRipple{
@@ -962,7 +961,6 @@
     .split.flip .sec-fig{order:0}
     .sec-fig{min-height:220px}
     .hero{grid-template-columns:1fr;gap:26px;padding:30px 26px}
-    .hero-fig{min-height:240px}
     .card{padding:26px 24px}
   }
   @media (max-width:620px){
@@ -1470,26 +1468,66 @@ body::before{
       末尾四层（原层）一个数字都不要动。 */
 .aurora::after {
 background-image:
-    radial-gradient(circle 1.30px at 47.0% 49.07%,rgba(236,244,255,0.95) 0 0.72px,rgba(236,244,255,0.0) 2.21px),
-    radial-gradient(circle 1.10px at 53.5% 52.14%,rgba(255,208,146,0.85) 0 0.61px,rgba(255,208,146,0.0) 1.87px),
-    radial-gradient(circle 1.40px at 58.0% 50.91%,rgba(240,246,255,0.96) 0 0.77px,rgba(240,246,255,0.0) 2.38px),
+    radial-gradient(circle 1.30px at 47.0% 49.07%,rgba(236,244,255,0.99) 0 0.72px,rgba(236,244,255,0.0) 2.21px),
+    radial-gradient(circle 1.10px at 53.5% 52.14%,rgba(255,208,146,0.98) 0 0.61px,rgba(255,208,146,0.0) 1.87px),
+    radial-gradient(circle 1.40px at 58.0% 50.91%,rgba(240,246,255,0.99) 0 0.77px,rgba(240,246,255,0.0) 2.38px),
     radial-gradient(circle 1.60px at 63.0% 46.70%,rgba(255,232,190,1.00) 0 0.88px,rgba(255,232,190,0.0) 2.72px),
-    radial-gradient(circle 4.20px at 63.0% 46.70%,rgba(255,214,164,0.38) 0 2.31px,rgba(255,214,164,0.0) 7.14px),
-    radial-gradient(circle 1.20px at 67.5% 54.39%,rgba(226,240,255,0.90) 0 0.66px,rgba(226,240,255,0.0) 2.04px),
-    radial-gradient(circle 1.30px at 72.0% 54.22%,rgba(255,214,164,0.80) 0 0.72px,rgba(255,214,164,0.0) 2.21px),
-    radial-gradient(circle 1.10px at 78.0% 54.78%,rgba(222,238,255,0.78) 0 0.61px,rgba(222,238,255,0.0) 1.87px),
-    radial-gradient(circle 1.20px at 41.0% 45.63%,rgba(216,234,255,0.76) 0 0.66px,rgba(216,234,255,0.0) 2.04px),
-    radial-gradient(circle 1.00px at 34.0% 42.40%,rgba(255,220,176,0.70) 0 0.55px,rgba(255,220,176,0.0) 1.70px),
-    radial-gradient(4% 6% at 63.0% 46.7%,rgba(255,216,168,0.13) 0%,rgba(255,216,168,0.05) 50%,transparent 100%),
-    radial-gradient(3.2% 5% at 53.5% 52.1%,rgba(214,232,255,0.10) 0%,rgba(214,232,255,0.038) 50%,transparent 100%),
-    radial-gradient(3% 4.6% at 72.0% 54.2%,rgba(228,238,255,0.085) 0%,rgba(228,238,255,0.032) 50%,transparent 100%),
-    radial-gradient(20% 7% at 63.0% 46.0%,rgba(255,196,130,0.088) 0%,rgba(255,196,130,0.03) 42%,transparent 100%),
-    radial-gradient(30% 9.5% at 63.0% 46.0%,rgba(214,232,255,0.075) 0%,rgba(214,232,255,0.029) 45%,transparent 100%),
-    linear-gradient(11deg,transparent 50.5%,rgba(150,192,255,0.038) 53.5%,rgba(232,243,255,0.07) 56.1%,rgba(150,192,255,0.038) 58.8%,transparent 61.8%),
-    radial-gradient(34% 11% at 63.0% 46.0%,rgba(202,224,255,0.095) 0%,rgba(202,224,255,0.038) 48%,transparent 100%),
-    linear-gradient(11deg,transparent 30%,rgba(150,190,255,0.055) 40%,rgba(198,224,255,0.10) 50%,rgba(150,190,255,0.055) 60%,transparent 70%),
-    linear-gradient(11deg,transparent 16%,rgba(110,155,255,0.028) 33%,rgba(142,182,255,0.05) 50%,rgba(110,155,255,0.028) 67%,transparent 84%),
+    radial-gradient(circle 4.20px at 63.0% 46.70%,rgba(255,214,164,0.51) 0 2.31px,rgba(255,214,164,0.0) 7.14px),
+    radial-gradient(circle 1.20px at 67.5% 54.39%,rgba(226,240,255,0.99) 0 0.66px,rgba(226,240,255,0.0) 2.04px),
+    radial-gradient(circle 1.30px at 72.0% 54.22%,rgba(255,214,164,0.92) 0 0.72px,rgba(255,214,164,0.0) 2.21px),
+    radial-gradient(circle 1.10px at 78.0% 54.78%,rgba(222,238,255,0.90) 0 0.61px,rgba(222,238,255,0.0) 1.87px),
+    radial-gradient(circle 1.20px at 41.0% 45.63%,rgba(216,234,255,0.87) 0 0.66px,rgba(216,234,255,0.0) 2.04px),
+    radial-gradient(circle 1.00px at 34.0% 42.40%,rgba(255,220,176,0.81) 0 0.55px,rgba(255,220,176,0.0) 1.70px),
+    radial-gradient(4% 6% at 63.0% 46.7%,rgba(255,216,168,0.17) 0%,rgba(255,216,168,0.067) 50%,transparent 100%),
+    radial-gradient(3.2% 5% at 53.5% 52.1%,rgba(214,232,255,0.13) 0%,rgba(214,232,255,0.05) 50%,transparent 100%),
+    radial-gradient(3% 4.6% at 72.0% 54.2%,rgba(228,238,255,0.11) 0%,rgba(228,238,255,0.043) 50%,transparent 100%),
+    radial-gradient(20% 7% at 63.0% 46.0%,rgba(255,196,130,0.12) 0%,rgba(255,196,130,0.04) 42%,transparent 100%),
+    radial-gradient(30% 9.5% at 63.0% 46.0%,rgba(214,232,255,0.10) 0%,rgba(214,232,255,0.039) 45%,transparent 100%),
+    linear-gradient(11deg,transparent 50.5%,rgba(150,192,255,0.05) 53.5%,rgba(232,243,255,0.093) 56.1%,rgba(150,192,255,0.05) 58.8%,transparent 61.8%),
+    radial-gradient(34% 11% at 63.0% 46.0%,rgba(202,224,255,0.126) 0%,rgba(202,224,255,0.05) 48%,transparent 100%),
+    linear-gradient(11deg,transparent 30%,rgba(150,190,255,0.073) 40%,rgba(198,224,255,0.133) 50%,rgba(150,190,255,0.073) 60%,transparent 70%),
+    linear-gradient(11deg,transparent 16%,rgba(110,155,255,0.037) 33%,rgba(142,182,255,0.067) 50%,rgba(110,155,255,0.037) 67%,transparent 84%),
     linear-gradient(11deg,transparent 51%,rgba(4,8,20,0.16) 57%,transparent 63%);
+}
+</style>
+<style id="starnight-8-heroft">
+/* 包外声明（2026-09-28 银河再明显一档）：带面三亮层等再提 1.33× 后，
+   正文首屏文字直接压在银河带上，只靠 text-shadow 已不足以守住 ≥4.5 红线。
+   给 hero 内容区加一处【无框】radial 淡底：中心渐隐到透明、无边界无直角，
+   只降低 hero 方块内的后台亮度（银河从 hero 边缘继续透出），
+   不破坏既有"去方框"设计；.hero 与 .card 同为单类选择器、声明更靠后，
+   可压过 .card{background:none}（去方框层）。 */
+ .hero{background:radial-gradient(132% 96% at 50% 16%,rgba(2,5,14,.36) 0%,rgba(2,5,14,.18) 62%,rgba(2,5,14,0) 100%)}
+/* CTA 副按钮（ghost）文字 #7fb2ff：英雄底影压在银河中下部时实测 3.47:1（<4.5），
+   就地后台众数 L≈0.09。只把按钮文字提亮（不动描边/底色观感），静止与 hover 两态
+   分别提至 #bcdcff / #bfe0ff（就地 ≥5.2:1），hover 时按钮底色变亮同步抵销。 */
+.hero-cta .btn.ghost{color:#bcdcff}
+.hero-cta .btn.ghost:hover{color:#bfe0ff}
+</style>
+<style id="herofx-9-card3d">
+/* 包外声明（任务34：Hero 卡 3D 纵深 + 星尘视差 + 渐变光边）
+   ① 3D 倾斜仅“可悬停 + 非 reduced”时经 :hover 激活：常态 transform:none，不与 .reveal 入场位移冲突；
+   ② 内容 translateZ(42px)：常态无 3D 上下文时零视觉，hover 进入透视即浮起 → 移动端渲染完全不变；
+   ③ 渐变描边挂 .hero::before（.card::after 已被去方框层禁用）、仅 hover 渐现，静止保持透明 → 不破坏“去方框”；
+   ④ 不新增全局 pointermove：--mxr/--myr 由既有 2075 处唯一回调写入，星尘光标经 window.__heroFx.cursor 同回调喂入。 */
+.hero-main{position:relative;z-index:2;pointer-events:none;transform-style:preserve-3d}
+.hero-hello,.hero-cta{transform-style:preserve-3d}
+.hero .hero-top,.hero .hi,.hero .hi-sub{transform:translateZ(42px)}
+.hero-cta .btn{pointer-events:auto}
+.hero.card::before{
+  content:'';position:absolute;inset:0;border-radius:16px;padding:1px;z-index:3;pointer-events:none;opacity:0;
+  background:linear-gradient(150deg,rgba(205,228,255,.55) 0%,rgba(150,200,255,.20) 30%,rgba(150,200,255,.14) 52%,rgba(150,200,255,.30) 78%,rgba(150,200,255,0) 100%);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor;
+          mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+          mask-composite:exclude;
+  transition:opacity .35s ease;
+}
+@media (hover:hover) and (prefers-reduced-motion:no-preference){
+  .hero.card{overflow:visible;will-change:transform;
+    transition:transform .22s cubic-bezier(.22,1,.36,1),opacity var(--dur-slow) var(--ease-out)}
+  .hero.card:hover{transform:perspective(1100px) rotateX(var(--myr,0deg)) rotateY(var(--mxr,0deg))}
+  .hero.card:hover::before{opacity:1}
 }
 </style>
 </head>
@@ -1915,7 +1953,7 @@ background-image:
 
   // 渐进式显现：区块整体淡入 + 区块内元素按顺序依次浮现
   const RV_SEL = [
-    ".hero-top", ".hero-hello .hi", ".hero-hello .hi-sub", ".hero-cta .btn", ".hero-fig",
+    ".hero-top", ".hero-hello .hi", ".hero-hello .hi-sub", ".hero-cta .btn",
     ".card-head",
     ".split > .sec-fig", ".split > .sec-body",
     ".sec-body .kv", ".sec-body .chip", ".sec-body .row", ".sec-body .contact",
@@ -2066,6 +2104,9 @@ background-image:
     if (!cards.length) return;
     let raf = 0;
     function move(e) {
+      /* 任务34：同一回调兼任两职——①把光标喂给 hero 星尘视差（无新监听）；②卡面高光 + hero 3D 倾角 */
+      const fx = window.__heroFx;
+      if (fx && fx.cursor) fx.cursor(e.clientX, e.clientY);
       const el = e.target.closest ? e.target.closest('.card') : null;
       if (!el) return;
       const r = el.getBoundingClientRect();
@@ -2074,56 +2115,90 @@ background-image:
         raf = 0;
         el.style.setProperty('--mx', ((e.clientX - r.left) / r.width * 100).toFixed(1) + '%');
         el.style.setProperty('--my', ((e.clientY - r.top) / r.height * 100).toFixed(1) + '%');
+        if (el.classList.contains('hero')) {
+          const nx = (e.clientX - r.left) / r.width - .5;
+          const ny = (e.clientY - r.top) / r.height - .5;
+          el.style.setProperty('--mxr', (nx * 16).toFixed(2) + 'deg');   /* rotateY ±8° */
+          el.style.setProperty('--myr', (-ny * 16).toFixed(2) + 'deg');  /* rotateX ±8° */
+        }
       });
     }
     document.addEventListener('pointermove', move, { passive: true });
   })();
 
-  /* 星尘延伸到 hero：轻量星点层（性能护栏：离开视口即停 rAF，回来再续） */
+  /* ---------- 任务34：Hero 鼠标视差（复活原 .hero-fig 星尘 canvas 为 hero 主体） ----------
+     深度分层星点 + 反向视差位移 + 光标 screen 柔光。光标坐标复用唯一的全局 pointermove
+     （经 window.__heroFx.cursor 收敛，不新增第二个监听）；IO + rAF 性能护栏保留，reduced 整体跳过。 */
   (function () {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    const fig = document.querySelector('.hero-fig');
-    if (!fig) return;
+    const hero = document.querySelector('.hero');
+    if (!hero) return;
+    const FINE = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
     const canvas = document.createElement('canvas');
     canvas.className = 'hero-stars';
     canvas.setAttribute('aria-hidden', 'true');
-    fig.appendChild(canvas);
+    hero.appendChild(canvas);
     const ctx = canvas.getContext('2d');
     if (!ctx) { canvas.remove(); return; }
 
     let W = 0, H = 0, dpr = 1, stars = [], raf = 0, running = false;
+    let mx = 0, my = 0, have = false, sx = 0, sy = 0;   /* 目标/平滑光标 */
     const DPR_CAP = 1.5;
     const COUNT_CAP = 240;
 
+    window.__heroFx = window.__heroFx || {};
+    window.__heroFx.cursor = function (x, y) { have = true; mx = x; my = y; };  /* 由唯一全局 pointermove 调用 */
+
     function build() {
       dpr = Math.min(window.devicePixelRatio || 1, DPR_CAP);
-      W = fig.clientWidth; H = fig.clientHeight;
+      W = hero.clientWidth; H = hero.clientHeight;
       canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
       canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      const n = Math.min(COUNT_CAP, Math.max(64, Math.round(W * H / 7200)));
+      const n = Math.min(COUNT_CAP, Math.max(64, Math.round(W * H / 6800)));
       stars = [];
       for (let i = 0; i < n; i++) {
+        const f = 0.18 + Math.random() * 0.78;      /* 深度分层：前景大星位移大 */
         stars.push({
           x: Math.random() * W, y: Math.random() * H,
-          r: 0.8 + Math.random() * 1.4,
-          a: 0.35 + Math.random() * 0.5,
+          r: 0.7 + Math.random() * (0.6 + f * 1.1),
+          a: 0.30 + Math.random() * 0.5,
           phase: Math.random() * Math.PI * 2,
           speed: 0.02 + Math.random() * 0.05,
-          drift: 0.06 + Math.random() * 0.12,
-          warm: Math.random() < 0.2
+          drift: 0.05 + Math.random() * 0.1,
+          warm: Math.random() < 0.22,
+          f: f
         });
       }
+      sx = W / 2; sy = H / 2; mx = sx; my = sy; have = false;  /* 视差基准：光标默认在中心 */
     }
 
     function frame(t) {
       if (!running) return;
       ctx.clearRect(0, 0, W, H);
+      const cx = W / 2, cy = H / 2;
+      if (FINE && have) {
+        sx += (mx - sx) * 0.10; sy += (my - sy) * 0.10;
+        /* 光标 screen 柔光（冷蓝主光 + 暖微光，只增亮夜空） */
+        let g = ctx.createRadialGradient(sx, sy, 0, sx, sy, 130);
+        g.addColorStop(0, 'rgba(150,205,255,.17)');
+        g.addColorStop(0.55, 'rgba(150,205,255,.06)');
+        g.addColorStop(1, 'rgba(150,205,255,0)');
+        ctx.fillStyle = g; ctx.fillRect(sx - 130, sy - 130, 260, 260);
+        g = ctx.createRadialGradient(sx, sy, 0, sx, sy, 58);
+        g.addColorStop(0, 'rgba(255,214,170,.10)');
+        g.addColorStop(1, 'rgba(255,214,170,0)');
+        ctx.fillStyle = g; ctx.fillRect(sx - 58, sy - 58, 116, 116);
+      }
       for (const s of stars) {
+        /* 反向视差：光标右移 → 前景星左移更多，形成“隔玻璃反向”深度感 */
+        const offX = (sx - cx) * 0.10 * s.f;
+        const offY = (sy - cy) * 0.10 * s.f;
+        const x = s.x - offX, y = s.y - offY;
         const alpha = s.a * (0.5 + 0.5 * Math.sin(t * s.speed + s.phase));
         ctx.globalAlpha = Math.max(0, Math.min(.95, alpha));
         ctx.fillStyle = s.warm ? '#ffce8c' : '#98d6ff';
-        ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(x, y, s.r, 0, Math.PI * 2); ctx.fill();
         s.y -= s.drift;
         if (s.y < -3) { s.y = H + 3; s.x = Math.random() * W; }
       }
@@ -2137,7 +2212,7 @@ background-image:
       const on = es.some(e => e.isIntersecting);
       on ? resume() : suspend();
     }, { threshold: 0 });
-    io.observe(fig);
+    io.observe(hero);
     let rz = 0;
     window.addEventListener('resize', () => {
       if (rz) return; rz = 1;

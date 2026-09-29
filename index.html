@@ -2142,8 +2142,7 @@ background-image:
     if (!ctx) { canvas.remove(); return; }
 
     let W = 0, H = 0, dpr = 1, stars = [], raf = 0, running = false;
-    const SPRING_K = 100, SPRING_C = 15;                 /* 弹簧跟随：k 刚度 / c 阻尼（ζ≈0.75 轻微欠阻尼→急停微回弹） */
-    let mx = 0, my = 0, have = false, sx = 0, sy = 0, svx = 0, svy = 0, last = 0;   /* 目标/平滑光标/速度/上帧时间戳 */
+    let mx = 0, my = 0, have = false, sx = 0, sy = 0;   /* 目标/平滑光标 */
     const DPR_CAP = 1.5;
     const COUNT_CAP = 240;
 
@@ -2171,20 +2170,15 @@ background-image:
           f: f
         });
       }
-      sx = W / 2; sy = H / 2; mx = sx; my = sy; have = false; svx = 0; svy = 0; last = 0;  /* 视差基准：光标默认在中心 */
+      sx = W / 2; sy = H / 2; mx = sx; my = sy; have = false;  /* 视差基准：光标默认在中心 */
     }
 
     function frame(t) {
       if (!running) return;
-      if (!last) last = t;
-      const dt = Math.min(0.05, (t - last) / 1000); last = t;   /* 物理步长（上限 50ms 防切页跳变） */
       ctx.clearRect(0, 0, W, H);
       const cx = W / 2, cy = H / 2;
       if (FINE && have) {
-        /* 弹簧物理跟随：semi-implicit Euler，sv += (k·Δ − c·v)·dt · 替代线性 lerp，急停时轻微回弹 */
-        svx += (SPRING_K * (mx - sx) - SPRING_C * svx) * dt;
-        svy += (SPRING_K * (my - sy) - SPRING_C * svy) * dt;
-        sx += svx * dt; sy += svy * dt;
+        sx += (mx - sx) * 0.10; sy += (my - sy) * 0.10;
         /* 光标 screen 柔光（冷蓝主光 + 暖微光，只增亮夜空） */
         let g = ctx.createRadialGradient(sx, sy, 0, sx, sy, 130);
         g.addColorStop(0, 'rgba(150,205,255,.17)');

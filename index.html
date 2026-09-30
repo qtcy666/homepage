@@ -2214,14 +2214,16 @@ background-image:
       b.fillStyle = topGlow; b.fillRect(0, 0, w, h);
 
       // ② 星云絮：大而柔的色斑（藏紫 / 藏蓝 / 青紫），lighten 叠加出发光质感
+      //    借鉴参考图：两翼中下星的星云带更亮更靠外，上方衬月晕、底部保持暗
       b.globalCompositeOperation = 'lighter';
       const blobs = [
-        { x: 0.30, y: 0.18, r: 0.34, c: '126,110,214', a: 0.16 },  // 藏紫 · 左上
-        { x: 0.67, y: 0.13, r: 0.30, c: '110,150,232', a: 0.15 },  // 藏蓝 · 右上
-        { x: 0.52, y: 0.30, r: 0.38, c: '96,128,224', a: 0.13 },   // 青蓝 · 中上（衬月晕）
-        { x: 0.15, y: 0.55, r: 0.42, c: '88,96,200',  a: 0.10 },   // 紫蓝 · 左中
-        { x: 0.85, y: 0.62, r: 0.36, c: '70,110,220', a: 0.09 },   // 藏蓝 · 右中
-        { x: 0.45, y: 0.82, r: 0.44, c: '56,64,180',  a: 0.08 }    // 深蓝紫 · 底部
+        { x: 0.30, y: 0.16, r: 0.30, c: '126,110,214', a: 0.14 },  // 藏紫 · 左上
+        { x: 0.70, y: 0.14, r: 0.28, c: '110,150,232', a: 0.13 },  // 藏蓝 · 右上
+        { x: 0.50, y: 0.30, r: 0.42, c: '104,136,228', a: 0.15 },  // 青蓝 · 中上（衬月晕，更大）
+        { x: 0.14, y: 0.50, r: 0.40, c: '92,106,212', a: 0.16 },   // 紫蓝 · 左下翼（参考图亮带）
+        { x: 0.88, y: 0.50, r: 0.38, c: '84,124,228', a: 0.15 },   // 藏蓝 · 右下翼（参考图亮带）
+        { x: 0.40, y: 0.74, r: 0.40, c: '66,80,196',  a: 0.10 },   // 深蓝紫 · 左下
+        { x: 0.82, y: 0.72, r: 0.36, c: '60,102,214', a: 0.11 }    // 藏蓝 · 右下
       ];
       for (const p of blobs) {
         const X = p.x * w, Y = p.y * h, R = p.r * w;
@@ -2234,15 +2236,32 @@ background-image:
       }
       b.globalCompositeOperation = 'source-over';
 
-      // ③ 月晕（静态基底）：中上部一团大而柔的青白辉光
-      const mcx = w * 0.5, mcy = h * 0.19, mR = w * 0.40;
+      // ③ 月晕（静态基底）：中部偏上的一大团青白辉光（借鉴参考图：中央光团 + 向下漫延）
+      const mcx = w * 0.5, mcy = h * 0.30, mR = w * 0.50;
       const moon = b.createRadialGradient(mcx, mcy, 0, mcx, mcy, mR);
-      moon.addColorStop(0, 'rgba(210,230,255,0.55)');
-      moon.addColorStop(0.18, 'rgba(190,216,252,0.30)');
-      moon.addColorStop(0.5, 'rgba(150,186,240,0.12)');
-      moon.addColorStop(1, 'rgba(150,186,240,0)');
+      moon.addColorStop(0, 'rgba(224,240,255,0.60)');
+      moon.addColorStop(0.16, 'rgba(198,222,253,0.34)');
+      moon.addColorStop(0.42, 'rgba(158,196,246,0.15)');
+      moon.addColorStop(0.75, 'rgba(150,188,242,0.05)');
+      moon.addColorStop(1, 'rgba(150,188,242,0)');
       b.fillStyle = moon;
       b.fillRect(mcx - mR, mcy - mR, mR * 2, mR * 2);
+
+      // ④ 月辉向下延伸层：参考图中部下方仍带青色辉光，让光团有“垂感”而非悬在顶上
+      const dmx = w * 0.5, dmy = h * 0.48, dmR = w * 0.34;
+      const down = b.createRadialGradient(dmx, dmy, 0, dmx, dmy, dmR);
+      down.addColorStop(0, 'rgba(150,198,250,0.12)');
+      down.addColorStop(0.55, 'rgba(120,160,232,0.05)');
+      down.addColorStop(1, 'rgba(120,160,232,0)');
+      b.fillStyle = down;
+      b.fillRect(dmx - dmR, dmy - dmR, dmR * 2, dmR * 2);
+
+      // ⑤ 四角暗角：仿参考图四角压暗、中央亮，营造“月辉照亮中部”的聚光感
+      const vig = b.createRadialGradient(w * 0.5, h * 0.38, w * 0.18, w * 0.5, h * 0.38, w * 0.9);
+      vig.addColorStop(0, 'rgba(4,8,22,0)');
+      vig.addColorStop(0.62, 'rgba(4,8,22,0.12)');
+      vig.addColorStop(1, 'rgba(4,8,22,0.32)');
+      b.fillStyle = vig; b.fillRect(0, 0, w, h);
     }
 
     function resize() {
@@ -2300,7 +2319,7 @@ background-image:
 
       // 月晕呼吸：青白辉光在静态基底上缓慢明暗起伏（仅动画开启时叠加）
       if (!reduce) {
-        const bx = W * 0.5, by = H * 0.19, br = W * 0.40;
+        const bx = W * 0.5, by = H * 0.30, br = W * 0.50;
         const breathe = 0.5 + 0.5 * Math.sin(t * 0.6);
         const ha = 0.14 + 0.13 * breathe;
         const hg = ctx.createRadialGradient(bx, by, br * 0.10, bx, by, br);

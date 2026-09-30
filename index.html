@@ -844,8 +844,9 @@
   .gate{
     position:fixed;inset:0;z-index:200;overflow:hidden;
     display:grid;place-items:center;color:#eaf2ff;
-    background:url('assets/starmap-bg.jpg') no-repeat center/cover,
-      radial-gradient(125% 95% at 50% 8%,#16264f 0%,#0a1230 44%,#04060f 100%);
+    /* 兜底色：整幅星野由下方 #stars Canvas 程序化绘制
+       （深蓝天幕 + 青白月晕 + 藏紫星云 + 细密星点），此处仅作无 JS 时的色底 */
+    background:radial-gradient(125% 95% at 50% 8%,#16264f 0%,#0a1230 44%,#04060f 100%);
     /* 幕布上移：只推 transform，不再淡出 —— 是“揭幕”而不是“交叉淡入” */
     transition:transform var(--dur-lift) var(--ease-lift);
     will-change:transform;
@@ -1440,8 +1441,7 @@ body::before{
    不做，揭幕时会从近黑的幕布跳到提亮后的页面；做了则前后同色系。
    只加到刚好不越线：#182a58 顶部；.gate-hint 4.93:1 -> 4.65:1 仍在 4.5 以上。 */
 .gate{
-  background:url('assets/starmap-bg.jpg') no-repeat center/cover,
-    radial-gradient(125% 95% at 50% 8%,#182a58 0%,#0c1538 44%,#080c1e 100%);
+  background:radial-gradient(125% 95% at 50% 8%,#182a58 0%,#0c1538 44%,#080c1e 100%);
 }
 </style>
 <style id="starnight-7-galaxy">
@@ -2159,6 +2159,7 @@ background-image:
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     let W = 0, H = 0, stars = [], shots = [], raf = null, running = false, entered = false;
+    let dpr = 1, bgCanvas = null, bgW = 0, bgH = 0;   // 离屏星野（天幕星云月晕）
 
     function build() {
       const count = Math.round(Math.min(680, Math.max(300, (W * H) / 2600)));
@@ -2186,13 +2187,72 @@ background-image:
       }
     }
 
+    // 程序化星野：离屏预渲染【深蓝天幕 + 藏紫/藏蓝星云絮 + 中上青白月晕】，每帧带缓慢漂移
+    function buildBg() {
+      const os = 0.12;                          // 12% 余量供漂移，避免露边
+      const DW = W * dpr, DH = H * dpr;
+      bgW = DW * (1 + os); bgH = DH * (1 + os);
+      if (!bgCanvas) { bgCanvas = document.createElement('canvas'); }
+      bgCanvas.width = Math.round(bgW);
+      bgCanvas.height = Math.round(bgH);
+      const b = bgCanvas.getContext('2d');
+      b.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const w = W * (1 + os), h = H * (1 + os);
+
+      // ① 天幕：垂直渐变，与 skyblue 提亮档同色系（顶中藏蓝 → 深藏蓝 → 近黑）
+      const sky = b.createLinearGradient(0, 0, 0, h);
+      sky.addColorStop(0, '#1a2c58');
+      sky.addColorStop(0.45, '#0c1538');
+      sky.addColorStop(1, '#060a1c');
+      b.fillStyle = sky; b.fillRect(0, 0, w, h);
+
+      // 顶部横向淡辉：模拟“上方天光”，让入口上方更透气
+      const topGlow = b.createRadialGradient(w * 0.5, h * 0.05, 0, w * 0.5, h * 0.05, w * 0.6);
+      topGlow.addColorStop(0, 'rgba(82,124,205,0.26)');
+      topGlow.addColorStop(0.55, 'rgba(60,96,180,0.10)');
+      topGlow.addColorStop(1, 'rgba(60,96,180,0)');
+      b.fillStyle = topGlow; b.fillRect(0, 0, w, h);
+
+      // ② 星云絮：大而柔的色斑（藏紫 / 藏蓝 / 青紫），lighten 叠加出发光质感
+      b.globalCompositeOperation = 'lighter';
+      const blobs = [
+        { x: 0.30, y: 0.18, r: 0.34, c: '126,110,214', a: 0.16 },  // 藏紫 · 左上
+        { x: 0.67, y: 0.13, r: 0.30, c: '110,150,232', a: 0.15 },  // 藏蓝 · 右上
+        { x: 0.52, y: 0.30, r: 0.38, c: '96,128,224', a: 0.13 },   // 青蓝 · 中上（衬月晕）
+        { x: 0.15, y: 0.55, r: 0.42, c: '88,96,200',  a: 0.10 },   // 紫蓝 · 左中
+        { x: 0.85, y: 0.62, r: 0.36, c: '70,110,220', a: 0.09 },   // 藏蓝 · 右中
+        { x: 0.45, y: 0.82, r: 0.44, c: '56,64,180',  a: 0.08 }    // 深蓝紫 · 底部
+      ];
+      for (const p of blobs) {
+        const X = p.x * w, Y = p.y * h, R = p.r * w;
+        const g = b.createRadialGradient(X, Y, 0, X, Y, R);
+        g.addColorStop(0, 'rgba(' + p.c + ',' + p.a + ')');
+        g.addColorStop(0.55, 'rgba(' + p.c + ',' + p.a * 0.45 + ')');
+        g.addColorStop(1, 'rgba(' + p.c + ',0)');
+        b.fillStyle = g;
+        b.fillRect(X - R, Y - R, R * 2, R * 2);
+      }
+      b.globalCompositeOperation = 'source-over';
+
+      // ③ 月晕（静态基底）：中上部一团大而柔的青白辉光
+      const mcx = w * 0.5, mcy = h * 0.19, mR = w * 0.40;
+      const moon = b.createRadialGradient(mcx, mcy, 0, mcx, mcy, mR);
+      moon.addColorStop(0, 'rgba(210,230,255,0.55)');
+      moon.addColorStop(0.18, 'rgba(190,216,252,0.30)');
+      moon.addColorStop(0.5, 'rgba(150,186,240,0.12)');
+      moon.addColorStop(1, 'rgba(150,186,240,0)');
+      b.fillStyle = moon;
+      b.fillRect(mcx - mR, mcy - mR, mR * 2, mR * 2);
+    }
+
     function resize() {
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
       W = gate.clientWidth; H = gate.clientHeight;
       canvas.width = Math.max(1, Math.round(W * dpr));
       canvas.height = Math.max(1, Math.round(H * dpr));
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       build();
+      buildBg();
     }
 
     function spawnShot() {
@@ -2229,6 +2289,28 @@ background-image:
 
     function render(t) {
       ctx.clearRect(0, 0, W, H);
+
+      // 离屏星野整体缓慢漂移（本片星空都在动，不只是星点）
+      if (bgCanvas) {
+        const mW = (bgW - W * dpr) / 2, mH = (bgH - H * dpr) / 2;
+        const dx = Math.sin(t * 0.045) * mW * 0.9;
+        const dy = Math.cos(t * 0.031) * mH * 0.9;
+        ctx.drawImage(bgCanvas, mW + dx, mH + dy, W * dpr, H * dpr, 0, 0, W, H);
+      }
+
+      // 月晕呼吸：青白辉光在静态基底上缓慢明暗起伏（仅动画开启时叠加）
+      if (!reduce) {
+        const bx = W * 0.5, by = H * 0.19, br = W * 0.40;
+        const breathe = 0.5 + 0.5 * Math.sin(t * 0.6);
+        const ha = 0.14 + 0.13 * breathe;
+        const hg = ctx.createRadialGradient(bx, by, br * 0.10, bx, by, br);
+        hg.addColorStop(0, 'rgba(225,240,255,' + ha.toFixed(3) + ')');
+        hg.addColorStop(0.45, 'rgba(176,206,252,' + (ha * 0.42).toFixed(3) + ')');
+        hg.addColorStop(1, 'rgba(176,206,252,0)');
+        ctx.fillStyle = hg;
+        ctx.fillRect(bx - br, by - br, br * 2, br * 2);
+      }
+
       for (let i = 0; i < stars.length; i++) {
         const s = stars[i];
         s.x += s.vx; s.y += s.vy;

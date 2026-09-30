@@ -844,7 +844,8 @@
   .gate{
     position:fixed;inset:0;z-index:200;overflow:hidden;
     display:grid;place-items:center;color:#eaf2ff;
-    background:radial-gradient(125% 95% at 50% 8%,#16264f 0%,#0a1230 44%,#04060f 100%);
+    background:url('assets/starmap-bg.jpg') no-repeat center/cover,
+      radial-gradient(125% 95% at 50% 8%,#16264f 0%,#0a1230 44%,#04060f 100%);
     /* 幕布上移：只推 transform，不再淡出 —— 是“揭幕”而不是“交叉淡入” */
     transition:transform var(--dur-lift) var(--ease-lift);
     will-change:transform;
@@ -1439,7 +1440,8 @@ body::before{
    不做，揭幕时会从近黑的幕布跳到提亮后的页面；做了则前后同色系。
    只加到刚好不越线：#182a58 顶部；.gate-hint 4.93:1 -> 4.65:1 仍在 4.5 以上。 */
 .gate{
-  background:radial-gradient(125% 95% at 50% 8%,#182a58 0%,#0c1538 44%,#080c1e 100%);
+  background:url('assets/starmap-bg.jpg') no-repeat center/cover,
+    radial-gradient(125% 95% at 50% 8%,#182a58 0%,#0c1538 44%,#080c1e 100%);
 }
 </style>
 <style id="starnight-7-galaxy">

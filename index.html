@@ -1510,6 +1510,26 @@ background-image:
     linear-gradient(11deg,transparent 51%,rgba(4,8,20,0.16) 57%,transparent 63%);
 }
 </style>
+<style id="skills-1-groups">
+/* 技能分组：把 #skills 的条目按「专业基础 / 编程与工具 / 语言 / 通用能力」归类。
+   只新增分组小标题（文字 + 一条渐隐细线）：
+     · 不动 .row 卡片、不动 .bar 流动光带
+     · 技能熟练度仍未确定，所以继续沿用"无终点流动光带"的语义，不谎报等级、不加百分比
+     · 色相沿用 --text-soft（现为 #b3c6e0）与蓝系 rgba(157,196,255,*)，不引入新颜色 */
+.skills .skills-group{
+  display:flex;align-items:center;gap:10px;
+  margin:22px 0 10px;
+  font-size:12px;font-weight:700;letter-spacing:.1em;
+  color:var(--text-soft);
+}
+/* 第一组紧贴上方，不再多留 22px */
+.skills .skills-group:first-child{margin-top:0}
+/* 标题右侧渐隐细线，呼应页面里既有的青色分隔语言 */
+.skills .skills-group::after{
+  content:'';flex:1;height:1px;
+  background:linear-gradient(90deg,rgba(157,196,255,.22),transparent);
+}
+</style>
 </head>
 <body>
 
@@ -1634,19 +1654,39 @@ background-image:
     <div class="card-head">
       <div class="ico">💻</div>
       <h2>技能</h2>
+      <div class="sub">持续更新中</div>
     </div>
     <div class="split flip">
       <div class="sec-body">
         <div class="skills">
+          <div class="skills-group">专业基础</div>
           <div class="row">
-            <div class="name">编程<small>正在学习的基础技能</small></div>
+            <div class="name">微积分<small>正在学习的基础技能</small></div>
             <div class="lv">
               <div class="bar"><i></i></div>
-              <span class="ph">入门 · 能读懂并修改简单程序，正在系统补基础</span>
+              <span class="ph">正在系统学习极限 / 导数 / 积分，随课程进度推进</span>
             </div>
           </div>
           <div class="row">
-            <div class="name">英语<small>正在学习的基础技能</small></div>
+            <div class="name">线性代数<small>正在学习的基础技能</small></div>
+            <div class="lv">
+              <div class="bar"><i></i></div>
+              <span class="ph">正在学习矩阵 / 线性方程组，随课程进度推进</span>
+            </div>
+          </div>
+
+          <div class="skills-group">编程与工具</div>
+          <div class="row">
+            <div class="name">计算机编程<small>正在系统补基础</small></div>
+            <div class="lv">
+              <div class="bar"><i></i></div>
+              <span class="ph">能读懂并修改简单程序，正在补语法与数据结构基础</span>
+            </div>
+          </div>
+
+          <div class="skills-group">语言</div>
+          <div class="row">
+            <div class="name">英语<small>以学术阅读为主</small></div>
             <div class="lv">
               <div class="bar"><i></i></div>
               <span class="ph">能读英文技术资料，听力和口语仍在练习</span>

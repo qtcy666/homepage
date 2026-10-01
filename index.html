@@ -744,6 +744,7 @@
     background:linear-gradient(180deg,rgba(120,170,255,.13),rgba(120,170,255,.06));
     border-bottom:1px solid var(--line);
   }
+
   .chat-head .av{
     width:36px;height:36px;border-radius:50%;display:grid;place-items:center;
     background:linear-gradient(135deg,#6fb1f3,#2f6fdb);box-shadow:0 0 0 3px rgba(11,20,48,.9);
@@ -1565,6 +1566,23 @@ background-image:
   color:#fff;letter-spacing:0;
   text-shadow:0 1px 4px rgba(6,16,40,.35);
   user-select:none;-webkit-user-select:none;
+}
+
+/* ③ 星空头像（v4.5.10）：把两处圆盘底换成官方星空头像图（同 assets/avatar-starmap.png）。
+   方案：background-image cover 铺满圆心；首字保留在 DOM 维持几何，颜色透明作为
+   图片加载失败时的降级（图加载正常则纯星空，加载失败则露首字白字）。
+   注意：.avatar 原有 3 层环、.chat-head .av 原有 3px 环保持不变。 */
+.avatar,
+.chat-head .av{
+  background-image:url('assets/avatar-starmap.png');
+  background-size:cover;
+  background-position:center;
+  background-repeat:no-repeat;
+}
+.avatar .ini,
+.chat-head .av .ini{
+  color:transparent;
+  text-shadow:none;
 }
 </style>
 </head>

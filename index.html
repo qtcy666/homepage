@@ -1530,6 +1530,43 @@ background-image:
   background:linear-gradient(90deg,rgba(157,196,255,.22),transparent);
 }
 </style>
+<style id="avatar-1-initial">
+/* 头像：白色人形剪影 SVG → 白色首字「刘」。
+   页面上同一个剪影出现在【两处】，本块一并覆盖：
+     ① Hero 首屏头像        .avatar          106px（≤620px 时 84px）
+     ② 「AI 数字分身」聊天框 .chat-head .av   36px（无小屏覆盖）
+   为什么选「刘」：
+     · 文件第 23 行的 favicon 本来就是【白字「刘」压在 #3a7bd5 圆角方块上】——
+       改完以后，浏览器标签页图标与页面头像成为同一套符号，互相印证；
+     · 与 .hero h1 的「逐字姓名 / 字重 800」同源，首屏上下形成呼应；
+     · 原剪影是通用占位符，不含任何个人特征。
+   本块只负责首字自身的排版；两个圆盘的尺寸、蓝色渐变底、外环
+   （.avatar 三层环 / .av 单层 3px 环）全部沿用不动。 */
+
+/* ① Hero 首屏头像（106px 圆盘） */
+.avatar .ini{
+  font-size:52px;            /* 106px 圆盘内约占一半，与 favicon 的 34/64≈53% 同一比例 */
+  font-weight:800;           /* 与 .hero h1 字重一致 */
+  line-height:1;             /* 配合 .avatar 既有的 display:grid;place-items:center 做垂直居中 */
+  color:#fff;                /* 与 favicon 的 fill='white'、原剪影的 #ffffff 一致 */
+  letter-spacing:0;
+  text-shadow:0 2px 10px rgba(6,16,40,.35); /* 极轻投影：让白字在渐变中部不失形（见第 7 节对比度说明） */
+  user-select:none;-webkit-user-select:none;
+}
+/* 小屏：.avatar 在 @media (max-width:620px) 里缩到 84px，首字同步缩，保持同样的占比。
+   本块位于文件末尾，同一断点下优先级更高，会覆盖上面的 52px。 */
+@media (max-width:620px){
+  .avatar .ini{font-size:42px}
+}
+
+/* ② 「AI 数字分身」聊天框头像（36px 圆盘，任何屏宽都不缩放，故无需媒体查询） */
+.chat-head .av .ini{
+  font-size:18px;font-weight:800;line-height:1;
+  color:#fff;letter-spacing:0;
+  text-shadow:0 1px 4px rgba(6,16,40,.35);
+  user-select:none;-webkit-user-select:none;
+}
+</style>
 </head>
 <body>
 
@@ -1601,10 +1638,7 @@ background-image:
     <div class="hero-main">
       <div class="hero-top">
         <div class="avatar">
-          <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="32" cy="24" r="11" fill="#ffffff"/>
-            <path d="M14 52c1.5-10 9-16 18-16s16.5 6 18 16" fill="#ffffff" opacity=".95"/>
-          </svg>
+          <span class="ini" aria-hidden="true">刘</span>
         </div>
         <div>
           <h1 aria-label="刘一鸣"><span class="ch">刘</span><span class="ch">一</span><span class="ch">鸣</span></h1>
@@ -1749,7 +1783,7 @@ background-image:
       <div class="sec-body">
         <div class="chat-box">
           <div class="chat-head">
-            <div class="av"><svg viewBox="0 0 64 64" fill="none"><circle cx="32" cy="24" r="11" fill="#fff"/><path d="M14 52c1.5-10 9-16 18-16s16.5 6 18 16" fill="#fff" opacity=".95"/></svg></div>
+            <div class="av"><span class="ini" aria-hidden="true">刘</span></div>
             <div>
               <b>AI 数字分身</b>
               <div class="status"><span class="dot"></span><span>在线 · 代表刘一鸣回答</span></div>

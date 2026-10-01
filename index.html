@@ -82,24 +82,30 @@
     text-rendering:optimizeLegibility;
   }
   /* 四角轻微压深：中心明亮、四周微蓝下沉，把背景从"平面"变成"有深度的舞台" */
-  /* 深空晕影：中心透气、四角沉入更深的黑，把视线的焦点留在地平线以上 */
+  /* 深空晕影：中心透气、四角沉入更深的黑，把视线的焦点留在地平线以上。
+     【性能 v4.5.7】流星已从本层背景剥离（见下方 .skymeteor）：本层仅静态暗角，无动画，不再每帧重绘全屏。 */
   body::after{
     content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;
     background-image:
-      radial-gradient(120% 90% at 50% 36%,transparent 38%,rgba(2,4,10,.55) 100%),
-      /* 流星拖尾：头部（右端/行进前方）一颗亮核，向左渐隐的长尾，随关键帧变速滑动 */
-      linear-gradient(102deg,transparent 38%,rgba(186,216,255,.05) 46%,rgba(210,232,255,.30) 52%,rgba(236,247,255,.78) 56%,rgba(244,250,255,.98) 58%,rgba(200,226,255,.5) 64%,rgba(170,210,252,.22) 70%,transparent 76%);
-    background-size:100% 100%,440px 3px;
-    background-repeat:no-repeat,no-repeat;
-    will-change:background-position;
+      radial-gradient(120% 90% at 50% 36%,transparent 38%,rgba(2,4,10,.55) 100%);
+    background-size:100% 100%;
+    background-repeat:no-repeat;
+  }
+  /* 主体页流星：独立窄条元素，translate3d 合成器动画（GPU 贴片移动），
+     取代原先 body::after 全屏 background-position 动画（每帧整层重绘 = 卡顿根因）。
+     移动轨迹与关键帧分段、变速曲线与旧版完全一致；元素 z-index:-1，位于暗角层之上、正文之下。 */
+  .skymeteor{
+    position:fixed;left:0;top:0;width:440px;height:3px;z-index:-1;pointer-events:none;
+    background-image:linear-gradient(102deg,transparent 38%,rgba(186,216,255,.05) 46%,rgba(210,232,255,.30) 52%,rgba(236,247,255,.78) 56%,rgba(244,250,255,.98) 58%,rgba(200,226,255,.5) 64%,rgba(170,210,252,.22) 70%,transparent 76%);
+    will-change:transform;
     animation:meteorSweep 19s infinite;
   }
   /* 流星：19 秒一圈，变速划过——慢滑出→中段加速冲过→末端减速隐没，配合头部亮核+渐隐长尾 */
   @keyframes meteorSweep{
-    0%  {background-position:0 0,-30vw -18vh; animation-timing-function:cubic-bezier(.55,.05,.7,.3)}
-    22% {background-position:0 0,16vw 8vh;    animation-timing-function:cubic-bezier(.12,.75,.4,1)}
-    66% {background-position:0 0,94vw 62vh;   animation-timing-function:cubic-bezier(.6,.05,.65,.2)}
-    100%{background-position:0 0,128vw 90vh}
+    0%  {transform:translate3d(-30vw,-18vh,0); animation-timing-function:cubic-bezier(.55,.05,.7,.3)}
+    22% {transform:translate3d(16vw,8vh,0);    animation-timing-function:cubic-bezier(.12,.75,.4,1)}
+    66% {transform:translate3d(94vw,62vh,0);   animation-timing-function:cubic-bezier(.6,.05,.65,.2)}
+    100%{transform:translate3d(128vw,90vh,0)}
   }
   /* 星点层：两层不同周期的星野叠加，错开重复感（取代原来的 32px 格纹） */
   body::before{
@@ -273,18 +279,20 @@
      .wrap::before/.wrap::after 基础规则都定义在顶部 @media 之后，
      同特异性下写在前面的媒体查询会被反向覆盖。 */
   @media (max-width:768px){
-    /* 手机上只保留 starBreath（仅 opacity，不吃性能），位移类动画全停 */
-    body::before{animation:starBreath 14s ease-in-out infinite alternate;will-change:opacity}
-    .wrap::before{animation:none;will-change:auto}
-    .wrap::after{animation:none;will-change:auto}
-    body::after{animation:none;will-change:auto}
-  }
-  @media (prefers-reduced-motion:reduce){
-    body::before{animation:none!important;will-change:auto}
-    .wrap::before{animation:none!important;will-change:auto}
-    .wrap::after{animation:none!important;will-change:auto}
-    body::after{animation:none!important;will-change:auto}
-  }
+     /* 手机上只保留 starBreath（仅 opacity，不吃性能），位移类动画全停 */
+     body::before{animation:starBreath 14s ease-in-out infinite alternate;will-change:opacity}
+     .wrap::before{animation:none;will-change:auto}
+     .wrap::after{animation:none;will-change:auto}
+     body::after{animation:none;will-change:auto}
+     .skymeteor{animation:none;will-change:auto}
+   }
+   @media (prefers-reduced-motion:reduce){
+     body::before{animation:none!important;will-change:auto}
+     .wrap::before{animation:none!important;will-change:auto}
+     .wrap::after{animation:none!important;will-change:auto}
+     body::after{animation:none!important;will-change:auto}
+     .skymeteor{animation:none!important;will-change:auto;display:none}
+   }
   /* ---------- 顶部阅读进度条（任务31：导航下方、--blue-deep→--cyan 渐变、scaleX 跟随 rAF 绘制）---------- */
   .progress{
     position:fixed;top:var(--nav-h);left:0;right:0;height:3px;z-index:49;
@@ -1204,16 +1212,19 @@ body::before{
   }
 }
 
-/* body::after 流星：只把白色换成冷青蓝（暗角层必须一起重写，否则会被整组顶掉） */
+/* 暗角层：保持静态（流星已拆分到下方 .skymeteor，本层只需暗角，与 base 同源重写） */
 body::after{
   background-image:
-    radial-gradient(120% 90% at 50% 36%,transparent 38%,rgba(2,4,10,.55) 100%),
-    linear-gradient(102deg,transparent 38%,rgba(120,185,255,.05) 46%,rgba(150,205,255,.30) 52%,rgba(178,222,255,.78) 56%,rgba(208,238,255,.98) 58%,rgba(150,205,255,.5) 64%,rgba(120,185,255,.22) 70%,transparent 76%);
+    radial-gradient(120% 90% at 50% 36%,transparent 38%,rgba(2,4,10,.55) 100%);
+}
+/* 流星：只把白色换成冷青蓝（独立窄条元素，配色随主题包切换） */
+.skymeteor{
+  background-image:linear-gradient(102deg,transparent 38%,rgba(120,185,255,.05) 46%,rgba(150,205,255,.30) 52%,rgba(178,222,255,.78) 56%,rgba(208,238,255,.98) 58%,rgba(150,205,255,.5) 64%,rgba(120,185,255,.22) 70%,transparent 76%);
 }
 </style>
 <style id="starnight-3-meteor">
 /* 流星增密：主页那条光条的周期 19s → 10s，出现频率约 ×1.9，划过速度也更快 */
-body::after{
+.skymeteor{
 animation:meteorSweep 10s linear infinite;
 }
 </style>
@@ -1515,6 +1526,9 @@ background-image:
 
 <!-- 极光背景层：3 个径向渐变光斑，内容之下，纯 CSS 漂移 -->
 <div class="aurora" aria-hidden="true"><i class="b1"></i><i class="b2"></i><i class="b3"></i><i class="b4"></i><i class="b5"></i></div>
+
+<!-- 主体页流星层：独立窄条元素，translate3d 合成器动画（GPU 贴片移动），替代原先全屏 background-position 动画导致的每帧整层重绘 -->
+<i class="skymeteor" aria-hidden="true"></i>
 
 <!-- 首屏星空入口：点击"启动"后进入网页主体 -->
 <div class="gate" id="gate" hidden>
@@ -2165,6 +2179,7 @@ background-image:
 
     let W = 0, H = 0, stars = [], shots = [], raf = null, running = false, entered = false;
     let dpr = 1, bgCanvas = null, bgW = 0, bgH = 0;   // 离屏星野（天幕星云月晕）
+    let sprites = null;                                // 精灵池（halo/spikes 离屏预渲染）
     // 宽幅星空实照：作为入口星野底层，cover 铺满并参与缓慢漂移（“图片动态化”）
     const bgImg = (function () {
       const im = new Image();
@@ -2292,6 +2307,58 @@ background-image:
       b.fillStyle = vig; b.fillRect(0, 0, w, h);
     }
 
+    // 预渲染精灵池：halo（-tier 分层）与 spikes（芒+核）离屏画好，每帧 drawImage 贴图，
+    // 取代每帧为每颗星新建渐变的昂贵路径（原 440+/帧 createRadialGradient + 880 arc/fill）
+    function makeSprites() {
+      // halo sprite：径向光晕 + 白核（核占光晕半径的比例随 tier 变，对齐原逐帧绘制）
+      function halo(tier, warm, size) {
+        const c = document.createElement('canvas');
+        c.width = c.height = size;
+        const x = c.getContext('2d');
+        const R = size / 2;
+        const col = warm ? '255,214,158' : '150,200,255';
+        const g = x.createRadialGradient(R, R, 0, R, R, R);
+        g.addColorStop(0, 'rgba(' + col + ',0.5)');
+        g.addColorStop(1, 'rgba(' + col + ',0)');
+        x.fillStyle = g; x.fillRect(0, 0, size, size);
+        // 白核：与光晕半径的比例按 tier 取 0.7/倍率（tier0 3.4 / tier1 6 / tier2 9），
+        // drawImage 缩放到光晕=haloR 后，核自然等于原绘制里的 s.r*0.7。
+        const ratio = tier === 0 ? 0.206 : tier === 1 ? 0.117 : 0.078;
+        const core = Math.max(1, R * ratio);
+        x.fillStyle = 'rgba(255,255,255,0.95)';
+        x.beginPath(); x.arc(R, R, core, 0, Math.PI * 2); x.fill();
+        return c;
+      }
+      // 芒 sprite：仅四向星芒（lighter 叠加层），中心透明；光晕/核由 halo sprite 提供。
+      // sprite 内芒尖 = 0.94R；绘制时半边长取 len/0.94，使实际芒尖 = len，与原 spikes() 一致。
+      function spikes(warm, size) {
+        const c = document.createElement('canvas');
+        c.width = c.height = size;
+        const x = c.getContext('2d');
+        const R = size / 2;
+        const col = warm ? '255,220,168' : '196,228,255';
+        x.lineWidth = 1.6;
+        x.lineCap = 'round';
+        for (let k = 0; k < 4; k++) {
+          const a = k * Math.PI / 4;
+          const dx = Math.cos(a) * R * 0.94, dy = Math.sin(a) * R * 0.94;
+          const lg = x.createLinearGradient(R - dx, R - dy, R + dx, R + dy);
+          lg.addColorStop(0, 'rgba(' + col + ',0)');
+          lg.addColorStop(0.5, 'rgba(' + col + ',0.75)');
+          lg.addColorStop(1, 'rgba(' + col + ',0)');
+          x.strokeStyle = lg;
+          x.beginPath(); x.moveTo(R - dx, R - dy); x.lineTo(R + dx, R + dy); x.stroke();
+        }
+        return c;
+      }
+      return {
+        // 按 tier 分层缓存不同尺寸的光晕（光晕越大用过越大 sprite，避免放大糊）
+        h: { c: { 0: halo(0, 0, 26), 1: halo(1, 0, 46), 2: halo(2, 0, 68) },
+             w: { 0: halo(0, 1, 26), 1: halo(1, 1, 46), 2: halo(2, 1, 68) } },
+        s: { c: spikes(0, 96), w: spikes(1, 96) }
+      };
+    }
+
     function resize() {
       dpr = Math.min(window.devicePixelRatio || 1, 2);
       W = gate.clientWidth; H = gate.clientHeight;
@@ -2300,6 +2367,7 @@ background-image:
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       build();
       buildBg();
+      sprites = makeSprites();
     }
 
     function spawnShot() {
@@ -2316,24 +2384,6 @@ background-image:
         w: 1.5 + Math.random() * 1.4,
         life: 1
       });
-    }
-
-    function spikes(x, y, len, a, warm, tilt) {
-      const c = warm ? "255,220,168" : "196,228,255";
-      ctx.save();
-      ctx.globalCompositeOperation = "lighter";
-      ctx.lineWidth = 1;
-      for (let k = 0; k < 4; k++) {
-        const ang = tilt + k * Math.PI / 4;
-        const dx = Math.cos(ang) * len, dy = Math.sin(ang) * len;
-        const g = ctx.createLinearGradient(x - dx, y - dy, x + dx, y + dy);
-        g.addColorStop(0, "rgba(" + c + ",0)");
-        g.addColorStop(0.5, "rgba(" + c + "," + (a * 0.75) + ")");
-        g.addColorStop(1, "rgba(" + c + ",0)");
-        ctx.strokeStyle = g;
-        ctx.beginPath(); ctx.moveTo(x - dx, y - dy); ctx.lineTo(x + dx, y + dy); ctx.stroke();
-      }
-      ctx.restore();
     }
 
     function render(t) {
@@ -2369,18 +2419,25 @@ background-image:
         const a = Math.max(0.05, Math.min(1, s.base + (tw - 0.5) * 2 * s.amp));
 
         const haloR = s.r * (s.tier === 2 ? 9 : s.tier === 1 ? 6 : 3.4);
-        const cg = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, haloR);
-        cg.addColorStop(0, s.warm ? "rgba(255,214,158," + (a * 0.5) + ")" : "rgba(150,200,255," + (a * 0.5) + ")");
-        cg.addColorStop(1, s.warm ? "rgba(255,214,158,0)" : "rgba(150,200,255,0)");
-        ctx.fillStyle = cg;
-        ctx.beginPath(); ctx.arc(s.x, s.y, haloR, 0, Math.PI * 2); ctx.fill();
-
+        // 精灵化：预渲染光晕/白核/芒 已离屏画好，这里只用 drawImage 贴图，避免每帧新建渐变
+        const hSpr = sprites.h[s.warm ? 'w' : 'c'][s.tier];
+        // 光晕 + 白核（含量直径与 haloR 同源，visual 等价原三连绘制的第一步）
+        ctx.globalAlpha = a;
+        ctx.drawImage(hSpr, s.x - haloR, s.y - haloR, haloR * 2, haloR * 2);
+        ctx.globalAlpha = 1;
         if (s.tier >= 1 && !reduce) {
-          spikes(s.x, s.y, s.r * s.spike * (0.6 + tw * 0.8), a * (0.5 + tw * 0.5), s.warm, s.tilt);
+          // 芒：lighter 叠加 + 旋转对齐 tilt；芒 sprite 内芒尖=0.94R，故半边长取 len/0.94，实现芒尖=len
+          const len = s.r * s.spike * (0.6 + tw * 0.8);
+          const mSpr = sprites.s[s.warm ? 'w' : 'c'];
+          const mR = len / 0.94;
+          ctx.save();
+          ctx.globalCompositeOperation = "lighter";
+          ctx.globalAlpha = Math.min(1, a * (0.5 + tw * 0.5));
+          ctx.translate(s.x, s.y);
+          ctx.rotate(s.tilt);
+          ctx.drawImage(mSpr, -mR, -mR, mR * 2, mR * 2);
+          ctx.restore();
         }
-
-        ctx.fillStyle = "rgba(255,255,255," + Math.min(1, a * 1.2) + ")";
-        ctx.beginPath(); ctx.arc(s.x, s.y, s.r * 0.7, 0, Math.PI * 2); ctx.fill();
       }
       if (!reduce && Math.random() < 0.016 && shots.length < 6) spawnShot();
       for (let i = shots.length - 1; i >= 0; i--) {

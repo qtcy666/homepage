@@ -68,12 +68,12 @@
   body{
     font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Segoe UI",sans-serif;
     color:var(--text-strong);
-    /* 同色系微渐变：让"纯色平面"变成有方向的浅色空间（顶部略亮、底部略沉） */
-    /* 深空底：顶部留出与入口幕布(#16264f)同源的蓝，往下渐沉到近黑，
-       与 .gate 的 radial-gradient(125% 95% at 50% 8%,#16264f,#0a1230 44%,#04060f) 同色系 */
+    /* 深空底：与入口幕布(#16264f)同源的宽幅星空实照铺底（顶部略亮、底部略沉），
+       其上是半透明深蓝罩保正文对比度；.aurora/星点/流星等动效层在其上叠加 */
     background:
-      radial-gradient(125% 88% at 50% -6%,rgba(22,38,79,.95) 0%,rgba(22,38,79,0) 58%),
-      linear-gradient(180deg,#0d1738 0%,#0a1128 42%,#060a18 100%);
+      radial-gradient(125% 88% at 50% -6%,rgba(22,38,79,.82) 0%,rgba(22,38,79,.12) 46%,rgba(22,38,79,0) 66%),
+      linear-gradient(180deg,rgba(13,23,56,.78) 0%,rgba(10,17,40,.66) 42%,rgba(6,10,24,.74) 100%),
+      url('assets/starmap-bg-wide-noperson.jpg') no-repeat center/cover;
     background-attachment:fixed;
     min-height:100vh;
     padding-top:var(--nav-h);
@@ -1124,8 +1124,9 @@
    background-color 与「背景固定」(background-attachment) 一律不动 —— 天空层只能用 background-image。 */
 body{
   background-image:
-    radial-gradient(125% 88% at 50% -6%,rgba(34,72,140,.95) 0%,rgba(34,72,140,0) 58%),
-    linear-gradient(180deg,#17305f 0%,#112048 42%,#091434 100%);
+    radial-gradient(125% 88% at 50% -6%,rgba(34,72,140,.88) 0%,rgba(34,72,140,0) 58%),
+    linear-gradient(180deg,rgba(23,48,95,.82) 0%,rgba(17,32,72,.72) 42%,rgba(9,20,52,.80) 100%),
+    url('assets/starmap-bg-wide-noperson.jpg');
 }
 </style>
 <style id="starnight-2-css-stars">
@@ -1341,8 +1342,9 @@ footer .ver{color:var(--c-violet)}
    页面整体仍是深蓝夜空，银河与繁星照常可见。 */
 body{
   background-image:
-    radial-gradient(125% 88% at 50% -6%,rgba(34,72,140,.95) 0%,rgba(34,72,140,0) 58%),
-    linear-gradient(180deg,#25477f 0%,#1b3763 42%,#122a4e 100%);
+    radial-gradient(125% 88% at 50% -6%,rgba(34,72,140,.85) 0%,rgba(34,72,140,0) 58%),
+    linear-gradient(180deg,rgba(37,71,127,.80) 0%,rgba(27,55,99,.70) 42%,rgba(18,42,78,.78) 100%),
+    url('assets/starmap-bg-wide-noperson.jpg');
 }
 </style>
 <style id="starnight-5-milkyway">

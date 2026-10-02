@@ -1038,16 +1038,25 @@
   /* 选区：用品牌蓝的淡色，而不是系统默认的荧光高亮 */
   ::selection{background:rgba(37,99,201,.20);color:var(--text-strong)}
 
-  /* 滚动条：细窄、蓝色渐变，与进度条同色系 */
-  html{scrollbar-width:thin;scrollbar-color:rgba(140,180,255,.45) transparent}
+  /* 滚动条：细窄、深空蓝同源（v4.5.17：由"与进度条同色系"改为"与主页背景色同源"）
+     ⚠️ 两套必须同时改，只改一处等于没改：
+     #1 标准 scrollbar-color —— Firefox 与 Chrome 121+ 用这条；Chrome 一旦设了它（非 auto），
+        就会整个忽略下面 ::-webkit-scrollbar 的样式（含宽度、圆角、渐变）。
+     #2 ::-webkit-scrollbar —— Safari / 老 Chrome 用这条（渐变、10px、圆角细条）。
+     ⚠️ track 不能写 transparent：Chrome 会把它渲染成【纯白滚动条槽】(实测 RGB 240,240,240)，
+        在深空背景上是一条刺眼白条 —— 这才是"滚动条不符背景色"的真正元凶。
+        故 Chrome 侧给显式深空蓝 rgba(11,20,48,.88)（实测渲成 RGB 32,48,64，融入背景）；
+        Safari 侧 transparent 是真透明、直接透出背景，无需改。
+     取色自背景同源的深空蓝：底部 #1e3f7a（贴近深空底）、中段 #2f6fdb、上端 #4f9ad8（极光冰蓝）。 */
+  html{scrollbar-width:thin;scrollbar-color:rgba(47,111,219,.78) rgba(11,20,48,.88)}
   ::-webkit-scrollbar{width:10px;height:10px}
   ::-webkit-scrollbar-track{background:transparent}
   ::-webkit-scrollbar-thumb{
-    background:linear-gradient(180deg,rgba(120,170,255,.72),rgba(56,189,248,.62));
+    background:linear-gradient(180deg,#1e3f7a,#2f6fdb 55%,#4f9ad8);
     border-radius:99px;border:3px solid transparent;background-clip:content-box;
   }
   ::-webkit-scrollbar-thumb:hover{
-    background:linear-gradient(180deg,rgba(143,196,255,.92),rgba(56,189,248,.85));
+    background:linear-gradient(180deg,#2f6fdb,#4f9ad8 55%,#7fb2ff);
     background-clip:content-box;border:3px solid transparent;
   }
   /* ===== 顶部导航玻璃折射 ===== */

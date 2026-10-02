@@ -1709,6 +1709,110 @@ footer{
   .hero.in h1{animation:none}
 }
 </style>
+<style id="avatar-ring-2">
+/* 头像完整修复（v4.5.14）：Hero 106px + 聊天 36px 的双层环，统一从 box-shadow 改为 border 伪元素。
+   本块【合并】取代此前分开的两条改动，只需贴这一块。
+
+   ===== 现象 =====
+   Hero 首屏 106px 圆盘的环在某一侧/某一角被切掉一截（桌面与手机都有）。
+
+   ===== 原因：不是被父容器裁掉，是 box-shadow 画不全 =====
+   环原本由 .avatar 的 box-shadow 外扩 8px 绘制。.avatar 位于 header.hero.card：
+     · .card{position:relative;overflow:hidden}（第 346 行）
+     · .reveal{opacity:0;transform:translateY(26px)}（第 426 行）→ 入场时给卡片加
+       transform 合成层
+   几何上【没有越界】：Hero 内边距最小 20px（≤620px）> 环外扩 8px，
+   所以不是被父容器裁掉，而是 box-shadow 的 spread 环在「合成层 + overflow:hidden」
+   组合下不保证完整绘制。
+   ⚠️ 第 1593 行原注释「Hero .avatar 不在滚动容器里，保留 box-shadow 不动」与实际现象
+      不符（Hero 同样受影响），本块据实修正该判断。
+   同一缺陷 v4.5.11 已在聊天头像上实测确认（截图探针：box-shadow 时环像素为 0，
+   改 border 伪元素即正常），本块把 Hero 一并改用同一套做法。
+
+   ===== 修法：只改「怎么画环」，不改「画多大」=====
+   总外扩保持原样（Hero 8px / 聊天 6px），圆盘尺寸、星空图、首字「刘」、位置、HTML 全不动。
+     Hero 106px（圆盘半径 53）：::before 深环 53→56px（-3px/3px）；::after 亮环 56→61px（-8px/5px）
+     聊天  36px（圆盘半径 18）：::before 深环 18→20px（-2px/2px）；::after 亮环 20→24px（-6px/4px）
+
+   ===== 顺带修掉两个层次缺陷 =====
+   ① Hero：原深色环(0–5px)被后画的亮色环(0–8px)整段盖住 → 深色分隔环从未显示；
+          改为首尾相接后才真正可见。
+   ② 聊天：原 ::after(半径 18–24) 把 ::before(18–21) 整段盖住，且 ::after 半透明，
+          两层糊成一圈灰蓝 → 改为 18–20 / 20–24 首尾相接。
+
+   ===== 注意 =====
+   · 本块【必须】贴在所有 <\/style> 之后、<\/head> 之前：它靠「在文档中更靠后」覆盖
+     第 1594 行旧 .avatar{box-shadow:…}（同优先级，后写的赢）。贴前面不生效。
+     （本注释内一律写作 <\/style>；照抄文件里 starnight-7-galaxy 注释的既有写法。
+       若写成不转义的结束标签，会被当成本 style 块的结束而【提前截断】，后面 CSS 全部变成页面文字。）
+   · 本块【不要】给 .avatar 加 overflow:hidden —— 伪元素环在框外（-3px/-8px），会被裁掉。
+   · 整块可回滚：删掉本块即恢复原状（第 1594 行旧声明【故意未删】）。 */
+
+/* ── Hero 106px 圆盘 ─────────────────────────────────────────── */
+.avatar{
+  position:relative;                              /* 伪元素定位参照 */
+  box-shadow:0 14px 30px -10px rgba(0,0,0,.6);    /* 只留柔和投影，撤掉两个 spread 环 */
+}
+.avatar::before{                                  /* 深色分隔环：半径 53 → 56px */
+  content:'';position:absolute;inset:-3px;border-radius:50%;
+  border:3px solid rgba(11,20,48,.9);pointer-events:none;
+}
+.avatar::after{                                   /* 亮色外环：半径 56 → 61px */
+  content:'';position:absolute;inset:-8px;border-radius:50%;
+  border:5px solid rgba(157,196,255,.62);pointer-events:none;
+}
+
+/* ── 聊天 36px 头像（.chat-head .av）────────────────────────── */
+.chat-head .av{
+  position:relative;                              /* v4.5.11 已有，此处复述以保证本块自足 */
+}
+.chat-head .av::before{                           /* 深色分隔环：半径 18 → 20px */
+  content:'';position:absolute;inset:-2px;border-radius:50%;
+  border:2px solid rgba(11,20,48,.9);pointer-events:none;
+}
+.chat-head .av::after{                            /* 亮色外环：半径 20 → 24px */
+  content:'';position:absolute;inset:-6px;border-radius:50%;
+  border:4px solid rgba(157,196,255,.62);pointer-events:none;
+}
+</style>
+<style id="avatar-ring-3">
+/* 头像环缺口收尾（v4.5.15）：解除 Hero 卡片对戒指环的裁切。
+   本块接在 avatar-ring-2（v4.5.14）之后，一并解决"环左侧缺一截"。
+
+   ===== 现象 =====
+   v4.5.14 把环从 box-shadow 改成 border 伪元素后，环已从"残缺"变为"清晰"，
+   但桌面与手机左下方仍各缺约 47°~52°。
+
+   ===== 根因（像素级实测，非推断）=====
+   第 443 行 .hero{padding:36px 36px} 被第 1071-1079 行「去方框」块的
+   .card{padding-left:0;padding-right:0} 覆盖（该块为让内容与顶部导航左对齐）
+   → .hero 计算 padding 实际为 36px 0px，水平内边距为 0。
+   于是 .avatar 与卡片左边界【完全贴齐】：
+     桌面 .avatar 左=74，卡片左=74（余量 0px）
+     手机 .avatar 左=12，卡片左=12（余量 0px）
+   而 .card{overflow:hidden}（第 346 行）就在这条边界上裁切，
+   环向外扩的 8px 在左侧被整段切掉。
+   实测缺口：157°~203°（桌面 1280）/ 155°~206°（手机 390），
+   与几何预测（环带 r=57~61 越过 x=74：外沿 150°~210°、内沿 158°~202°）精确吻合。
+   ⚠️ 因此 v4.5.14 块注释里"不是被父容器裁掉"的结论【已被实测推翻】，
+      真实成因是 box-shadow 画不全【与】父容器裁切两个叠加，前者已修，本块修后者。
+
+   ===== 修法 =====
+   ① 让 Hero 卡片不再裁切 → 环可以画到卡片边界之外（卡片此刻已无边框/底色，
+      环外扩到星空背景上是无缝的）。
+   ② 同时收回 .hero-cta::before 的横向外扩：它是磁吸感应的命中区
+      （第 548 行 inset:-80px）。卡片一旦不裁切，它会撑出横向滚动条
+      （实测：仅做 ① 时桌面 +6px、手机 +68px）。改为 inset:-80px 0
+      即保留上下 80px 命中区、去掉左右外扩。
+
+   ===== 实测结果 =====
+   环 360/360（桌面与手机均 100%，此前 86.9% / 85.6%）；
+   横向溢出 0px；头像位置不变（桌面 74 / 手机 12）；docH 不变。
+
+   可整块回滚：删掉本块即恢复 v4.5.14 状态。 */
+header.hero.card{overflow:visible}
+.hero-cta::before{inset:-80px 0}
+</style>
 </head>
 <body>
 

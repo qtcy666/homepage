@@ -464,10 +464,30 @@
 
   /* ---------- Hero ---------- */
   .hero{
-    display:grid;grid-template-columns:minmax(0,1fr);
+    display:grid;grid-template-columns:minmax(0,1.12fr) minmax(0,.88fr);
     gap:34px;align-items:center;padding:36px 36px;
   }
   .hero-top{display:flex;align-items:center;gap:20px}
+  /* Hero 右侧脑机接口配图（v4.5.21）：图片自带椭圆羽化 alpha，不描边。
+     再用 mix-blend-mode:screen 让深色像素"等于不存在"（screen 与黑=保留背景），
+     于是只有发光的大脑本身浮在卡片星空上——实测环带亮度与改前卡片背景一致
+     （76/74/75/78 vs 72/73/75/78），完全看不出图片边界；若改用 drop-shadow
+     会在亮星云处压出一圈暗斑（环带掉到 38），故不用阴影。
+     只占右列、垂直居中，窄屏（<900px）自动落到文字下方。 */
+  .hero-bci{
+    margin:0;position:relative;width:100%;max-width:470px;
+    justify-self:center;align-self:center;pointer-events:none;
+  }
+  .hero-bci img{
+    display:block;width:100%;height:auto;
+    mix-blend-mode:screen;
+    opacity:0;transform:translateY(16px) scale(.985);
+    transition:opacity .95s var(--ease-out) .2s,transform 1.1s var(--ease-spring) .2s;
+  }
+  .card.in .hero-bci img{opacity:1;transform:none}
+  @media (prefers-reduced-motion:reduce){
+    .hero-bci img{opacity:1;transform:none;transition:none}
+  }
   .hero::after{
     content:"";position:absolute;inset:0 0 auto 0;height:4px;
     background:linear-gradient(90deg,var(--blue),var(--cyan));
@@ -1001,6 +1021,7 @@
     .split.flip .sec-fig{order:0}
     .sec-fig{min-height:220px}
     .hero{grid-template-columns:1fr;gap:26px;padding:30px 26px}
+    .hero-bci{max-width:360px;margin:2px auto 0}
     .hero-fig{min-height:240px}
     .card{padding:26px 24px}
   }
@@ -1990,6 +2011,10 @@ header.hero.card{overflow:visible}
         </div>
       </div>
     </div>
+    <figure class="hero-bci">
+      <img src="assets/hero-bci.webp" width="1200" height="738" decoding="async"
+           alt="脑机接口概念图：发光的神经网络大脑与神经芯片" />
+    </figure>
   </header>
 
   <!-- 首屏滚动引导 -->
@@ -2289,6 +2314,8 @@ header.hero.card{overflow:visible}
     "下方可以和我聊聊，这是我的\"数字分身\"。": "Scroll down and talk to me — that's my \"digital twin\".",
     "🤖 和数字分身聊聊": "🤖 Chat with my AI twin",
     "看看我的技能": "See my skills",
+    "脑机接口概念图：发光的神经网络大脑与神经芯片":
+      "Brain–computer interface concept art: a glowing neural-network brain linked to a neural chip",
 
     /* ---- 关于我 ---- */
     "自我介绍": "About me",

@@ -747,7 +747,7 @@
 
   .chat-head .av{
     width:36px;height:36px;border-radius:50%;display:grid;place-items:center;
-    background:linear-gradient(135deg,#6fb1f3,#2f6fdb);box-shadow:0 0 0 3px rgba(11,20,48,.9);
+    background:linear-gradient(135deg,#6fb1f3,#2f6fdb);
   }
   .chat-head .av svg{width:23px;height:23px}
   .chat-head b{font-size:15px}
@@ -1583,6 +1583,130 @@ background-image:
 .chat-head .av .ini{
   color:transparent;
   text-shadow:none;
+}
+/* 亮色圆环（v4.5.10 用户反馈：星空暗+背景深，圆形轮廓融入背景看不清 → 补亮环）。
+   覆盖层：保留原深投影与深色内环(分隔星空/背景)，把外环加亮加宽以凸显正圆。
+   Hero 106px：8px 亮浅蓝外环；聊天 36px：6px 亮外环。色相沿用 rgba(157,196,255), 不引入新色。
+   ⚠️ v4.5.11 修复：聊天头像的环不能再用 box-shadow —— 它位于 .chat-box(overflow:hidden)
+   内部的滚动容器合成层下，Chromium 会把子元素非 inset spread 阴影整体缺失，导致环完全不渲染
+   （已用截图探针反复验证：box-shadow 时环像素为 0，改用 border 伪元素则正常）。
+   Hero .avatar 不在滚动容器里，保留原 box-shadow 三层环不动。 */
+.avatar{
+  box-shadow:0 14px 30px -10px rgba(0,0,0,.6),
+             0 0 0 5px rgba(11,20,48,.9),
+             0 0 0 8px rgba(157,196,255,.62);
+}
+/* 聊天头像：改用 ::before/::after 两层 border 圆环，绕开 box-shadow 在滚动容器内被裁剪的问题。 */
+.chat-head .av{
+  position:relative;
+}
+.chat-head .av::before{
+  content:'';position:absolute;inset:-3px;border-radius:50%;
+  border:3px solid rgba(11,20,48,.9);pointer-events:none;
+}
+.chat-head .av::after{
+  content:'';position:absolute;inset:-6px;border-radius:50%;
+  border:6px solid rgba(157,196,255,.62);pointer-events:none;
+}</style>
+<style id="text-clarity-2">
+/* 文字更清晰 · 第二轮（v4.5.12）
+   背景：卡片去框后，文字直接坐在流动的星点 / 银河 / 极光上。
+   上一轮（starnight-4-legible）的方向是对的——用「更实的深色投影 + subpixel 抗锯齿
+   + 提亮最弱两档文字」把文字从星点里拉出来；但那条投影里有一层 6px 大模糊，
+   它会吃掉字缘的高频，正是「发虚」的来源。
+
+   本轮只做三件【不改版式、不改配色】的事（整块追加在文件末尾，可整块回滚）：
+     ① .card / footer 的文字投影换成「紧贴 + 更实」的清晰描边
+        ——去掉 6px 大模糊，字缘变锋利；同时用 1px 实边继续压住星点；
+     ② 最弱两档文字（--text-soft / --text-muted）再提亮半档，抬高全站最弱处对比度；
+     ③ 11–13px 级小字（技能小注 / 说明占位 / 表单提示 / 页脚小字）统一加粗半档，
+        深底上不发糊。
+   不动：字号 / 行高 / 间距 / 任何非颜色属性 / 任何 HTML 结构。 */
+
+.card,footer{
+  text-shadow:
+    0 0 1px rgba(2,5,14,.95),
+    0 1px 1px rgba(2,5,14,.80),
+    0 1px 2px rgba(2,5,14,.42);
+}
+
+/* 最弱两档文字再提亮半档（纯增益：没有任何一处会比现在更难读） */
+:root{
+  --text-soft:#c8d8ec;
+  --text-muted:#bcd0e6;
+}
+
+/* 小字提清晰：全站 11–13px 级「浅色小注 / 说明占位 / 页脚小字」统一加粗半档。
+   这些是全站最弱、最容易被星点吃掉的字。
+   只动字重与字色（字色随上面两档 token 一起提亮），不动字号与间距，避免换行变化。 */
+.card-head .sub,
+.hero-hello .hi-sub,
+.info .kv .k,
+.skills .name small,
+.skills .lv .ph,
+.ph,
+.contact .cl,
+.fb-row .hint,
+.fb-note,
+.fb-viewer-hint,
+.fv-item .fv-top,
+.fv-item .fv-meta,
+.fv-empty,
+.status,
+footer{
+  font-weight:500;
+}
+</style>
+<style id="name-visible-1">
+/* ── v4.5.13 姓名可见性修复（P0：Hero 名字此前根本没被绘制） ───────────────
+   现象：`.hero h1` 的「刘一鸣」实测【笔画像素占比 0.00%、对比度 1.07】
+         （背景 L=0.0759 / 笔画 L=0.0849）——不是"不清楚"，是一个字都没画出来。
+         对照：导航栏同名的「刘一鸣」对比度 13.32，清晰可见。
+   根因：姓名用 background-clip:text 做渐变（-webkit-text-fill-color:transparent），
+         而三个 .ch 子元素各自带逐字上浮动画（chRise … forwards）。
+         Chromium 会把「被动画的子元素」放进独立合成图层，父级「按字形裁剪背景」
+         因此找不到任何字形 → 整段不绘制。
+         逐项验证：子元素上任何动画形式（transform / filter / 仅 opacity / 仅
+         relative top）都会导致 0.00%，与是否走合成无关；只有把动画挪到父级才恢复。
+         （该缺陷自「任务30 逐字姓名」加入起即存在，与后续文字清晰化改动无关。）
+   修复：入场从「逐字」改为「整名」——动画上移到父级 h1（父级自身的
+         opacity/transform/filter 动画不会破坏它自己的 clip:text，已实测稳定可见），
+         子元素彻底去动画、去 transform、去 filter，回到纯静态字形。
+   保留：渐变姓名本体 / 6.5s 高光扫过 txtSheen / reduced-motion 直接出终态。
+   不动：字号 / 字重 / 字距 / 行高 / HTML 结构。整块可回滚。 */
+
+/* 子元素回到纯静态字形：这是让父级 clip:text 重新「看见」字形的关键 */
+.hero.in h1 .ch{
+  animation:none !important;
+  opacity:1 !important;
+  transform:none !important;
+  filter:none !important;
+}
+
+/* 去掉姓名的 text-shadow —— 对「透明字填充 + 背景裁剪」的渐变文字，
+   阴影是画在字形【下面】的，会从透明的字身里透出来，把字压暗：
+   实测 保留 0 1px 2px rgba(2,4,10,.45) → 笔画主体 L=0.612 / 对比度 5.21；
+        去掉后 → 笔画主体 L=0.838 / 对比度 6.96（笔画覆盖 1.40% → 9.58%）。
+   注意：这里【不能】改成"更轻的深色描边"，0 0 1px 的深色阴影会让字再次消失。 */
+.hero h1{
+  text-shadow:none;
+}
+
+/* 入场动画上移到父级；与原有高光扫过并存（两个动画各动各的属性，互不覆盖） */
+.hero.in h1{
+  animation:
+    txtSheen 6.5s ease-in-out infinite,
+    nameRise .9s cubic-bezier(.22,.8,.3,1) both;
+}
+@keyframes nameRise{
+  from{opacity:0;transform:translateY(18px);filter:blur(6px)}
+  to{opacity:1;transform:none;filter:none}
+}
+
+/* 无障碍：恢复原「直接展示最终态」行为
+   （媒体查询不提升优先级，必须在此显式覆盖上面的 .hero.in h1 规则） */
+@media (prefers-reduced-motion:reduce){
+  .hero.in h1{animation:none}
 }
 </style>
 </head>

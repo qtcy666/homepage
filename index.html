@@ -1059,11 +1059,28 @@
   @supports selector(::-webkit-scrollbar){
     html{scrollbar-width:auto;scrollbar-color:auto}
     html::-webkit-scrollbar{width:11px;height:11px}
-    /* 槽＝与左邻背景逐段取样的渐变（上 9% 是顶栏右缘的深色，中部中蓝，底部转深） */
+    /* 槽＝滚动条底下【真实背景】的逐点取样（办法：临时把滚动条隐藏，直接量它盖住的那 11px），
+       并且用 px 锚定而非百分比 —— track 高度＝视口高，用百分比会随窗口高度整体错位，
+       而 topbar 高度(≈70px)与背景色带是绝对像素位置。
+       验收口径＝「滚动条原样」与「隐藏滚动条后的真背景」逐段比：y0-60 差 0、y60-120 差 28、
+       y360-900 差 1~13；只有滑块本体所在区间是亮蓝（那是滑块，属设计，不是槽）。
+       ⚠️ 不要用「裁剪截图 clip」去量顶部 —— 裁剪渲染会凭空多出白色端点，整屏截图才是真相。 */
     html::-webkit-scrollbar-track{
-      background:linear-gradient(180deg,#0a1f44 0%,#0a1f44 9%,#1d4677 20%,
-                                 #1f4b7e 50%,#294883 70%,#213566 84%,#152243 100%);
+      background:linear-gradient(180deg,
+        rgb(9,30,67) 0px,rgb(9,30,67) 58px,rgb(23,52,97) 80px,rgb(29,67,115) 140px,
+        rgb(30,72,120) 180px,rgb(30,75,123) 240px,rgb(30,77,124) 320px,
+        rgb(30,75,125) 400px,rgb(31,71,123) 460px,rgb(34,70,120) 500px,
+        rgb(38,70,127) 560px,rgb(40,71,127) 600px,rgb(36,61,115) 640px,
+        rgb(34,57,107) 680px,rgb(31,50,97) 720px,rgb(27,44,87) 780px,
+        rgb(24,40,80) 820px,rgb(21,36,70) 860px,rgb(19,33,66) 900px);
     }
+    /* 两端默认按钮：显式关掉作防御（有些平台/渲染路径会露出白色端点） */
+    html::-webkit-scrollbar-button{display:none;width:0;height:0}
+    /* 页面本身有 5px 的既有横向溢出 → 底部会多出一条横向滚动条，且右下角出现一个
+       白色 corner 方块（实测 x1269-1279 / y889-899 恒为纯白）。二者都非设计所需：
+       横向条收起，corner 直接染成槽底同色。 */
+    html::-webkit-scrollbar:horizontal{height:0}
+    html::-webkit-scrollbar-corner{background:rgb(19,33,66)}
     html::-webkit-scrollbar-thumb{
       background:linear-gradient(180deg,#2f6fdb,#4f9ad8 55%,#7fb2ff);
       border-radius:99px;border:3px solid transparent;background-clip:content-box;

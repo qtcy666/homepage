@@ -2375,7 +2375,9 @@ header.hero.card{overflow:visible}
       const nr = nav.getBoundingClientRect();
       ink.style.width = r.width + 'px';
       ink.style.height = r.height + 'px';
-      ink.style.left = (r.left - nr.left) + 'px';
+      // +nav.scrollLeft：墨迹是滚动内容的一部分，会随滚动偏移；不补这一项，
+      // 手机端导航一旦横向滚动，墨迹就会整体偏掉 scrollLeft 那么多（原来一直在 0 所以没暴露）。
+      ink.style.left = (r.left - nr.left + nav.scrollLeft) + 'px';
       ink.style.opacity = '1';
     }
     place(cur);
@@ -2397,6 +2399,36 @@ header.hero.card{overflow:visible}
     nav.addEventListener('scroll', refresh, { passive: true });
     window.addEventListener('resize', refresh);
     window.addEventListener('scroll', refresh, { passive: true });
+  })();
+
+  /* 导航条跟随高亮：手机端 #nav 是横向滚动条（≤414px 时内容 377px > 容器，末尾「数字分身 / 反馈」会被裁掉）。
+     区块高亮其实一直有正确切换，但高亮项滑出可视条之外时，用户看到的就是"导航没跟着变"。
+     这里在 active 每次切换后把新高亮项滚回可视区；桌面端不溢出时是空操作。
+     只在 active 变化时滚（MutationObserver），不在 scroll 事件里滚，
+     避免与用户手动横滑导航抢方向盘。 */
+  (function () {
+    const nav = document.getElementById('nav');
+    if (!nav) return;
+    const PAD = 10; // 高亮项左右至少留出的可见边距
+    function reveal() {
+      const a = nav.querySelector('a.active');
+      if (!a) return;
+      if (nav.scrollWidth <= nav.clientWidth + 1) return; // 不溢出则无需滚动
+      const r = a.getBoundingClientRect();
+      const nr = nav.getBoundingClientRect();
+      let left = nav.scrollLeft;
+      if (r.left < nr.left + PAD) left += (r.left - nr.left) - PAD;            // 左侧被遮
+      else if (r.right > nr.right - PAD) left += (r.right - nr.right) + PAD;   // 右侧被遮
+      if (Math.abs(left - nav.scrollLeft) > 1) {
+        nav.scrollTo({ left, behavior: 'smooth' });
+      }
+    }
+    new MutationObserver(reveal).observe(nav, { attributes: true, attributeFilter: ['class'], subtree: true });
+    // 点导航项时浏览器已会把焦点项滚进可视区，这里再对齐一次（覆盖 active 未变化、但焦点滚动未发生的情况）
+    nav.addEventListener('click', (e) => {
+      if (e.target.closest && e.target.closest('a')) setTimeout(reveal, 80);
+    });
+    reveal();
   })();
 
   /* 玻璃折射：卡片表层淡高光跟随鼠标（desktop 优先，触摸屏由固定入光位置兜底） */

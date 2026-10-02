@@ -468,14 +468,15 @@
     gap:34px;align-items:center;padding:36px 36px;
   }
   .hero-top{display:flex;align-items:center;gap:20px}
-  /* Hero 右侧脑机接口配图（v4.5.21）：图片自带椭圆羽化 alpha，不描边。
-     再用 mix-blend-mode:screen 让深色像素"等于不存在"（screen 与黑=保留背景），
-     于是只有发光的大脑本身浮在卡片星空上——实测环带亮度与改前卡片背景一致
-     （76/74/75/78 vs 72/73/75/78），完全看不出图片边界；若改用 drop-shadow
-     会在亮星云处压出一圈暗斑（环带掉到 38），故不用阴影。
-     只占右列、垂直居中，窄屏（<900px）自动落到文字下方。 */
+  /* Hero 右侧脑机接口配图（v4.5.21）：素材已按亮度键出 alpha（深色底完全透明，
+     不存在图片矩形边界），再叠 mix-blend-mode:screen 让深色像素"等于不存在"
+     （screen 与黑=保留背景），于是只有发光的大脑本身浮在卡片星空上——实测图片四边
+     "内-外"亮度台阶 ≤2 级（上-0.07/下+2.0/左-0.55），肉眼看不出边界；若改用
+     drop-shadow 会在亮星云处压出一圈暗斑（环带掉到 38，核心亮度只有 64），故不用阴影。
+     配图宽度撑满右列（483px，占卡片高 82%），只占右列、垂直居中，
+     窄屏（<900px）自动落到文字下方。 */
   .hero-bci{
-    margin:0;position:relative;width:100%;max-width:470px;
+    margin:0;position:relative;width:100%;max-width:none;
     justify-self:center;align-self:center;pointer-events:none;
   }
   .hero-bci img{
@@ -2012,7 +2013,7 @@ header.hero.card{overflow:visible}
       </div>
     </div>
     <figure class="hero-bci">
-      <img src="assets/hero-bci.webp" width="1200" height="738" decoding="async"
+      <img src="assets/hero-bci.webp" width="1000" height="667" decoding="async"
            alt="脑机接口概念图：发光的神经网络大脑与神经芯片" />
     </figure>
   </header>

@@ -1038,26 +1038,56 @@
   /* 选区：用品牌蓝的淡色，而不是系统默认的荧光高亮 */
   ::selection{background:rgba(37,99,201,.20);color:var(--text-strong)}
 
-  /* 滚动条：细窄、深空蓝同源（v4.5.17：由"与进度条同色系"改为"与主页背景色同源"）
-     ⚠️ 两套必须同时改，只改一处等于没改：
-     #1 标准 scrollbar-color —— Firefox 与 Chrome 121+ 用这条；Chrome 一旦设了它（非 auto），
-        就会整个忽略下面 ::-webkit-scrollbar 的样式（含宽度、圆角、渐变）。
-     #2 ::-webkit-scrollbar —— Safari / 老 Chrome 用这条（渐变、10px、圆角细条）。
-     ⚠️ track 不能写 transparent：Chrome 会把它渲染成【纯白滚动条槽】(实测 RGB 240,240,240)，
-        在深空背景上是一条刺眼白条 —— 这才是"滚动条不符背景色"的真正元凶。
-        故 Chrome 侧给显式深空蓝 rgba(11,20,48,.88)（实测渲成 RGB 32,48,64，融入背景）；
-        Safari 侧 transparent 是真透明、直接透出背景，无需改。
-     取色自背景同源的深空蓝：底部 #1e3f7a（贴近深空底）、中段 #2f6fdb、上端 #4f9ad8（极光冰蓝）。 */
-  html{scrollbar-width:thin;scrollbar-color:rgba(47,111,219,.78) rgba(11,20,48,.88)}
-  ::-webkit-scrollbar{width:10px;height:10px}
-  ::-webkit-scrollbar-track{background:transparent}
-  ::-webkit-scrollbar-thumb{
-    background:linear-gradient(180deg,#1e3f7a,#2f6fdb 55%,#4f9ad8);
-    border-radius:99px;border:3px solid transparent;background-clip:content-box;
+  /* 滚动条（v4.5.18：让槽彻底"隐形"、贴合背景，只留滑块）
+     ▸ 背景这一列不是纯色，而是「顶部深 → 中部中蓝 → 底部深」的垂直渐变
+       （背景层是 position:fixed，实测 y0-90 #0a1f44 / y180-450 #1e4d7d~#1f4b7e / y810-900 #152243，
+        且四个不同滚动位置完全一致），所以【单色槽永远贴不齐】：
+        v4.5.17 的单色槽实测 RGB(41,49,73)，而旁边背景 RGB(31,71,123)，色差 82（明显偏暗偏灰，像贴了块补丁）。
+       ⇒ 槽改为按"滚动条左邻背景"逐段取样的渐变，实测色差降到 2（肉眼不可分辨）。
+     ▸ 两路实现（浏览器能力分支）：
+        · Firefox 等不支持 ::-webkit-scrollbar 的 → 标准 scrollbar-color，只能给单色，兜底取背景中蓝；
+        · Chrome / Safari → @supports selector(::-webkit-scrollbar) 命中，把 scrollbar-color 置回 auto。
+          ⚠️ 必须置 auto 才有用：Chrome 一旦设了非 auto 的 scrollbar-color 就会整个无视 ::-webkit-scrollbar
+             （宽度、圆角、渐变全失效，v4.5.17 踩过）。
+        · 宽度统一 11px（与 thin 实测等宽，布局零位移）。
+     ⚠️ 规则一律带 html::-webkit-scrollbar 前缀，只命中根滚动条。
+        ::-webkit-scrollbar 不写前缀 = 全局生效，会连带给 .msgs / .fb-viewer-list 等内部滚动容器，
+        把整屏渐变套到小容器上会错乱 —— 它们另有一条规则单独处理（见下方）。
+     ⚠️ 槽不能写 transparent：Chrome 会把它渲成【纯白槽】(实测 RGB 240,240,240)，必须给明确颜色/渐变。 */
+  /* 兜底（Firefox）：单色，取背景中蓝 */
+  html{scrollbar-width:thin;scrollbar-color:rgba(47,111,219,.78) rgba(30,69,121,.92)}
+  @supports selector(::-webkit-scrollbar){
+    html{scrollbar-width:auto;scrollbar-color:auto}
+    html::-webkit-scrollbar{width:11px;height:11px}
+    /* 槽＝与左邻背景逐段取样的渐变（上 9% 是顶栏右缘的深色，中部中蓝，底部转深） */
+    html::-webkit-scrollbar-track{
+      background:linear-gradient(180deg,#0a1f44 0%,#0a1f44 9%,#1d4677 20%,
+                                 #1f4b7e 50%,#294883 70%,#213566 84%,#152243 100%);
+    }
+    html::-webkit-scrollbar-thumb{
+      background:linear-gradient(180deg,#2f6fdb,#4f9ad8 55%,#7fb2ff);
+      border-radius:99px;border:3px solid transparent;background-clip:content-box;
+    }
+    html::-webkit-scrollbar-thumb:hover{
+      background:linear-gradient(180deg,#4f9ad8,#7fb2ff 55%,#a9ccff);
+      background-clip:content-box;border:3px solid transparent;
+    }
   }
-  ::-webkit-scrollbar-thumb:hover{
-    background:linear-gradient(180deg,#2f6fdb,#4f9ad8 55%,#7fb2ff);
-    background-clip:content-box;border:3px solid transparent;
+  /* 内部滚动容器（聊天记录 .msgs / 反馈列表 .fb-viewer-list）：槽贴合卡片玻璃面，滑块低调蓝。
+     不套用根滚动条的整屏渐变（尺寸与位置都不同）。 */
+  @supports selector(::-webkit-scrollbar){
+    .msgs::-webkit-scrollbar,.fb-viewer-list::-webkit-scrollbar{width:9px;height:9px}
+    .msgs::-webkit-scrollbar-track,.fb-viewer-list::-webkit-scrollbar-track{background:rgba(8,13,30,.45)}
+    .msgs::-webkit-scrollbar-thumb,.fb-viewer-list::-webkit-scrollbar-thumb{
+      background:rgba(79,154,216,.55);border-radius:99px;border:2px solid transparent;background-clip:content-box;
+    }
+    .msgs::-webkit-scrollbar-thumb:hover,.fb-viewer-list::-webkit-scrollbar-thumb:hover{
+      background:rgba(127,178,255,.75);background-clip:content-box;border:2px solid transparent;
+    }
+  }
+  /* 同上两个容器在 Firefox 的单色兜底（否则会继承根滚动条的中蓝槽，与卡片玻璃面不符） */
+  @supports not selector(::-webkit-scrollbar){
+    .msgs,.fb-viewer-list{scrollbar-width:thin;scrollbar-color:rgba(79,154,216,.55) rgba(8,13,30,.45)}
   }
   /* ===== 顶部导航玻璃折射 ===== */
   .svg-defs{position:absolute;width:0;height:0;overflow:hidden}

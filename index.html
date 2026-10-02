@@ -332,6 +332,31 @@
   .nav a:hover{color:var(--text-link)}
   .nav a.active{color:#fff}
 
+  /* ---------- 语言切换（中 / EN） ----------
+     位置：① 入口幕布内（首次访问即可选）；② 顶部导航栏右端。
+     浅底为深玻璃 + 细边，选中项用与 .nav .ink 同源的蓝—青渐变，白字对比度 >4.5:1。 */
+  .lang-sw{
+    display:inline-flex;align-items:center;gap:2px;flex:0 0 auto;
+    padding:3px;border-radius:999px;
+    background:rgba(11,20,48,.55);border:1px solid var(--line);
+  }
+  .lang-sw button{
+    appearance:none;-webkit-appearance:none;border:0;cursor:pointer;
+    font:inherit;font-size:12px;font-weight:700;letter-spacing:.4px;line-height:1;
+    padding:6px 11px;border-radius:999px;
+    background:transparent;color:var(--text-soft);
+    transition:color var(--dur-fast) var(--ease-out),background var(--dur-base) var(--ease-out);
+  }
+  .lang-sw button:hover{color:var(--text-link)}
+  .lang-sw button:focus-visible{outline:2px solid var(--text-link);outline-offset:2px}
+  .lang-sw button[aria-pressed="true"]{
+    color:#fff;
+    background:linear-gradient(90deg,#2b62c9,#3b82f6 55%,#22b8e6);
+    box-shadow:0 5px 14px -7px rgba(37,99,201,.85);
+  }
+  /* 入口幕布内的切换器：与 .gate-hint 拉开距离，居中 */
+  .gate .lang-sw{margin-top:26px}
+
   /* 墨迹滑块：随点击/hover 在链接间滑动的"墨滴"图层（渐进增强，不支持则无） */
   .nav .ink{
     position:absolute;top:2px;border-radius:999px;pointer-events:none;z-index:0;
@@ -1901,6 +1926,10 @@ header.hero.card{overflow:visible}
     <p>把复杂问题简单化 —— 点击启动，进入我的主页。</p>
     <button class="gate-btn" id="gateBtn" type="button">启 动</button>
     <div class="gate-hint">点击按钮，或按 Enter 键进入</div>
+    <div class="lang-sw" role="group" aria-label="Language">
+      <button type="button" data-lang="zh" lang="zh-CN">中</button>
+      <button type="button" data-lang="en" lang="en">EN</button>
+    </div>
   </div>
 </div>
 
@@ -1915,6 +1944,10 @@ header.hero.card{overflow:visible}
       <a href="#contact">联系方式</a>
       <a href="#twin">数字分身</a>
       <a href="#feedback">反馈</a>
+    </div>
+    <div class="lang-sw" role="group" aria-label="Language">
+      <button type="button" data-lang="zh" lang="zh-CN">中</button>
+      <button type="button" data-lang="en" lang="en">EN</button>
     </div>
   </div>
 </nav>
@@ -2094,14 +2127,15 @@ header.hero.card{overflow:visible}
           </div>
           <div class="msgs" id="msgs" role="log" aria-live="polite" aria-label="与数字分身的对话"></div>
           <div class="suggest" id="suggest">
-            <button>你是谁</button>
-            <button>你在干什么</button>
-            <button>你的特点</button>
-            <button>你的兴趣</button>
-            <button>你的学校专业</button>
-            <button>你的技能</button>
-            <button>你的学习目标</button>
-            <button>怎么联系你</button>
+            <!-- data-q：无论界面语言如何，点击后都发送这条"规范问题"，保证规则一定能命中（回答语言再按当前语言输出） -->
+            <button data-q="你是谁">你是谁</button>
+            <button data-q="你在干什么">你在干什么</button>
+            <button data-q="你的特点">你的特点</button>
+            <button data-q="你的兴趣">你的兴趣</button>
+            <button data-q="你的学校专业">你的学校专业</button>
+            <button data-q="你的技能">你的技能</button>
+            <button data-q="你的学习目标">你的学习目标</button>
+            <button data-q="怎么联系你">怎么联系你</button>
           </div>
           <div class="chat-input">
             <label class="sr-only" for="q">向数字分身提问</label>
@@ -2216,49 +2250,333 @@ header.hero.card{overflow:visible}
 </div>
 
 <script>
-  const me = {
-    name: "刘一鸣",
-    school: "天津大学",
-    major: "智能医学工程",
-    doing: "进行大学学习",
-    interests: ["羽毛球", "乒乓球", "阅读"],
-    trait: "喜欢把复杂问题简单化"
+  /* ==================================================================
+     双语（中 / EN）i18n —— v4.5.19
+     ------------------------------------------------------------------
+     设计：仍是单一 index.html（单一 DOM 事实源），只在运行时换词。
+     这样以后改版式 / 改样式只需改一处，不会出现"中英两份文件各自漂移"。
+       · 静态 HTML：启动时把含中文且已收录的「文本节点 / placeholder /
+         aria-label / title / alt」各存一份快照；切 EN 时按词典替换，
+         切回中时用快照原样还原（中文态与改前逐字节等效）。
+       · 动态 JS 文案（数字分身回答、反馈校验与状态、作者面板）：走 tx()/tr()。
+       · 匹配前先归一化：全角引号统一成半角、连续空白折成一个再 trim，
+         避免排版换行或引号样式差异导致漏配。
+       · 语言存 localStorage，回访保持；默认中文（不按浏览器语言自动跳，
+         避免中文用户被英文系统带到英文页）。
+     ================================================================== */
+  const I18N_EN = {
+    /* ---- 入口幕布 ---- */
+    "天津大学 · 智能医学工程": "Tianjin University · Intelligent Medical Engineering",
+    "你好，我是 刘一鸣": "Hi, I'm 刘一鸣",
+    "把复杂问题简单化 —— 点击启动，进入我的主页。": "Making the complex simple — click Start to enter my homepage.",
+    "启 动": "Start",
+    "点击按钮，或按 Enter 键进入": "Click the button, or press Enter to continue",
+
+    /* ---- 顶部导航 ---- */
+    "关于我": "About",
+    "技能": "Skills",
+    "学习目标": "Goals",
+    "联系方式": "Contact",
+    "数字分身": "AI Twin",
+    "反馈": "Feedback",
+    "页面导航": "Page navigation",
+    "回到顶部": "Back to top",
+
+    /* ---- Hero ---- */
+    "🎓 天津大学 · 智能医学工程": "🎓 Tianjin University · Intelligent Medical Engineering",
+    "把复杂问题简单化 · 大学生": "Simplifying the complex · University student",
+    "你好呀，欢迎来到我的主页 👋": "Hi there, welcome to my homepage 👋",
+    "下方可以和我聊聊，这是我的\"数字分身\"。": "Scroll down and talk to me — that's my \"digital twin\".",
+    "🤖 和数字分身聊聊": "🤖 Chat with my AI twin",
+    "看看我的技能": "See my skills",
+
+    /* ---- 关于我 ---- */
+    "自我介绍": "About me",
+    "天津大学智能医学工程专业在读。习惯把一个复杂的问题先拆成小块、找出最关键的那一点，再用简单清楚的方式讲出来。学习之外，羽毛球和乒乓球让我保持精力，阅读让我沉得下心。":
+      "I'm studying Intelligent Medical Engineering at Tianjin University. Faced with a complex problem, I like to break it into small pieces, find the one point that matters most, and then explain it in plain terms. Outside of class, badminton and table tennis keep me active, and reading keeps me calm.",
+    "性格": "Personality",
+    "踏实、有耐心，喜欢先把事情弄明白再动手，不太爱把话说满。":
+      "Grounded and patient. I'd rather understand something properly before I start, and I tend to understate rather than overpromise.",
+    "兴趣爱好": "Interests",
+    "🏸 羽毛球": "🏸 Badminton",
+    "🏓 乒乓球": "🏓 Table tennis",
+    "📚 阅读": "📚 Reading",
+
+    /* ---- 技能 ---- */
+    "持续更新中": "Still growing",
+    "专业基础": "Foundations",
+    "微积分": "Calculus",
+    "线性代数": "Linear algebra",
+    "正在学习的基础技能": "Core skill in progress",
+    "正在系统学习极限 / 导数 / 积分，随课程进度推进": "Working through limits, derivatives and integrals alongside the course",
+    "正在学习矩阵 / 线性方程组，随课程进度推进": "Working through matrices and systems of linear equations alongside the course",
+    "编程与工具": "Programming & tools",
+    "计算机编程": "Computer programming",
+    "正在系统补基础": "Building the basics",
+    "能读懂并修改简单程序，正在补语法与数据结构基础": "I can read and modify simple programs; currently shoring up syntax and data structures",
+    "语言": "Languages",
+    "英语": "English",
+    "以学术阅读为主": "Mainly academic reading",
+    "能读英文技术资料，听力和口语仍在练习": "I can read technical material in English; listening and speaking are still in practice",
+
+    /* ---- 学习记录 / 目标 ---- */
+    "学习记录 / 目标": "Learning log / goals",
+    "先把数学、编程和专业基础课打牢；再找一两个医学数据 / 图像方向的小项目动手做，确认自己真正感兴趣的方向。":
+      "First, build a solid base in math, programming and the core major courses; then take on one or two small projects in medical data or imaging to find the direction I truly enjoy.",
+    "学习记录": "Learning log",
+    "目前以课程学习为主，课下同步补编程与英语；有阶段性进展会更新在这里。":
+      "Coursework comes first for now, with programming and English alongside it; I'll update this section whenever there's real progress.",
+
+    /* ---- 联系方式 ---- */
+    "邮箱": "Email",
+    "电话": "Phone",
+    "其他": "Other",
+    "欢迎通过上方邮箱或电话联系": "Feel free to reach me by email or phone above",
+
+    /* ---- 数字分身 ---- */
+    "数字分身 · 聊聊天": "AI twin · let's chat",
+    "AI 数字分身": "AI digital twin",
+    "在线 · 代表刘一鸣回答": "Online · answers on behalf of 刘一鸣",
+    "↺ 重新开始": "↺ Restart",
+    "清空对话，重新开始": "Clear the chat and start over",
+    "你是谁": "Who are you",
+    "你在干什么": "What are you up to",
+    "你的特点": "Your strengths",
+    "你的兴趣": "Your interests",
+    "你的学校专业": "School & major",
+    "你的技能": "Your skills",
+    "你的学习目标": "Your goals",
+    "怎么联系你": "How to reach you",
+    "向数字分身提问": "Ask the AI twin",
+    "与数字分身的对话": "Conversation with the AI twin",
+    "试着问我一个问题…": "Try asking me a question…",
+    "发送": "Send",
+    "发送问题": "Send question",
+
+    /* ---- 访客反馈 ---- */
+    "访客反馈": "Visitor feedback",
+    "无需登录 · 30 秒即可提交": "No sign-in · takes 30 seconds",
+    "你和我的关系": "How do you know me",
+    "朋友": "Friend",
+    "同学": "Classmate",
+    "老师": "Teacher",
+    "亲戚": "Relative",
+    "潜在合作伙伴": "Potential partner",
+    "其他访客": "Other visitor",
+    "反馈类型": "Feedback type",
+    "💡 建议": "💡 Suggestion",
+    "❓ 问题": "❓ Question",
+    "🤝 想认识 / 合作": "🤝 Say hi / collaborate",
+    "🌟 夸奖鼓励": "🌟 Praise",
+    "你当前使用的设备": "Your current device",
+    "当前使用的设备": "Current device",
+    "📱 手机端": "📱 Mobile",
+    "💻 电脑端": "💻 Desktop",
+    /* 数据库里存的是中文枚举值（不改库），仅显示时译 */
+    "手机端": "Mobile",
+    "电脑端": "Desktop",
+    "暂无": "—",
+    "你的反馈": "Your message",
+    "例如：我觉得页面哪里不错 / 哪里可以更好 / 想对我说什么…": "e.g. what works well / what could be better / anything you want to tell me…",
+    "怎么称呼你（选填）": "What should I call you (optional)",
+    "昵称 / 名字": "Nickname / name",
+    "想收到回复？留个联系方式（选填）": "Want a reply? Leave a contact (optional)",
+    "邮箱 / 微信等": "Email / WeChat, etc.",
+    "页面体验（选填，点击星星）": "Page experience (optional, tap the stars)",
+    "页面体验评分": "Page experience rating",
+    "1 星": "1 star",
+    "2 星": "2 stars",
+    "3 星": "3 stars",
+    "4 星": "4 stars",
+    "5 星": "5 stars",
+    "✉️ 提交反馈": "✉️ Send feedback",
+    "提交即表示你已阅读以下说明：仅收集你主动填写的少量信息（称呼 / 联系方式可选），用于作者阅读与回复；不收集敏感隐私。":
+      "By submitting you acknowledge: only the small amount of information you choose to provide (name and contact are optional) is collected, so the author can read it and reply. No sensitive data is collected.",
+    "🔐 查看反馈（作者）": "🔐 View feedback (author)",
+    "仅作者可见，需口令": "Author only · password required",
+    "访问口令": "Access password",
+    "请输入口令": "Enter password",
+    "解锁": "Unlock",
+    "↻ 刷新": "↻ Refresh",
+
+    /* ---- 页脚 ---- */
+    "· 由 Vibe Coding 从 V1 开始打磨": "· crafted from V1 with Vibe Coding",
+    "本页访客反馈可免登录提交，最终存于 Supabase（受 RLS 保护）；数字分身目前为前端规则式模拟（不联网、不收集数据）。":
+      "Visitor feedback on this page needs no sign-in and is stored in Supabase (protected by RLS). The AI twin is currently a front-end, rule-based simulation — no network calls, no data collection."
   };
 
+  let LANG = (function () {
+    try { return localStorage.getItem("lang") === "en" ? "en" : "zh"; } catch (e) { return "zh"; }
+  })();
+
+  const _norm = function (s) {
+    return String(s).replace(/[\u2018\u2019\u201c\u201d]/g, '"').replace(/\s+/g, " ").trim();
+  };
+  const _EN = (function () {
+    const m = Object.create(null);
+    for (const k in I18N_EN) m[_norm(k)] = I18N_EN[k];
+    return m;
+  })();
+
+  /* 中文 → EN 词典查询：未收录或已是英文的原样返回 */
+  function tr(s) { return LANG === "en" ? (_EN[_norm(s)] === undefined ? s : _EN[_norm(s)]) : s; }
+  /* 显式双语对 */
+  function tx(zh, en) { return LANG === "en" ? en : zh; }
+
+  const _ATTRS = ["placeholder", "aria-label", "title", "alt"];
+  const _texts = [];   // {n, zh} 静态文本节点快照
+  const _attrs = [];   // {el, a, zh} 属性快照
+
+  function _collect() {
+    _texts.length = 0;
+    const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
+    for (let n = w.nextNode(); n; n = w.nextNode()) {
+      const p = n.parentNode;
+      if (!p) continue;
+      const tag = p.nodeName;
+      if (tag === "SCRIPT" || tag === "STYLE" || tag === "NOSCRIPT" || tag === "TEXTAREA") continue;
+      if (p.closest && p.closest(".lang-sw")) continue;   // 切换器自身的「中」不参与翻译
+      const zh = n.nodeValue || "";
+      if (!/[\u4e00-\u9fff]/.test(zh)) continue;
+      if (_EN[_norm(zh)] === undefined) continue;
+      _texts.push({ n: n, zh: zh });
+    }
+    _attrs.length = 0;
+    document.querySelectorAll("[placeholder],[aria-label],[title],[alt]").forEach(function (el) {
+      if (el.closest && el.closest(".lang-sw")) return;
+      _ATTRS.forEach(function (a) {
+        if (!el.hasAttribute(a)) return;
+        const zh = el.getAttribute(a);
+        if (!/[\u4e00-\u9fff]/.test(zh)) return;
+        if (_EN[_norm(zh)] === undefined) return;
+        _attrs.push({ el: el, a: a, zh: zh });
+      });
+    });
+  }
+
+  const _META = [
+    ['meta[name="description"]', "content",
+      "刘一鸣的个人主页：天津大学智能医学工程，一个喜欢把复杂问题简单化的大学生。",
+      "Personal homepage of 刘一鸣 — Intelligent Medical Engineering at Tianjin University, a student who likes to make complex things simple."],
+    ['meta[property="og:title"]', "content", "刘一鸣 · 个人主页", "刘一鸣 · Personal Homepage"],
+    ['meta[property="og:description"]', "content",
+      "刘一鸣的个人主页：天津大学智能医学工程，一个喜欢把复杂问题简单化的大学生。欢迎来聊聊。",
+      "Personal homepage of 刘一鸣 — Intelligent Medical Engineering at Tianjin University, a student who likes to make complex things simple. Drop by and say hi."],
+    ['meta[name="twitter:title"]', "content", "刘一鸣 · 个人主页", "刘一鸣 · Personal Homepage"],
+    ['meta[name="twitter:description"]', "content",
+      "刘一鸣的个人主页：天津大学智能医学工程，一个喜欢把复杂问题简单化的大学生。",
+      "Personal homepage of 刘一鸣 — Intelligent Medical Engineering at Tianjin University, a student who likes to make complex things simple."]
+  ];
+
+  function _setMeta() {
+    document.title = tx("刘一鸣 · 个人主页", "刘一鸣 · Personal Homepage");
+    _META.forEach(function (p) {
+      const el = document.querySelector(p[0]);
+      if (el) el.setAttribute(p[1], tx(p[2], p[3]));
+    });
+    const loc = document.querySelector('meta[property="og:locale"]');
+    if (loc) loc.setAttribute("content", LANG === "en" ? "en_US" : "zh_CN");
+    const tt = document.querySelector('meta[name="twitter:title"]');
+    if (tt) tt.setAttribute("content", tx("刘一鸣 · 个人主页", "刘一鸣 · Personal Homepage"));
+  }
+
+  /* 语言切换后需要重绘的动态区（数字分身开场白、作者面板列表…）在这里登记。
+     顺序很重要：先在 applyLang 里换完静态文本，再跑这些回调，
+     避免动态区把静态结果又覆盖回中文。 */
+  const _subs = [];
+  function onLangChange(fn) { _subs.push(fn); }
+
+  function applyLang(l) {
+    LANG = (l === "en") ? "en" : "zh";
+    document.documentElement.setAttribute("lang", LANG === "en" ? "en" : "zh-CN");
+    document.documentElement.setAttribute("data-lang", LANG);
+    _texts.forEach(function (o) {
+      o.n.nodeValue = (LANG === "en") ? _EN[_norm(o.zh)] : o.zh;
+    });
+    _attrs.forEach(function (o) {
+      o.el.setAttribute(o.a, (LANG === "en") ? _EN[_norm(o.zh)] : o.zh);
+    });
+    _setMeta();
+    document.querySelectorAll(".lang-sw button").forEach(function (b) {
+      b.setAttribute("aria-pressed", b.getAttribute("data-lang") === LANG ? "true" : "false");
+    });
+    _subs.forEach(function (fn) { try { fn(); } catch (e) { console.error(e); } });
+    try { localStorage.setItem("lang", LANG); } catch (e) {}
+  }
+
+  document.addEventListener("click", function (e) {
+    const b = (e.target && e.target.closest) ? e.target.closest(".lang-sw button") : null;
+    if (!b) return;
+    applyLang(b.getAttribute("data-lang"));
+  });
+
+  _collect();
+  applyLang(LANG);
+
+  const me = {
+    name: "刘一鸣",
+    get school() { return tx("天津大学", "Tianjin University"); },
+    get major() { return tx("智能医学工程", "Intelligent Medical Engineering"); },
+    get doing() { return tx("进行大学学习", "studying at university"); },
+    get interests() { return LANG === "en" ? ["badminton", "table tennis", "reading"] : ["羽毛球", "乒乓球", "阅读"]; },
+    get trait() { return tx("喜欢把复杂问题简单化", "I like to make complex things simple"); }
+  };
+  /* 兴趣列表的自然语言形式（中：顿号连接；英：逗号 + and） */
+  function interestsText() {
+    return tx("羽毛球、乒乓球、阅读", "badminton, table tennis and reading");
+  }
+
   // 规则式知识库：命中即返回，越具体的规则越靠前
+  // 双语（v4.5.19）：re 同时收录中英关键词，英文访客自由输入也能命中；回答用 tx() 按当前语言输出。
   const rules = [
-    { re: /(你好|您好|hi|hello|嗨|哈喽|在吗)/i,
-      a: () => `你好呀 👋 我是 ${me.name} 的数字分身。你可以问我：他是谁、在做什么、有什么特点、兴趣爱好，或者学校专业。` },
-    { re: /(学校|专业|哪个大学|哪所大学|在哪上学|读什么)/,
-      a: () => `我目前就读于 ${me.school}，专业是 ${me.major}。😊` },
-    { re: /(你是谁|介绍.*你|你是谁啊|你叫什么)/,
-      a: () => `我是 ${me.name} 的数字分身。${me.name} 是 ${me.school} ${me.major} 专业的学生，你可以把我当成一个"能在你没空时，用他的方式回答问题"的小助理。` },
-    { re: /(总结|概括|一句话|简单介绍|介绍一下他|介绍一下自己)/,
-      a: () => `一句话版：${me.name}，${me.school} ${me.major} 在读，一个「${me.trait}」的大学生，平时喜欢 ${me.interests.join("、")}。` },
-    { re: /(你在干什么|在干嘛|最近做什么|最近在忙|最近怎么样)/,
-      a: () => `我最近主要在${me.doing}，同时在学习怎么更好地运用 AI 来帮自己。上课、做项目、练习，都希望踏实完成。` },
-    { re: /(你的特点|你的优点|你的特色|记忆点|特别之处|有什么特别)/,
-      a: () => `我最明显的特点就是「${me.trait}」。遇到复杂的问题，我习惯先拆成小块、抓住最核心的那一点，再用简单清楚的方式讲出来。` },
-    { re: /(兴趣|爱好|喜欢什么|玩什么|运动)/,
-      a: () => `我的兴趣是 ${me.interests.join("、")}。打羽毛球和乒乓球让我放松、保持活力，阅读则让我安静下来、开阔思路。` },
-    { re: /(技能|会什么|会些什么|编程|英语|擅长|拿手)/,
-      a: () => `我正在学习一些基础技能：编程和英语。页面「技能」区里留了熟练程度的空位，等我有把握了会补上真实水平。` },
-    { re: /(目标|计划|打算|未来|规划|方向)/,
-      a: () => `关于学习目标和规划，页面里我留了「学习记录 / 目标」的空位，正在慢慢补充。等想清楚了，我会第一时间更新在这里。` },
-    { re: /(联系|邮箱|微信|电话|怎么找你|合作|contact)/i,
-      a: () => `可以用公开方式联系 ${me.name}：邮箱 3026445032@tju.edu.cn，电话 19582446693。也欢迎先在这里留言，我会把问题转达给他。` },
-    { re: /(大学生|学生|上学|几年级)/,
-      a: () => `是的，我现在是 ${me.school} ${me.major} 的大学生，正在${me.doing}。学习之余我最喜欢 ${me.interests.join("、")}。` },
-    { re: /(谢谢|感谢|多谢|thx|thanks)/i,
-      a: () => `不客气～ 还有想了解的随时问我 😊` },
-    { re: /(再见|拜拜|bye|下次聊)/i,
-      a: () => `好呀，随时回来找我聊。祝你今天顺利 👋` }
+    { re: /(你好|您好|hi|hello|嗨|哈喽|在吗|hey|good (morning|afternoon|evening))/i,
+      a: () => tx(`你好呀 👋 我是 ${me.name} 的数字分身。你可以问我：他是谁、在做什么、有什么特点、兴趣爱好，或者学校专业。`,
+                  `Hi there 👋 I'm ${me.name}'s digital twin. You can ask me who he is, what he's up to, what his strengths are, what he's into, or about his school and major.`) },
+    { re: /(学校|专业|哪个大学|哪所大学|在哪上学|读什么|school|major|university|college|what do you study)/i,
+      a: () => tx(`我目前就读于 ${me.school}，专业是 ${me.major}。😊`,
+                  `I'm currently at ${me.school}, studying ${me.major}. 😊`) },
+    { re: /(你是谁|介绍.*你|你是谁啊|你叫什么|who are you|who r u|introduce yourself|about you)/i,
+      a: () => tx(`我是 ${me.name} 的数字分身。${me.name} 是 ${me.school} ${me.major} 专业的学生，你可以把我当成一个"能在你没空时，用他的方式回答问题"的小助理。`,
+                  `I'm the digital twin of ${me.name}. ${me.name} is a student of ${me.major} at ${me.school}. Think of me as a little assistant who can "answer questions his way when he's busy".`) },
+    { re: /(总结|概括|一句话|简单介绍|介绍一下他|介绍一下自己|summar|in one sentence|brief|tl;?dr)/i,
+      a: () => tx(`一句话版：${me.name}，${me.school} ${me.major} 在读，一个「${me.trait}」的大学生，平时喜欢 ${me.interests.join("、")}。`,
+                  `In one line: ${me.name}, studying ${me.major} at ${me.school} — a student who likes to make complex things simple, into ${interestsText()}.`) },
+    { re: /(你在干什么|在干嘛|最近做什么|最近在忙|最近怎么样|what are you doing|what's up|whats up|how are you|what have you been)/i,
+      a: () => tx(`我最近主要在${me.doing}，同时在学习怎么更好地运用 AI 来帮自己。上课、做项目、练习，都希望踏实完成。`,
+                  `Lately I've mostly been ${me.doing}, and also learning how to use AI better to help myself. Classes, projects, practice — I try to get them done properly.`) },
+    { re: /(你的特点|你的优点|你的特色|记忆点|特别之处|有什么特别|strength|strengths|what makes you|special about)/i,
+      a: () => tx(`我最明显的特点就是「${me.trait}」。遇到复杂的问题，我习惯先拆成小块、抓住最核心的那一点，再用简单清楚的方式讲出来。`,
+                  `What stands out most is that I like to make complex things simple. When something is complicated, I break it into small pieces, grab the one point that matters most, and explain it in plain terms.`) },
+    { re: /(兴趣|爱好|喜欢什么|玩什么|运动|interest|hobby|hobbies|sport|free time)/i,
+      a: () => tx(`我的兴趣是 ${me.interests.join("、")}。打羽毛球和乒乓球让我放松、保持活力，阅读则让我安静下来、开阔思路。`,
+                  `I'm into ${interestsText()}. Badminton and table tennis help me relax and stay active, while reading quiets my mind and opens up new ideas.`) },
+    { re: /(技能|会什么|会些什么|编程|英语|擅长|拿手|skill|skills|program|coding|good at)/i,
+      a: () => tx(`我正在学习一些基础技能：编程和英语。页面「技能」区里留了熟练程度的空位，等我有把握了会补上真实水平。`,
+                  `I'm working on some basics right now: programming and English. The Skills section leaves room for real proficiency levels, and I'll fill them in once I'm confident.`) },
+    { re: /(目标|计划|打算|未来|规划|方向|goal|goals|plan|plans|future|direction)/i,
+      a: () => tx(`关于学习目标和规划，页面里我留了「学习记录 / 目标」的空位，正在慢慢补充。等想清楚了，我会第一时间更新在这里。`,
+                  `On goals and plans: the "Learning log / goals" section on this page is where I'm filling things in little by little. Once I've thought it through, I'll update it there first.`) },
+    { re: /(联系|邮箱|微信|电话|怎么找你|合作|contact|e-?mail|phone|wechat|reach you|collaborat)/i,
+      a: () => tx(`可以用公开方式联系 ${me.name}：邮箱 3026445032@tju.edu.cn，电话 19582446693。也欢迎先在这里留言，我会把问题转达给他。`,
+                  `You can reach ${me.name} publicly by email: 3026445032@tju.edu.cn, or phone: 19582446693. Feel free to leave a message here too — I'll pass it on to him.`) },
+    { re: /(大学生|学生|上学|几年级|student|undergrad|which year|freshman|sophomore)/i,
+      a: () => tx(`是的，我现在是 ${me.school} ${me.major} 的大学生，正在${me.doing}。学习之余我最喜欢 ${me.interests.join("、")}。`,
+                  `Yes — I'm a ${me.major} student at ${me.school}, currently ${me.doing}. Outside of study, what I enjoy most is ${interestsText()}.`) },
+    { re: /(谢谢|感谢|多谢|thx|thanks|thank you)/i,
+      a: () => tx(`不客气～ 还有想了解的随时问我 😊`,
+                  `No problem — ask me anytime 😊`) },
+    { re: /(再见|拜拜|bye|下次聊|see you|goodbye)/i,
+      a: () => tx(`好呀，随时回来找我聊。祝你今天顺利 👋`,
+                  `Sure, come back and chat anytime. Have a great day 👋`) }
   ];
 
   function reply(text) {
     const t = (text || "").trim();
     for (const r of rules) {
       if (r.re.test(t)) return typeof r.a === "function" ? r.a() : r.a;
+    }
+    if (LANG === "en") {
+      return `(Digital twin v2 · still learning) On "${t}" — my owner ${me.name} has his own answer. You can ask me "who are you / what are you up to / your strengths / your interests / your school and major" and I'll do my best. 😊`;
     }
     return `（数字分身 v2 · 还在学习中）关于「${t}」，我的主人 ${me.name} 有他自己的答案。你可以问我"你是谁 / 在做什么 / 有什么特点 / 什么兴趣 / 哪个学校专业"，我会尽力回答。😊`;
   }
@@ -2283,11 +2601,13 @@ header.hero.card{overflow:visible}
   function removeTyping() { const t = document.getElementById("typing"); if (t) t.remove(); }
 
   let busy = false;
-  function send(text) {
+  function send(text, shown) {
     const input = document.getElementById("q");
     const v = (text ?? input.value).trim();
     if (!v || busy) return;
-    add("me", v);
+    /* shown：气泡里显示的内容。英文态点推荐问题时发送的是"规范中文问题"（保证规则命中），
+       但气泡按用户实际看到的英文按钮文字显示，避免自己说的话变成看不懂的中文。 */
+    add("me", (shown && String(shown).trim()) || v);
     input.value = "";
     busy = true;
     addTyping();
@@ -2296,11 +2616,14 @@ header.hero.card{overflow:visible}
   }
 
   function greet() {
-    add("ai", `你好，我是 ${me.name} 的数字分身 👋\n有什么想了解的，尽管问我。`);
+    add("ai", tx(`你好，我是 ${me.name} 的数字分身 👋\n有什么想了解的，尽管问我。`,
+                 `Hi, I'm ${me.name}'s digital twin 👋\nAsk me anything you'd like to know.`));
   }
 
   document.querySelectorAll("#suggest button").forEach(btn => {
-    btn.addEventListener("click", () => send(btn.textContent));
+    // data-q 是"规范中文问题"：按钮显示文字会随语言变，但发送内容不变，保证规则一定命中
+    // 第二个参数让气泡显示按钮上的文字（EN 用户看到的是英文）。
+    btn.addEventListener("click", () => send(btn.getAttribute("data-q") || btn.textContent, btn.textContent));
   });
 
   document.getElementById("reset").addEventListener("click", () => {
@@ -2309,6 +2632,13 @@ header.hero.card{overflow:visible}
 
   // 开场白
   greet();
+
+  // 切换语言后重放开场白（旧消息是旧语言，直接清掉最干净）
+  onLangChange(function () {
+    msgs.innerHTML = "";
+    busy = false;
+    greet();
+  });
 
   // 渐进式显现：区块整体淡入 + 区块内元素按顺序依次浮现
   const RV_SEL = [
@@ -2991,10 +3321,10 @@ header.hero.card{overflow:visible}
       const msg = (document.getElementById("fb-msg").value || "").trim();
       const rel = document.querySelector('input[name="relation"]:checked');
       const dev = document.querySelector('input[name="device"]:checked');
-      if (!rel) { msgErr.textContent = "请选择你和我的关系。"; return null; }
-      if (!dev) { msgErr.textContent = "请选择你使用的设备。"; return null; }
-      if (!msg) { msgErr.textContent = "请写下你的反馈内容。"; return null; }
-      if (msg.length < 5) { msgErr.textContent = "反馈内容太短啦，多写几句吧（至少 5 个字）。"; return null; }
+      if (!rel) { msgErr.textContent = tx("请选择你和我的关系。", "Please choose how you know me."); return null; }
+      if (!dev) { msgErr.textContent = tx("请选择你使用的设备。", "Please choose your device."); return null; }
+      if (!msg) { msgErr.textContent = tx("请写下你的反馈内容。", "Please write your feedback."); return null; }
+      if (msg.length < 5) { msgErr.textContent = tx("反馈内容太短啦，多写几句吧（至少 5 个字）。", "That's a bit short — could you add a few more words? (at least 5 characters)"); return null; }
       msgErr.textContent = "";
       return {
         relation: rel.value,
@@ -3020,7 +3350,7 @@ header.hero.card{overflow:visible}
       const data = validate();
       if (!data) return;
       submitBtn.disabled = true;
-      submitBtn.textContent = "⏳ 提交中…";
+      submitBtn.textContent = tx("⏳ 提交中…", "⏳ Sending…");
       try {
         if (SUPABASE_URL && SUPABASE_ANON_KEY) {
           // 密钥鉴权：新式 sb_* key 只能放 apikey 头（非 JWT）；旧式 eyJ anon JWT 才额外放 Bearer
@@ -3038,24 +3368,35 @@ header.hero.card{overflow:visible}
             body: JSON.stringify(data)
           });
           if (!res.ok) throw new Error("HTTP " + res.status);
-          setStatus("ok", "✅ 提交成功！感谢你的反馈，主人很快会看到。<br>（记录已写入 Supabase `feedback` 表）");
+          setStatus("ok", tx("✅ 提交成功！感谢你的反馈，主人很快会看到。<br>（记录已写入 Supabase `feedback` 表）",
+                             "✅ Sent! Thanks for your feedback — the author will see it soon.<br>(Saved to the Supabase `feedback` table)"));
           trackDemo(false);
         } else {
           // 未配置 Supabase：本地演示模式，数据仅存当前浏览器
           const list = JSON.parse(localStorage.getItem("fb_demo") || "[]");
           list.push({ ...data, savedAt: new Date().toISOString() });
           localStorage.setItem("fb_demo", JSON.stringify(list));
-          setStatus("ok", "✅ （演示模式）提交成功！因尚未配置 Supabase，本次记录保存在当前浏览器本地。<br>主人接入后端后即可真正入库。");
+          setStatus("ok", tx("✅ （演示模式）提交成功！因尚未配置 Supabase，本次记录保存在当前浏览器本地。<br>主人接入后端后即可真正入库。",
+                             "✅ (Demo mode) Sent! Supabase isn't configured yet, so this entry is stored locally in this browser.<br>It will go into the real database once the backend is connected."));
           trackDemo(true);
         }
         form.reset(); rating = 0; paint();
       } catch (err) {
         console.error(err);
-        setStatus("err", "⚠️ 提交失败，请稍后再试，或通过其他方式联系主人。（" + err.message + "）");
+        setStatus("err", tx("⚠️ 提交失败，请稍后再试，或通过其他方式联系主人。（" + err.message + "）",
+                            "⚠️ Sending failed. Please try again later, or reach the author another way. (" + err.message + ")"));
       } finally {
         submitBtn.disabled = false;
-        submitBtn.textContent = "✉️ 提交反馈";
+        submitBtn.textContent = tx("✉️ 提交反馈", "✉️ Send feedback");
       }
+    });
+
+    /* 切换语言时清掉"上一秒用旧语言写下"的瞬时提示（校验提示 / 提交结果）。
+       这些是一次性通知，清空比留着半中半英更干净；用户重新提交即按新语言输出。 */
+    onLangChange(function () {
+      msgErr.textContent = "";
+      status.className = "fb-status";
+      status.innerHTML = "";
     });
 
     function trackDemo(isDemo) {
@@ -3088,27 +3429,42 @@ header.hero.card{overflow:visible}
 
     let unlocked = false;
 
+    /* 展开/收起按钮的文字同时取决于"展开状态"和"当前语言"，单独同步。
+       （语言切换时 applyLang 会先按静态词典把它改回"查看反馈"，再跑 onLangChange 回调修正，故这里必须重设） */
+    function syncToggle() {
+      toggle.textContent = body.hidden
+        ? tx("🔐 查看反馈（作者）", "🔐 View feedback (author)")
+        : tx("🙈 收起反馈", "🙈 Hide feedback");
+    }
+
     toggle.addEventListener("click", function () {
       const show = body.hidden;
       body.hidden = !show;
-      toggle.textContent = show ? "🙈 收起反馈" : "🔐 查看反馈（作者）";
+      syncToggle();
       toggle.scrollIntoView({ block: "nearest", behavior: "smooth" });
       if (show && unlocked) load();
+    });
+
+    // 切换语言：修正按钮文字；若已解锁且面板展开，按新语言重绘列表
+    onLangChange(function () {
+      syncToggle();
+      errEl.textContent = "";                 // 同样是瞬时提示，避免留下旧语言
+      if (unlocked && !body.hidden) load();
     });
 
     lockForm.addEventListener("submit", async function (e) {
       e.preventDefault();
       const v = (pwdInput.value || "").trim();
       if (!v) {
-        errEl.textContent = "请输入口令。";
+        errEl.textContent = tx("请输入口令。", "Please enter the password.");
         pwdInput.select();
         return;
       }
-      errEl.textContent = "⏳ 校验中…";
+      errEl.textContent = tx("⏳ 校验中…", "⏳ Checking…");
       try {
         // 前端比对口令（与任务 21 方案一致）
         if (v !== VIEWER_PWD) {
-          errEl.textContent = "口令不正确，请重试。";
+          errEl.textContent = tx("口令不正确，请重试。", "Wrong password — please try again.");
           errEl.className = "fb-status err";
           pwdInput.select();
           return;
@@ -3120,7 +3476,7 @@ header.hero.card{overflow:visible}
         load();
       } catch (err) {
         console.error(err);
-        errEl.textContent = "⚠️ 校验失败：" + String(err && err.message || err);
+        errEl.textContent = tx("⚠️ 校验失败：", "⚠️ Check failed: ") + String(err && err.message || err);
       }
     });
 
@@ -3146,7 +3502,7 @@ header.hero.card{overflow:visible}
     }
 
     async function load() {
-      listEl.innerHTML = '<div class="fv-empty">⏳ 加载中…</div>';
+      listEl.innerHTML = '<div class="fv-empty">' + tx("⏳ 加载中…", "⏳ Loading…") + '</div>';
       try {
         const headers = { "apikey": SUPABASE_ANON_KEY };
         if (/^eyJ/i.test(SUPABASE_ANON_KEY)) headers["Authorization"] = "Bearer " + SUPABASE_ANON_KEY;
@@ -3156,33 +3512,35 @@ header.hero.card{overflow:visible}
         );
         if (!res.ok) throw new Error("HTTP " + res.status);
         const rows = await res.json();
-        countEl.textContent = "共 " + rows.length + " 条反馈";
+        countEl.textContent = tx("共 " + rows.length + " 条反馈",
+                                 rows.length + (rows.length === 1 ? " entry" : " entries"));
         if (!rows.length) {
-          listEl.innerHTML = '<div class="fv-empty">还没有收到任何反馈。</div>';
+          listEl.innerHTML = '<div class="fv-empty">' + tx("还没有收到任何反馈。", "No feedback yet.") + '</div>';
           return;
         }
         listEl.innerHTML = rows.map(function (r) {
           const devTag = (r.device === "手机端")
-            ? '<span class="tag dev-mobile">📱 ' + esc(r.device || "手机端") + '</span>'
-            : '<span class="tag dev-desktop">💻 ' + esc(r.device || "电脑端") + '</span>';
+            ? '<span class="tag dev-mobile">📱 ' + esc(tr(r.device || "手机端")) + '</span>'
+            : '<span class="tag dev-desktop">💻 ' + esc(tr(r.device || "电脑端")) + '</span>';
           return '<div class="fv-item">'
             + '<div class="fv-top"><span class="fv-time">🕒 ' + esc(fmtTime(r.created_at)) + '</span><span class="fv-tags">' + devTag + '</span></div>'
             + '<div class="fv-tags">'
-            + '<span class="tag">' + esc(r.relation || "暂无") + '</span>'
-            + '<span class="tag">' + esc(r.category || "其他") + '</span>'
+            + '<span class="tag">' + esc(tr(r.relation || "暂无")) + '</span>'
+            + '<span class="tag">' + esc(tr(r.category || "其他")) + '</span>'
             + '</div>'
             + '<p class="fv-msg">' + esc(r.message) + '</p>'
             + '<div class="fv-meta">'
             + (r.nickname ? "👤 " + esc(r.nickname) + " · " : "")
             + (r.contact ? "✉️ " + esc(r.contact) + " · " : "")
             + '<span class="fv-rating">' + stars(r.rating) + '</span>'
-            + (r.rating ? "（" + r.rating + " 星）" : "（未评分）")
+            /* 库里的枚举值（关系 / 类型 / 设备）保持中文存储，只在显示时翻译 */
+            + (r.rating ? tx("（" + r.rating + " 星）", "(" + r.rating + " / 5)") : tx("（未评分）", "(no rating)"))
             + '</div>'
             + '</div>';
         }).join("");
       } catch (err) {
         console.error(err);
-        listEl.innerHTML = '<div class="fv-empty">⚠️ 加载失败：' + esc(err.message) + '</div>';
+        listEl.innerHTML = '<div class="fv-empty">' + tx("⚠️ 加载失败：", "⚠️ Load failed: ") + esc(err.message) + '</div>';
       }
     }
   })();

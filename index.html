@@ -484,9 +484,12 @@
       发光体直接顶到图框边缘，图框不再读成"空槽位"。② 图框右缘贴栏线
       （justify-self:end），宽度按语言定量、允许超出所在网格列向左溢出，把文字右侧
       空档吃掉（v4.5.22 中缝 340px → 淡星云轻搭芯片尾部）。
-      尺寸依据（均相对栏左，与视口宽度无关；实测来自 hero_bci_check）：素材内容从
-      图框左缘 2% 处淡起（淡星云，alpha≈2%~8%，近乎不可见）、8.2% 处才见"发光核心"。
-      允许淡星云轻压 tagline 芯片尾部 ≤20px，但发光核心距芯片右缘 ≥40px（窄视口 ~22px）：
+      尺寸依据（均相对栏左，与视口宽度无关；实测来自 hero_bci_check，"大脑行带"
+      口径=素材上 8%~48% 行带内逐列最大可见度 alpha×亮度）：
+      素材（v4，1140x804）左缘 6.5% 处淡起、15.4% 处见"发光核心"；右缘已按可见度
+      自适应收边（裁到主体末列+12px 并做 30px alpha 渐隐羽化），发光主体顶到图框
+      右边、无切断台阶（≈0.5 亮度级）——右侧不再有空白带（v3 素材右侧 6% 真空+4% 极淡）。
+      图框左缘的淡星云允许轻搭 tagline 芯片尾部 ≤20px，发光核心距芯片右缘 ≥40px：
         zh 芯片右缘 ≈ 栏左+329 → 图框左缘 ≈ 栏左+301（width:calc(100% + 263px)）
         en 芯片右缘 ≈ 栏左+514 → 图框左缘 ≈ 栏左+502（width:calc(100% + 62px)）
       窄屏（≤900px）媒体查询里 width:auto 复位，自动落到文字下方居中。 */
@@ -2031,7 +2034,7 @@ header.hero.card{overflow:visible}
       </div>
     </div>
     <figure class="hero-bci">
-      <img src="assets/hero-bci.webp" width="1200" height="794" decoding="async"
+      <img src="assets/hero-bci.webp" width="1140" height="804" decoding="async"
            alt="脑机接口概念图：发光的神经网络大脑与神经芯片" />
     </figure>
   </header>

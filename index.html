@@ -587,8 +587,10 @@
   }
   .avatar svg{width:64px;height:64px}
   /* v4.5.23m：名字高度回调 46→40（v4.5.23e 曾放大；行高仍由头像 106 决定，
-     space-between 拉满图高不变——字块高度保持和图片一样） */
-  .hero h1{font-size:40px;font-weight:800;letter-spacing:.6px}
+     space-between 拉满图高不变——字块高度保持和图片一样）。
+     v4.5.23n：字之间间距收紧 .6→-2px（每字隙收 2.6px，总宽 121.8→116.6；
+     40px 中文字距 -5%，紧凑不重叠） */
+  .hero h1{font-size:40px;font-weight:800;letter-spacing:-2px}
   /* 任务30：姓名=首屏焦点+质感入场。渐变文字+缓慢高光扫过+逐字上浮淡入；
      渐进增强：默认/reduced-motion/不支持background-clip时为最终态（静止完整姓名） */
   .hero h1 .ch{display:inline-block} /* 逐字节点：HTML 紧贴无空格，不产生 inline 间隙 */

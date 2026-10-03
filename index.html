@@ -475,28 +475,26 @@
     gap:34px;align-items:center;padding:36px 36px;
   }
   .hero-top{display:flex;align-items:center;gap:20px}
-  /* Hero 右侧脑机接口配图（v4.5.23）：素材已按亮度键出 alpha（深色底完全透明，
-     不存在图片矩形边界），再叠 mix-blend-mode:screen 让深色像素"等于不存在"
-     （screen 与黑=保留背景），于是只有发光的大脑本身浮在卡片星空上——实测图片四边
-     "内-外"亮度台阶 ≤2 级，肉眼看不出边界；若改用 drop-shadow 会在亮星云处压出
-     一圈暗斑，故不用阴影。
-     v4.5.23 变化：① 素材从 1000x667 换成 1200x794 的**紧致裁剪**版——原稿四周有
-     大量透明边（alpha>16 只占画面 35.4%），图框本身就读成"空槽位"；裁掉透明边后
-     画面占比 46.9%，发光体直接顶到图框边缘。② 配图右缘仍贴栏线，但整块向左多伸
-     140px 进文字列右侧的空档（width:calc(100%+140px) + margin-left:-140px）：
-     图框左缘落在文字容器右缘之外 20px、距可见墨迹约 59px，空档被星云填掉，
-     而文字/按钮/EN tagline 的位置完全没动。
-     窄屏（<900px）媒体查询里 width:auto 复位，自动落到文字下方居中。 */
-  .hero-bci{
-    /* 图框右缘贴栏线（justify-self:end），宽度超出所在网格列时只会向左溢出——
-       于是"向左伸多少"就等于"把中缝吃掉多少"。用量按语言给：
-       zh 文字墨迹右缘 ≈ 栏左+314，图框左缘取 栏左+389（淡星云 栏左+404）⇒ 距墨迹 ~90px；
-       en tagline 长得多（墨迹右缘 ≈ 栏左+514），若照 zh 伸 175px 会压住 tagline 尾巴，
-       故改为收窄 29px 右对齐，同样留出 ~90px。两式都只跟"栏左"有关，与视口宽度无关。 */
-    position:relative;width:calc(100% + 175px);max-width:none;
-    justify-self:end;align-self:center;pointer-events:none;
-  }
-  html[data-lang="en"] .hero-bci{width:calc(100% - 29px)}
+   /* Hero 右侧脑机接口配图（v4.5.23）：素材已按亮度键出 alpha（深色底完全透明，
+      不存在图片矩形边界），再叠 mix-blend-mode:screen 让深色像素"等于不存在"
+      （screen 与黑=保留背景），于是只有发光的大脑本身浮在卡片星空上——实测图片四边
+      "内-外"亮度台阶 ≤2 级，肉眼看不出边界；若改用 drop-shadow 会在亮星云处压出
+      一圈暗斑，故不用阴影。
+      v4.5.23 变化：① 素材换成 1200x794 的**紧致裁剪**版（alpha>16 占比 35.4%→46.9%），
+      发光体直接顶到图框边缘，图框不再读成"空槽位"。② 图框右缘贴栏线
+      （justify-self:end），宽度按语言定量、允许超出所在网格列向左溢出，把文字右侧
+      空档吃掉（v4.5.22 中缝 340px → 淡星云轻搭芯片尾部）。
+      尺寸依据（均相对栏左，与视口宽度无关；实测来自 hero_bci_check）：素材内容从
+      图框左缘 2% 处淡起（淡星云，alpha≈2%~8%，近乎不可见）、8.2% 处才见"发光核心"。
+      允许淡星云轻压 tagline 芯片尾部 ≤20px，但发光核心距芯片右缘 ≥40px（窄视口 ~22px）：
+        zh 芯片右缘 ≈ 栏左+329 → 图框左缘 ≈ 栏左+301（width:calc(100% + 263px)）
+        en 芯片右缘 ≈ 栏左+514 → 图框左缘 ≈ 栏左+502（width:calc(100% + 62px)）
+      窄屏（≤900px）媒体查询里 width:auto 复位，自动落到文字下方居中。 */
+   .hero-bci{
+     position:relative;width:calc(100% + 263px);max-width:none;
+     justify-self:end;align-self:center;pointer-events:none;
+   }
+   html[data-lang="en"] .hero-bci{width:calc(100% + 62px)}
   .hero-bci img{
     display:block;width:100%;height:auto;
     mix-blend-mode:screen;

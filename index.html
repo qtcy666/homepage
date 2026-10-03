@@ -478,11 +478,19 @@
        tagline 字号刻意不动：EN 芯片 389px+头像占位 126 已顶满 530px 列宽，放大必折行。 */
     margin-bottom:28px;
   }
-  /* v4.5.23g：文字块的上下分布与配图相符——.hero-main 拉满整行高（=图高），
-     姓名/身份组贴顶（与图顶平齐），欢迎语/按钮组贴底（与图底平齐），
-     中间的空档由右侧配图的中下部（芯片底座与光丝）承托。
-     手机端单列时行高=内容高，space-between 无多余空间，布局不变。 */
-  .hero-main{align-self:stretch;display:flex;flex-direction:column;justify-content:space-between}
+  /* v4.5.23h：文字在图的高度范围内【均匀分布】——.hero-main 拉满整行高（=图高），
+     6 个直接子元素（姓名行/tagline/介绍/欢迎语/副提示/按钮）space-between 均分间隙
+     （zh/1280 实测每隙 ~78px，从图顶均匀铺到图底）。
+     .hero-hello 用 display:contents 透明化：DOM 保留（不破坏任何选择器/测试引用），
+     其子元素直接参与 hero-main 的分布；tagline/meta 已从 avatar 右列提为直接子元素。
+     桌面端各元素 margin-top 归零（间距全由 space-between 分配），
+     手机端（≤900）恢复原 margin 自然间距、单列布局不变。 */
+  .hero-main{align-self:stretch;display:flex;flex-direction:column;justify-content:space-between;
+    align-items:flex-start}   /* ⚠ 不拉伸子项宽度：否则 tagline 芯片被拉成整列宽，淡星云-芯片断言必崩 */
+  .hero-hello{display:contents}
+  @media (min-width:901px){
+    .hero-main > *,.hero-hello > *{margin-top:0}
+  }
   .hero-top{display:flex;align-items:center;gap:20px}
    /* Hero 右侧脑机接口配图（v4.5.23）：素材已按亮度键出 alpha（深色底完全透明，
       不存在图片矩形边界），再叠 mix-blend-mode:screen 让深色像素"等于不存在"
@@ -2042,12 +2050,10 @@ header.hero.card{overflow:visible}
         <div class="avatar">
           <span class="ini" aria-hidden="true">刘</span>
         </div>
-        <div>
-          <h1 aria-label="刘一鸣"><span class="ch">刘</span><span class="ch">一</span><span class="ch">鸣</span></h1>
-          <span class="tagline">🎓 天津大学 · 智能医学工程</span>
-          <div class="hero-meta">把复杂问题简单化 · 大学生</div>
-        </div>
+        <h1 aria-label="刘一鸣"><span class="ch">刘</span><span class="ch">一</span><span class="ch">鸣</span></h1>
       </div>
+      <span class="tagline">🎓 天津大学 · 智能医学工程</span>
+      <div class="hero-meta">把复杂问题简单化 · 大学生</div>
       <div class="hero-hello">
         <div class="hi">你好呀，欢迎来到我的主页 👋</div>
         <div class="hi-sub">下方可以和我聊聊，这是我的"数字分身"。</div>

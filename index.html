@@ -478,11 +478,11 @@
        tagline 字号刻意不动：EN 芯片 389px+头像占位 126 已顶满 530px 列宽，放大必折行。 */
     margin-bottom:28px;
   }
-  /* v4.5.23f：文字块从最上面开始、按自然间距向下排布（常规文档流观感）：
-     顶对齐后文字顶与图顶平齐（hero 顶 padding 36→28），下方交给右侧大图。
-     字号同步再放大一档（h1 46 / hi 19 / hi-sub 16.5 / meta 16 / 按钮 16），
-     元素间距随字号自然拉开（11→14、18→24、16→20）。tagline 仍锁 14px（EN 列宽约束）。 */
-  .hero-main{align-self:start}
+  /* v4.5.23g：文字块的上下分布与配图相符——.hero-main 拉满整行高（=图高），
+     姓名/身份组贴顶（与图顶平齐），欢迎语/按钮组贴底（与图底平齐），
+     中间的空档由右侧配图的中下部（芯片底座与光丝）承托。
+     手机端单列时行高=内容高，space-between 无多余空间，布局不变。 */
+  .hero-main{align-self:stretch;display:flex;flex-direction:column;justify-content:space-between}
   .hero-top{display:flex;align-items:center;gap:20px}
    /* Hero 右侧脑机接口配图（v4.5.23）：素材已按亮度键出 alpha（深色底完全透明，
       不存在图片矩形边界），再叠 mix-blend-mode:screen 让深色像素"等于不存在"

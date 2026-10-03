@@ -490,16 +490,12 @@
   .hero-hello{display:contents}
   @media (min-width:901px){
     /* 最高点与照片顶部对齐：素材纵向可见淡起在 y30/804 ≈ 显示 +25px，
-       padding-top 25 后头像盒顶(142) = 图片淡星云顶(141.7)。
+       padding-top 25 后头像盒顶(139) = 图片淡星云顶(138.7)（zh/1280 差 0.3px）。
+       v4.5.23j：字的高度和图片一样——space-between 拉满整行高（=图高），
+       顶=图片淡星云顶、底=图底；行间距 = (图高 − 25 − 内容 265)/5 自动：
+       zh 74.3 / en 46.4 / 中视口 45·36·18·8 梯度（防溢出），仍略小于 v4.5.23h 的 78-82。
        （行间距归零规则移到主样式表末尾——放这里压不过后文 .tagline 等的 margin-top） */
     .hero-main{padding-top:25px;justify-content:space-between}
-  }
-  @media (min-width:1180px){
-    /* rail 恒 1132 的宽屏（图高固定 zh 661/en 522）：改用固定行间距，
-       zh 60px / en 42px（en 图矮，60 会溢出）；底部自然留白不再强贴图底。
-       901~1179 保持 space-between 自适应（图矮时间隙自动收窄，防溢出）。 */
-    .hero-main{justify-content:flex-start;gap:60px}
-    html[data-lang="en"] .hero-main{gap:42px}
   }
   .hero-top{display:flex;align-items:center;gap:20px}
    /* Hero 右侧脑机接口配图（v4.5.23）：素材已按亮度键出 alpha（深色底完全透明，

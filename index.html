@@ -64,7 +64,7 @@
     --ease-lift:cubic-bezier(.7,0,.2,1);     /* 幕布推移：起步柔和、中段果断、收尾柔顺 */
   }
   *{box-sizing:border-box;margin:0;padding:0}
-  html{scroll-behavior:smooth;overscroll-behavior-y:none}
+  html{scroll-behavior:smooth;overscroll-behavior-y:none;overflow-x:hidden;overflow-x:clip}
   body{
     font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Segoe UI",sans-serif;
     color:var(--text-strong);
@@ -489,15 +489,28 @@
       素材（v4，1140x804）左缘 6.5% 处淡起、15.4% 处见"发光核心"；右缘已按可见度
       自适应收边（裁到主体末列+12px 并做 30px alpha 渐隐羽化），发光主体顶到图框
       右边、无切断台阶（≈0.5 亮度级）——右侧不再有空白带（v3 素材右侧 6% 真空+4% 极淡）。
-      图框左缘的淡星云允许轻搭 tagline 芯片尾部 ≤20px，发光核心距芯片右缘 ≥40px：
-        zh 芯片右缘 ≈ 栏左+329 → 图框左缘 ≈ 栏左+301（width:calc(100% + 263px)）
-        en 芯片右缘 ≈ 栏左+514 → 图框左缘 ≈ 栏左+502（width:calc(100% + 62px)）
+      图框左缘的淡星云允许轻搭 tagline 芯片尾部 ≤20px、发光核心距芯片 ≥20px
+      （具体净空见 .hero-bci 处 v4.5.23d 注释）。
       窄屏（≤900px）媒体查询里 width:auto 复位，自动落到文字下方居中。 */
    .hero-bci{
-     position:relative;width:calc(100% + 263px);max-width:none;
+     /* v4.5.23d 出血版：图框右缘不再贴内容栏线，而是穿过 .wrap 的右内边距与
+        居中留白，一直贴到**视口右缘**（bleed）——右侧零空白，配图再大一圈：
+          margin-right = -(wrap右padding 24) - max(0, (100vw-1180px)/2 居中留白)
+        （.wrap{max-width:1180px;margin:auto;padding:24px}，两段在 1180px 处连续。）
+        ⚠ width 必须同样叠加出血量——否则大屏下图只会右移、不会变大
+        （margin-right 只挪位置，尺寸全由 width 决定）。
+        左伸量按"最紧的 960 视口"重定（淡星云 6.5% 点搭 tagline 芯片 ≤18px、
+        发光核心 15.4% 点距芯片 ≥24px；1280 下淡星云基本相接、核心 +66~83px）：
+          zh 图框左缘 ≈ 栏左+268（width:calc(100% + 296px)）
+          en 图框左缘 ≈ 栏左+466（width:calc(100% + 98px)）
+        注意 html 已加 overflow-x:clip——常驻滚动条环境下 100vw 含滚动条宽，
+        出血可能溢出 1 个滚动条宽度，clip 负责剪掉而不出横向滚动条。 */
+     position:relative;max-width:none;
+     width:calc(100% + 296px + 24px + max(0px, (100vw - 1180px)/2));
+     margin-right:calc(-24px - max(0px, (100vw - 1180px)/2));
      justify-self:end;align-self:center;pointer-events:none;
    }
-   html[data-lang="en"] .hero-bci{width:calc(100% + 62px)}
+   html[data-lang="en"] .hero-bci{width:calc(100% + 98px + 24px + max(0px, (100vw - 1180px)/2))}
   .hero-bci img{
     display:block;width:100%;height:auto;
     mix-blend-mode:screen;

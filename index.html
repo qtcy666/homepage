@@ -489,7 +489,17 @@
     align-items:flex-start}   /* ⚠ 不拉伸子项宽度：否则 tagline 芯片被拉成整列宽，淡星云-芯片断言必崩 */
   .hero-hello{display:contents}
   @media (min-width:901px){
-    .hero-main > *,.hero-hello > *{margin-top:0}
+    /* 最高点与照片顶部对齐：素材纵向可见淡起在 y30/804 ≈ 显示 +25px，
+       padding-top 25 后头像盒顶(142) = 图片淡星云顶(141.7)。
+       （行间距归零规则移到主样式表末尾——放这里压不过后文 .tagline 等的 margin-top） */
+    .hero-main{padding-top:25px;justify-content:space-between}
+  }
+  @media (min-width:1180px){
+    /* rail 恒 1132 的宽屏（图高固定 zh 661/en 522）：改用固定行间距，
+       zh 60px / en 42px（en 图矮，60 会溢出）；底部自然留白不再强贴图底。
+       901~1179 保持 space-between 自适应（图矮时间隙自动收窄，防溢出）。 */
+    .hero-main{justify-content:flex-start;gap:60px}
+    html[data-lang="en"] .hero-main{gap:42px}
   }
   .hero-top{display:flex;align-items:center;gap:20px}
    /* Hero 右侧脑机接口配图（v4.5.23）：素材已按亮度键出 alpha（深色底完全透明，
@@ -1283,6 +1293,13 @@
      只在文字正好压到亮星点/极光时起作用。 text-shadow 会被子元素继承。 */
 
   .card{text-shadow:0 1px 2px rgba(2,4,10,.45)}
+
+  /* v4.5.23i：hero 均匀分布——桌面端子项 margin-top 归零（间距全由 space-between/gap 分配）。
+     ⚠ 必须放在主样式表最后：中部 ~606 行的 .tagline{margin-top:14px} 等靠后且同为 (0,1,0)，
+       原来写在 ~492 行的归零行压不过它们（间隙混入 +14/+8）；此处 (0,2,0) + 最后位置双保险。 */
+  @media (min-width:901px){
+    .hero .hero-main > *,.hero .hero-hello > *{margin-top:0}
+  }
 </style>
 <style id="starnight-1-sky">
 /* 更蓝的深夜空：只覆盖 body 的 background-image。

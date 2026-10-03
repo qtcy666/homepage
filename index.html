@@ -489,18 +489,29 @@
     align-items:flex-start}   /* ⚠ 不拉伸子项宽度：否则 tagline 芯片被拉成整列宽，淡星云-芯片断言必崩 */
   .hero-hello{display:contents}
   @media (min-width:901px){
-    /* 最高点与照片顶部对齐（v4.5.23k 修正口径）：素材纵向有两层可见起——
-       y30 一缕极淡星云（α≈0.05，肉眼几乎不可见）和 y48 大脑主亮起（α≈0.37）。
-       v4.5.23i 曾对齐淡星云（pt25，头像顶 139）→ 用户反馈"字太高了"——
-       人眼感知的"照片顶部"是大脑亮部，改对齐主亮起：y48/804×图高。
-       v4.5.23k pt40（图高 661.5 时偏移 39.5）；v4.5.23l 缩图后重校准：
-       zh pt35（图高 593.9 → 偏移 35.0）、en pt31（图高 522 → 偏移 31.1）。
-       v4.5.23j：字的高度和图片一样——space-between 拉满整行高（=图高），
-       底=图底；行间距 = (图高 − 40 − 内容 265)/5 自动：zh ~71 / en ~43 梯度。
+    /* 最高点与照片顶部对齐（v4.5.23o 三次修正后的最终口径）：
+       素材纵向逐行"可见像素宽度"分析——y0~100 全是 1~7px 的零星细线（闪电波纹/
+       连接线），大脑球体主体从 y104 起跳（可见像素 7→95、最长连续段 61）。
+       人眼感知的"图片顶部"= 大脑主体顶 y104/804，此前的 y30（淡星云）和
+       y48（细线上端）口径均偏小 → 头像曾高出大脑顶 45~81px。
+       显示偏移 = 104/1140 × 图宽（宽高比恒定，与语言无关）：
+         901~1180：图宽 = vw−388（rail=vw−612，左伸 200+24）→ pt = 9.123vw − 35.4px
+         ≥1180：  图宽 = 0.5vw+202（rail 568 + 224 + (vw−1180)/2）→ pt = 4.5615vw + 18.4px
+       两式在 1180 处同为 72.2px，连续；全视口精确（替代此前固定 pt 只能
+       单视口校准的局限，en 专属 pt 也一并废弃——公式语言无关）。
+       v4.5.23j：字的高度和图片一样——space-between 拉满整行高（=图高），底=图底。
        （行间距归零规则移到主样式表末尾——放这里压不过后文 .tagline 等的 margin-top） */
-    .hero-main{padding-top:35px;justify-content:space-between}
-    /* en 图未缩（高 522，亮顶偏移 31.1px）——单独校准，否则头像会低于大脑亮顶 ~4px */
-    html[data-lang="en"] .hero-main{padding-top:31px}
+    .hero-main{padding-top:calc(9.123vw - 35.4px);justify-content:space-between}
+    /* en 图左伸 98（图宽 = vw−490，比 zh 窄 102）→ 偏移公式常数不同；
+       min() 钳制：en 超窄视口（901~922）图高 < 内容 265+pt 会溢出，
+       牺牲对齐保底（间隙 ≥3px/隙）。 */
+    html[data-lang="en"] .hero-main{
+      padding-top:min(calc(9.123vw - 44.7px), calc(70.5vw - 625.45px));
+    }
+  }
+  @media (min-width:1180px){
+    .hero-main{padding-top:calc(4.5615vw + 18.4px)}
+    html[data-lang="en"] .hero-main{padding-top:calc(4.5615vw + 9.1px)}
   }
   .hero-top{display:flex;align-items:center;gap:20px}
    /* Hero 右侧脑机接口配图（v4.5.23）：素材已按亮度键出 alpha（深色底完全透明，

@@ -472,16 +472,17 @@
        改由配图向左伸进文字列右侧的空档（见 .hero-bci 的 -140px），
        中缝由 340px 收到 ~59px（到可见墨迹）。 */
     display:grid;grid-template-columns:minmax(340px,530px) minmax(0,1fr);
-    gap:34px;align-items:center;padding:36px 36px 20px;
+    gap:34px;align-items:center;padding:28px 36px 20px;
     /* v4.5.23e：图出血放大后文字按比例放大（h1/hi/hi-sub/meta/按钮 ≈+15~20%），
        并收紧下半间隙——底 padding 36→20、与下一区块间距(.card margin-bottom 44)→28。
        tagline 字号刻意不动：EN 芯片 389px+头像占位 126 已顶满 530px 列宽，放大必折行。 */
     margin-bottom:28px;
   }
-  /* v4.5.23e：图出血后高 ~662，文字块仅 ~270，垂直居中会让文字下方空 ~215px。
-     改为"贴底+抬升 115px"：下缝收到 ~140px（与图底部对齐趋势），上缝交给右侧大图撑场。
-     （align-self:end 以图底为行底；zh 图 662 高 → 上缝 ~277/下缝 ~141；en 图 522 → 上下 ~138 平衡） */
-  .hero-main{align-self:end;margin-bottom:115px}
+  /* v4.5.23f：文字块从最上面开始、按自然间距向下排布（常规文档流观感）：
+     顶对齐后文字顶与图顶平齐（hero 顶 padding 36→28），下方交给右侧大图。
+     字号同步再放大一档（h1 46 / hi 19 / hi-sub 16.5 / meta 16 / 按钮 16），
+     元素间距随字号自然拉开（11→14、18→24、16→20）。tagline 仍锁 14px（EN 列宽约束）。 */
+  .hero-main{align-self:start}
   .hero-top{display:flex;align-items:center;gap:20px}
    /* Hero 右侧脑机接口配图（v4.5.23）：素材已按亮度键出 alpha（深色底完全透明，
       不存在图片矩形边界），再叠 mix-blend-mode:screen 让深色像素"等于不存在"
@@ -564,7 +565,7 @@
     box-shadow:0 14px 30px -10px rgba(0,0,0,.6),0 0 0 5px rgba(11,20,48,.9),0 0 0 7px rgba(157,196,255,.28);
   }
   .avatar svg{width:64px;height:64px}
-  .hero h1{font-size:41px;font-weight:800;letter-spacing:.6px}
+  .hero h1{font-size:46px;font-weight:800;letter-spacing:.6px}
   /* 任务30：姓名=首屏焦点+质感入场。渐变文字+缓慢高光扫过+逐字上浮淡入；
      渐进增强：默认/reduced-motion/不支持background-clip时为最终态（静止完整姓名） */
   .hero h1 .ch{display:inline-block} /* 逐字节点：HTML 紧贴无空格，不产生 inline 间隙 */
@@ -603,22 +604,22 @@
     100%{background-position:0 0,-40% 0}
   }
   .tagline{
-    display:inline-flex;align-items:center;gap:6px;margin-top:11px;
+    display:inline-flex;align-items:center;gap:6px;margin-top:14px;
     padding:6px 15px;background:var(--blue-soft);color:var(--text-link);
     border-radius:999px;font-size:14px;font-weight:600;
     box-shadow:inset 0 0 0 1px rgba(58,123,213,.12);
   }
-  .hero-meta{margin-top:11px;color:var(--text-soft);font-size:15px;letter-spacing:.2px}
-  .hero-hello{margin-top:18px}
-  .hero-hello .hi{font-weight:700;color:var(--text-link);font-size:17px}
-  .hero-hello .hi-sub{font-size:15px;color:var(--text-soft);margin-top:6px}
+  .hero-meta{margin-top:14px;color:var(--text-soft);font-size:16px;letter-spacing:.2px}
+  .hero-hello{margin-top:24px}
+  .hero-hello .hi{font-weight:700;color:var(--text-link);font-size:19px}
+  .hero-hello .hi-sub{font-size:16.5px;color:var(--text-soft);margin-top:8px}
   .hero-fig{min-height:340px}
   /* 星尘层：hero 配图上的轻量氛围星点（仅增强，reduced 下不创建） */
   .hero-fig canvas.hero-stars{position:absolute;inset:0;width:100%;height:100%;z-index:2;pointer-events:none}
 
   /* 行动入口按钮 */
-  .hero-cta{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
-  .hero-cta .btn{font-size:15px;padding:10px 18px}   /* v4.5.23e 与放大后的文字配套 */
+  .hero-cta{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap}
+  .hero-cta .btn{font-size:16px;padding:11px 19px}   /* v4.5.23f 与放大后的文字配套 */
   .btn{
     cursor:pointer;text-decoration:none;font-size:13.5px;font-weight:700;
     padding:9px 16px;border-radius:999px;display:inline-flex;align-items:center;gap:6px;

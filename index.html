@@ -464,21 +464,39 @@
 
   /* ---------- Hero ---------- */
   .hero{
-    display:grid;grid-template-columns:minmax(0,1.12fr) minmax(0,.88fr);
+    /* v4.5.23 消空位：文字块实际墨迹只有 ~330px 宽（姓名/简介/按钮都短），
+       文字列再宽也只会把中缝撑大。但又不能把文字列硬收窄到 400px 以内——
+       EN 的 tagline "🎓 Tianjin University · Intelligent Medical Engineering"
+       连带头像占位共需 388+126=514px，收窄会让它折成两行（zh 203px 不受影响，
+       所以这是 EN 独有回归）。故文字列固定 minmax(340px,530px)（保住 EN 单行），
+       改由配图向左伸进文字列右侧的空档（见 .hero-bci 的 -140px），
+       中缝由 340px 收到 ~59px（到可见墨迹）。 */
+    display:grid;grid-template-columns:minmax(340px,530px) minmax(0,1fr);
     gap:34px;align-items:center;padding:36px 36px;
   }
   .hero-top{display:flex;align-items:center;gap:20px}
-  /* Hero 右侧脑机接口配图（v4.5.21）：素材已按亮度键出 alpha（深色底完全透明，
+  /* Hero 右侧脑机接口配图（v4.5.23）：素材已按亮度键出 alpha（深色底完全透明，
      不存在图片矩形边界），再叠 mix-blend-mode:screen 让深色像素"等于不存在"
      （screen 与黑=保留背景），于是只有发光的大脑本身浮在卡片星空上——实测图片四边
-     "内-外"亮度台阶 ≤2 级（上-0.07/下+2.0/左-0.55），肉眼看不出边界；若改用
-     drop-shadow 会在亮星云处压出一圈暗斑（环带掉到 38，核心亮度只有 64），故不用阴影。
-     配图宽度撑满右列（483px，占卡片高 82%），只占右列、垂直居中，
-     窄屏（<900px）自动落到文字下方。 */
+     "内-外"亮度台阶 ≤2 级，肉眼看不出边界；若改用 drop-shadow 会在亮星云处压出
+     一圈暗斑，故不用阴影。
+     v4.5.23 变化：① 素材从 1000x667 换成 1200x794 的**紧致裁剪**版——原稿四周有
+     大量透明边（alpha>16 只占画面 35.4%），图框本身就读成"空槽位"；裁掉透明边后
+     画面占比 46.9%，发光体直接顶到图框边缘。② 配图右缘仍贴栏线，但整块向左多伸
+     140px 进文字列右侧的空档（width:calc(100%+140px) + margin-left:-140px）：
+     图框左缘落在文字容器右缘之外 20px、距可见墨迹约 59px，空档被星云填掉，
+     而文字/按钮/EN tagline 的位置完全没动。
+     窄屏（<900px）媒体查询里 width:auto 复位，自动落到文字下方居中。 */
   .hero-bci{
-    margin:0;position:relative;width:100%;max-width:none;
-    justify-self:center;align-self:center;pointer-events:none;
+    /* 图框右缘贴栏线（justify-self:end），宽度超出所在网格列时只会向左溢出——
+       于是"向左伸多少"就等于"把中缝吃掉多少"。用量按语言给：
+       zh 文字墨迹右缘 ≈ 栏左+314，图框左缘取 栏左+389（淡星云 栏左+404）⇒ 距墨迹 ~90px；
+       en tagline 长得多（墨迹右缘 ≈ 栏左+514），若照 zh 伸 175px 会压住 tagline 尾巴，
+       故改为收窄 29px 右对齐，同样留出 ~90px。两式都只跟"栏左"有关，与视口宽度无关。 */
+    position:relative;width:calc(100% + 175px);max-width:none;
+    justify-self:end;align-self:center;pointer-events:none;
   }
+  html[data-lang="en"] .hero-bci{width:calc(100% - 29px)}
   .hero-bci img{
     display:block;width:100%;height:auto;
     mix-blend-mode:screen;
@@ -1022,7 +1040,9 @@
     .split.flip .sec-fig{order:0}
     .sec-fig{min-height:220px}
     .hero{grid-template-columns:1fr;gap:26px;padding:30px 26px}
-    .hero-bci{max-width:360px;margin:2px auto 0}
+    /* 单列布局：配图回到文字下方居中，必须把按语言的左伸宽度彻底复位
+       （选择器权重需 ≥ html[data-lang="en"] .hero-bci，故同样带 html[data-lang]） */
+    html[data-lang] .hero-bci{width:auto;max-width:360px;margin:2px auto 0;justify-self:center}
     .hero-fig{min-height:240px}
     .card{padding:26px 24px}
   }
@@ -2013,7 +2033,7 @@ header.hero.card{overflow:visible}
       </div>
     </div>
     <figure class="hero-bci">
-      <img src="assets/hero-bci.webp" width="1000" height="667" decoding="async"
+      <img src="assets/hero-bci.webp" width="1200" height="794" decoding="async"
            alt="脑机接口概念图：发光的神经网络大脑与神经芯片" />
     </figure>
   </header>

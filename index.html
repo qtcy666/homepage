@@ -510,8 +510,12 @@
     }
   }
   @media (min-width:1180px){
-    .hero-main{padding-top:calc(4.5615vw + 18.4px)}
-    html[data-lang="en"] .hero-main{padding-top:calc(4.5615vw + 9.1px)}
+    /* v4.5.23p：行间距收紧——space-between（拉满图高底贴图底）改为固定 gap：
+       zh 40px / en 28px（en 图矮 72px，gap 40 在 1180 视口会溢出 9px）；
+       顶对齐 calc 不动；底部自然留白（zh/1280 约 52px），字块高度不再强制=图高
+       （用户已确认行间距优先）。901~1179 仍 space-between 自适应防溢出。 */
+    .hero-main{padding-top:calc(4.5615vw + 18.4px);justify-content:flex-start;gap:40px}
+    html[data-lang="en"] .hero-main{padding-top:calc(4.5615vw + 9.1px);gap:28px}
   }
   .hero-top{display:flex;align-items:center;gap:20px}
    /* Hero 右侧脑机接口配图（v4.5.23）：素材已按亮度键出 alpha（深色底完全透明，

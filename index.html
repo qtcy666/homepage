@@ -882,6 +882,8 @@
   .chat-head .av svg{width:23px;height:23px}
   .chat-head b{font-size:15px}
   .status{font-size:12px;color:var(--text-soft);margin-top:1px}
+  /* v4.5.26：数字分身刻意不落盘的明示小字（避免访客输入被留在本机） */
+  .chat-note{font-size:11px;color:var(--text-muted);margin-top:2px;line-height:1.35}
   .dot{display:inline-block;width:8px;height:8px;border-radius:50%;
     background:#28c76f;margin-right:5px;vertical-align:middle;
     box-shadow:0 0 0 3px rgba(40,199,111,.16)}
@@ -2277,6 +2279,7 @@ header.hero.card{overflow:visible}
             <div>
               <b>AI 数字分身</b>
               <div class="status"><span class="dot" aria-hidden="true"></span><span>在线 · 代表刘一鸣回答</span></div>
+              <div class="chat-note">对话不保存，刷新即清空</div>
             </div>
             <button class="reset" id="reset" title="清空对话，重新开始" aria-label="清空对话，重新开始">↺ 重新开始</button>
           </div>
@@ -2415,6 +2418,9 @@ header.hero.card{overflow:visible}
          避免排版换行或引号样式差异导致漏配。
        · 语言存 localStorage，回访保持；默认中文（不按浏览器语言自动跳，
          避免中文用户被英文系统带到英文页）。
+       · 数字分身对话刻意不持久化（chat 模块不碰 localStorage / sessionStorage）：
+         访客打的字不该被留在本机，刷新 / 重置即回到开场白；并在头部小字明示
+         「对话不保存，刷新即清空」。这是取舍不是遗漏——改动前请先看这行。
      ================================================================== */
   const I18N_EN = {
     /* ---- 入口幕布 ---- */
@@ -2492,6 +2498,7 @@ header.hero.card{overflow:visible}
     "数字分身 · 聊聊天": "AI twin · let's chat",
     "AI 数字分身": "AI digital twin",
     "在线 · 代表刘一鸣回答": "Online · answers on behalf of 刘一鸣",
+    "对话不保存，刷新即清空": "Chats aren't saved, refresh clears them",
     "↺ 重新开始": "↺ Restart",
     "清空对话，重新开始": "Clear the chat and start over",
     "你是谁": "Who are you",

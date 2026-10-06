@@ -2276,11 +2276,13 @@ header.hero.card{overflow:visible}
             <div class="av"><span class="ini" aria-hidden="true">刘</span></div>
             <div>
               <b>AI 数字分身</b>
-              <div class="status"><span class="dot"></span><span>在线 · 代表刘一鸣回答</span></div>
+              <div class="status"><span class="dot" aria-hidden="true"></span><span>在线 · 代表刘一鸣回答</span></div>
             </div>
-            <button class="reset" id="reset" title="清空对话，重新开始">↺ 重新开始</button>
+            <button class="reset" id="reset" title="清空对话，重新开始" aria-label="清空对话，重新开始">↺ 重新开始</button>
           </div>
           <div class="msgs" id="msgs" role="log" aria-live="polite" aria-label="与数字分身的对话"></div>
+          <!-- 可视区外的播报位：内容由 JS 走 tx() 写入（静态中文会被 _collect() 收走 → 英文态残留） -->
+          <div class="sr-only" id="srLive" role="status" aria-live="polite" aria-atomic="true"></div>
           <div class="suggest-wrap">
             <!-- 问题按钮由 JS 渲染（两批轮换 + 已问标记）；data-q 恒为"规范中文问题"，
                  保证无论界面语言都命中同一条规则，回答语言再按当前语言输出。 -->
@@ -2290,7 +2292,7 @@ header.hero.card{overflow:visible}
           <div class="chat-input">
             <label class="sr-only" for="q">向数字分身提问</label>
             <input id="q" placeholder="试着问我一个问题…" autocomplete="off" maxlength="200"
-                   onkeydown="if(event.key==='Enter')send()" />
+                   onkeydown="if(event.key==='Enter' && !event.isComposing && event.keyCode!==229)send()" />
             <button type="button" onclick="send()" aria-label="发送问题">发送</button>
           </div>
         </div>
@@ -2753,7 +2755,7 @@ header.hero.card{overflow:visible}
                  `I'm a rule-based digital twin of ${me.name} (offline, answering from a local script). For the full picture, see the "About" section below.`)
       ] },
     { id: "summary",
-      re: /(总结|概括|一句话|简单介绍|介绍一下他|介绍一下自己|简单说说|summar|summary|in one sentence|brief|tl;?dr|overview|describe him)/i,
+      re: /(总结|概括|一句话|简单介绍|介绍一下他|介绍一下自己|简单说说|summar|summary|in one sentence|in one line|brief|tl;?dr|overview|describe him|describe yourself)/i,
       a: () => tx(`一句话版：${me.name}，${me.school} ${me.major} 在读，一个「${me.trait}」的大学生，平时喜欢 ${me.interests.join("、")}。`,
                   `In one line: ${me.name}, studying ${me.major} at ${me.school} — a student who likes to make complex things simple, into ${interestsText()}.`),
       v: [
@@ -2957,14 +2959,26 @@ header.hero.card{overflow:visible}
     msgs.scrollTop = msgs.scrollHeight;
   }
 
-  // 正在输入动效
+  /* 正在输入动效。
+     v4.5.25 无障碍：三点气泡本身对 AT 无意义（无文本），标 aria-hidden；
+     真正的"正在输入"由 #srLive（可视区外 aria-live）播报，消息区同时标 aria-busy="true"，
+     让屏幕阅读器等回复落地后一次性播报，而不是读一串空 span。 */
+  const srLive = document.getElementById("srLive");
+  function setBusy(on) {
+    if (msgs) { if (on) msgs.setAttribute("aria-busy", "true"); else msgs.removeAttribute("aria-busy"); }
+    if (srLive) srLive.textContent = on ? tx("数字分身正在输入", "The AI twin is typing") : "";
+  }
   function addTyping() {
     const m = document.createElement("div");
-    m.className = "msg ai"; m.id = "typing";
+    m.className = "msg ai"; m.id = "typing"; m.setAttribute("aria-hidden", "true");
     m.innerHTML = '<div class="bubble typing-b"><span></span><span></span><span></span></div>';
     msgs.appendChild(m); msgs.scrollTop = msgs.scrollHeight;
+    setBusy(true);
   }
-  function removeTyping() { const t = document.getElementById("typing"); if (t) t.remove(); }
+  function removeTyping() {
+    const t = document.getElementById("typing"); if (t) t.remove();
+    setBusy(false);
+  }
 
   let busy = false;
   /* v4.5.23q：挂起回复可取消——存定时器 id + 会话版本号。
@@ -2975,6 +2989,7 @@ header.hero.card{overflow:visible}
   function cancelPending() {
     if (pendingReply) { clearTimeout(pendingReply); pendingReply = 0; }
     chatSession++;
+    removeTyping();          // 清掉可能残留的"正在输入"气泡，并复位 aria-busy / 播报位
   }
   function send(text, shown) {
     const input = document.getElementById("q");
@@ -2984,6 +2999,8 @@ header.hero.card{overflow:visible}
        但气泡按用户实际看到的英文按钮文字显示，避免自己说的话变成看不懂的中文。 */
     add("me", (shown && String(shown).trim()) || v);
     input.value = "";
+    /* v4.5.25：发送后把焦点交还输入框（含点"发送"按钮与点推荐问题的情况），便于连续追问 */
+    try { input.focus({ preventScroll: true }); } catch (e) { input.focus(); }
     busy = true;
     addTyping();
     const delay = 420 + Math.min(900, v.length * 45);
@@ -3013,28 +3030,34 @@ header.hero.card{overflow:visible}
   /* v4.5.24 建议问题区：两批轮换 + 已问标记（✓）；data-q 恒为"规范中文问题"，
      显示文字按当前语言渲染 —— 换语言必须重渲染（见 onLangChange）。
      注意：这些按钮必须是 #suggest 的直接子节点且 data-q 含中文（i18n 测试硬约束），
-     所以"换一批"按钮放在 #suggest 之外的 .suggest-wrap 里。 */
+     所以"换一批"按钮放在 #suggest 之外的 .suggest-wrap 里。
+     v4.5.25：每项多带一个 id = 期望命中的规则名。data-q 固定中文，保证命中与界面语言无关，
+     但按钮可见文字是当前语言（英文用户看到的是 en）——为避免"可见的词 ≠ 内部匹配的词"
+     日后踩坑，约定 q（中文）与 en（英文）必须**都能命中同一个 id**，并由 chat_fix_test 逐项断言。
+     新增推荐问题时，务必同步把对应英文关键词补进 rules（本次就给 summary 补了
+     "describe yourself / in one line"）。 */
   const SUGGEST_BATCHES = [
     /* 首批 = 页面原有的 8 条（保持与改前版一致的可见文本，data-q 即按钮文字） */
     [
-      { q: "你是谁", zh: "你是谁", en: "Who are you" },
-      { q: "你在干什么", zh: "你在干什么", en: "What are you up to" },
-      { q: "你的特点", zh: "你的特点", en: "Your strengths" },
-      { q: "你的兴趣", zh: "你的兴趣", en: "Your interests" },
-      { q: "你的学校专业", zh: "你的学校专业", en: "School & major" },
-      { q: "你的技能", zh: "你的技能", en: "Your skills" },
-      { q: "你的学习目标", zh: "你的学习目标", en: "Your goals" },
-      { q: "怎么联系你", zh: "怎么联系你", en: "How to reach you" }
+      { id: "identity",  q: "你是谁",       zh: "你是谁",       en: "Who are you" },
+      { id: "doing",     q: "你在干什么",   zh: "你在干什么",   en: "What are you up to" },
+      { id: "traits",    q: "你的特点",     zh: "你的特点",     en: "Your strengths" },
+      { id: "interests", q: "你的兴趣",     zh: "你的兴趣",     en: "Your interests" },
+      { id: "school",    q: "你的学校专业", zh: "你的学校专业", en: "School & major" },
+      { id: "skills",    q: "你的技能",     zh: "你的技能",     en: "Your skills" },
+      { id: "goals",     q: "你的学习目标", zh: "你的学习目标", en: "Your goals" },
+      { id: "contact",   q: "怎么联系你",   zh: "怎么联系你",   en: "How to reach you" }
     ],
+    /* 第二批 = 人设卡片 / 规划 / 运动类追问 */
     [
-      { q: "你多大了", zh: "你多大了", en: "How old are you" },
-      { q: "你是哪里人", zh: "你是哪里人", en: "Where are you from" },
-      { q: "你是什么星座", zh: "你是什么星座", en: "What's your zodiac sign" },
-      { q: "你在学校成绩怎么样", zh: "你在学校成绩怎么样", en: "How are your grades" },
-      { q: "你以后想干嘛", zh: "你以后想干嘛", en: "What do you want to do later" },
-      { q: "你能用一句话介绍自己吗", zh: "你能用一句话介绍自己吗", en: "Describe yourself in one line" },
-      { q: "你喜欢什么运动", zh: "你喜欢什么运动", en: "What sports do you like" },
-      { q: "怎么联系你", zh: "怎么联系你", en: "How can I reach you" }
+      { id: "age",       q: "你多大了",               zh: "你多大了",               en: "How old are you" },
+      { id: "hometown",  q: "你是哪里人",             zh: "你是哪里人",             en: "Where are you from" },
+      { id: "zodiac",    q: "你是什么星座",           zh: "你是什么星座",           en: "What's your zodiac sign" },
+      { id: "grades",    q: "你在学校成绩怎么样",     zh: "你在学校成绩怎么样",     en: "How are your grades" },
+      { id: "goals",     q: "你以后想干嘛",           zh: "你以后想干嘛",           en: "What do you want to do later" },
+      { id: "summary",   q: "你能用一句话介绍自己吗", zh: "你能用一句话介绍自己吗", en: "Describe yourself in one line" },
+      { id: "interests", q: "你喜欢什么运动",         zh: "你喜欢什么运动",         en: "What sports do you like" },
+      { id: "contact",   q: "怎么联系你",             zh: "怎么联系你",             en: "How can I reach you" }
     ]
   ];
   let batchIdx = 0;
@@ -3074,6 +3097,9 @@ header.hero.card{overflow:visible}
   document.getElementById("reset").addEventListener("click", () => {
     cancelPending(); resetChatState(); askedQ.clear();
     msgs.innerHTML = ""; busy = false; renderSuggest(); greet();
+    /* v4.5.25：重置后把焦点交回输入框，键盘用户不必再 Tab 一圈 */
+    const qi = document.getElementById("q");
+    if (qi) { try { qi.focus({ preventScroll: true }); } catch (e) { qi.focus(); } }
   });
 
   // 开场白

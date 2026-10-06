@@ -862,8 +862,10 @@
   .fv-empty{font-size:13px;color:var(--text-soft);text-align:center;padding:24px 8px}
 
   /* ---------- 数字分身 ---------- */
+  /* v4.5.24：高度由内容决定（.msgs 自己带上限，超出后在消息区内滚动），
+     不再固定 540px —— 短对话不再留大片空白，长对话也不会把整个面板撑破。 */
   .chat-box{
-    display:flex;flex-direction:column;height:540px;
+    display:flex;flex-direction:column;
     border:1px solid var(--line);border-radius:16px;overflow:hidden;
     background:rgba(255,255,255,.04);box-shadow:inset 0 1px 0 rgba(157,196,255,.10);
   }
@@ -883,17 +885,51 @@
   .dot{display:inline-block;width:8px;height:8px;border-radius:50%;
     background:#28c76f;margin-right:5px;vertical-align:middle;
     box-shadow:0 0 0 3px rgba(40,199,111,.16)}
-  .msgs{flex:1;overflow-y:auto;padding:17px;display:flex;flex-direction:column;gap:12px}
-  .msg{max-width:82%;display:flex;gap:8px;align-items:flex-end}
+  .msgs{overflow-y:auto;padding:17px;display:flex;flex-direction:column;gap:12px;
+    min-height:150px;max-height:min(380px,44vh)}
+  .msg{max-width:84%;display:flex;gap:8px;align-items:flex-end}
+  .msg .msg-col{display:flex;flex-direction:column;gap:4px;align-items:flex-start;min-width:0}
+  .msg.me .msg-col{align-items:flex-end}
+  .msg .av-mini{
+    width:26px;height:26px;flex:0 0 auto;border-radius:50%;display:grid;place-items:center;
+    font-size:12px;font-weight:700;color:#fff;background:linear-gradient(135deg,#6fb1f3,#2f6fdb);
+    box-shadow:0 0 0 2px rgba(255,255,255,.06);
+  }
   .msg .bubble{
     padding:11px 15px;border-radius:15px;font-size:14px;line-height:1.65;
     white-space:pre-wrap;box-shadow:0 8px 20px -12px rgba(0,0,0,.75);
   }
+  .msg .time{font-size:10.5px;line-height:1;color:var(--text-soft);opacity:.7;padding:0 3px}
+  .msg .msg-acts{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px}
+  .msg .act-chip{
+    cursor:pointer;border:1px solid rgba(120,170,255,.45);background:rgba(120,170,255,.14);
+    color:var(--text-link);border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:700;
+    transition:background var(--dur-fast) var(--ease-out),transform var(--dur-fast) var(--ease-out);
+  }
+  .msg .act-chip:hover{background:var(--blue-soft);transform:translateY(-1px)}
   .msg.ai{align-self:flex-start}
   .msg.ai .bubble{background:var(--ai-msg);border:1px solid var(--line);border-top-left-radius:5px}
   .msg.me{align-self:flex-end;flex-direction:row-reverse}
   .msg.me .bubble{background:var(--me-msg);color:#fff;border-top-right-radius:5px}
-  .suggest{display:flex;flex-wrap:wrap;gap:8px;padding:11px 15px;border-top:1px solid var(--line);background:rgba(255,255,255,.03)}
+  .suggest-wrap{
+    display:flex;align-items:center;gap:6px;
+    border-top:1px solid var(--line);background:rgba(255,255,255,.03);padding:8px 12px 8px 15px;
+  }
+  .suggest{display:flex;flex-wrap:wrap;gap:8px;flex:1;min-width:0}
+  .suggest-more{
+    cursor:pointer;flex:0 0 auto;border:1px solid var(--line);background:rgba(255,255,255,.07);
+    color:var(--text-soft);border-radius:999px;padding:6px 12px;font-size:12.5px;font-weight:700;
+    white-space:nowrap;transition:background var(--dur-fast) var(--ease-out),color var(--dur-fast) var(--ease-out);
+  }
+  .suggest-more:hover{background:var(--blue-soft);color:var(--text-link)}
+  .suggest button.asked{background:var(--blue-soft);border-color:rgba(120,170,255,.5)}
+  .suggest button .mark{margin-right:4px;font-weight:700;color:var(--text-link)}
+  /* 从数字分身"转达"跳到表单时，闪一下目标输入框，让人知道该填哪里 */
+  .flash{animation:fbFlash 1.2s var(--ease-out) 1}
+  @keyframes fbFlash{
+    0%,100%{box-shadow:0 0 0 0 rgba(120,170,255,0)}
+    40%{box-shadow:0 0 0 4px rgba(120,170,255,.42)}
+  }
   .suggest button{
     cursor:pointer;border:1px solid var(--line);background:rgba(255,255,255,.07);color:var(--text-link);
     border-radius:999px;padding:6px 13px;font-size:13px;font-weight:600;
@@ -1131,7 +1167,10 @@
     .skills .row{flex-direction:column;align-items:flex-start}
     .fb-stars .star{font-size:30px}
     .skills .lv{min-width:0;width:100%;text-align:left}
-    .chat-box{height:520px}
+    .chat-box{height:auto}
+    .msgs{max-height:min(320px,42vh)}
+    .suggest{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+    .suggest button{flex:0 0 auto}
     .gate-inner{padding:0 20px}
     .gate-inner h1{letter-spacing:1px}
     .gate-inner p{font-size:14px}
@@ -2242,16 +2281,11 @@ header.hero.card{overflow:visible}
             <button class="reset" id="reset" title="清空对话，重新开始">↺ 重新开始</button>
           </div>
           <div class="msgs" id="msgs" role="log" aria-live="polite" aria-label="与数字分身的对话"></div>
-          <div class="suggest" id="suggest">
-            <!-- data-q：无论界面语言如何，点击后都发送这条"规范问题"，保证规则一定能命中（回答语言再按当前语言输出） -->
-            <button data-q="你是谁">你是谁</button>
-            <button data-q="你在干什么">你在干什么</button>
-            <button data-q="你的特点">你的特点</button>
-            <button data-q="你的兴趣">你的兴趣</button>
-            <button data-q="你的学校专业">你的学校专业</button>
-            <button data-q="你的技能">你的技能</button>
-            <button data-q="你的学习目标">你的学习目标</button>
-            <button data-q="怎么联系你">怎么联系你</button>
+          <div class="suggest-wrap">
+            <!-- 问题按钮由 JS 渲染（两批轮换 + 已问标记）；data-q 恒为"规范中文问题"，
+                 保证无论界面语言都命中同一条规则，回答语言再按当前语言输出。 -->
+            <div class="suggest" id="suggest"></div>
+            <button type="button" class="suggest-more" id="suggestMore">↻ 换一批</button>
           </div>
           <div class="chat-input">
             <label class="sr-only" for="q">向数字分身提问</label>
@@ -2387,6 +2421,7 @@ header.hero.card{overflow:visible}
     "把复杂问题简单化 —— 点击启动，进入我的主页。": "Making the complex simple — click Start to enter my homepage.",
     "启 动": "Start",
     "点击按钮，或按 Enter 键进入": "Click the button, or press Enter to continue",
+    "↻ 换一批": "↻ More questions",
 
     /* ---- 顶部导航 ---- */
     "关于我": "About",
@@ -2650,81 +2685,275 @@ header.hero.card{overflow:visible}
     return tx("羽毛球、乒乓球、阅读", "badminton, table tennis and reading");
   }
 
-  /* 规则式知识库（v4.5.23q 打分制）：命中多条时按"命中片段长度"打分取最高——片段越长越具体；
-     同分时数组靠前者优先。泛化规则（问候/身份/概述）前置，避免被更靠后的具体规则抢先命中
-     （旧版"数组顺序即优先级"会让"你是谁、你是哪个学校的"被学校规则答非所问）。
-     双语（v4.5.19）：re 同时收录中英关键词，英文访客自由输入也能命中；回答用 tx() 按当前语言输出。 */
+  /* ==================================================================
+     v4.5.24 数字分身：输入归一化 + 语义分组打分 + 多轮状态
+     ------------------------------------------------------------------
+     · 归一化：繁体→简体、全角→半角、去常见标点、压缩空白，
+       并额外产出一份"无空白"紧凑串，让「在 吗」「你是谁。」「？」这类
+       变体不再依赖子串侥幸命中。
+     · 分组：每个语义组一条规则，re 里同时收中英文关键词（school 组收
+       school / university / college / major / where do you study …），
+       命中只看语义、语言只决定输出（正是既有的 tx() 策略）。
+     · 打分：命中多条时按"命中片段长度"取最具体，同分保留靠前规则。
+     · 多轮：重复问同一话题时换一句同义回答并追加衔接话术；
+       该行为只在真实对话轮次（send → turn:true）生效，
+       直接调用 reply(q) 永远返回基准答案，保持与改前逐字节等效。
+     ================================================================== */
+
+  /* 常用繁体 → 简体（覆盖提问高频字；只收非同一字，避免误改） */
+  const T2S = {
+    "嗎":"吗","麼":"么","甚":"什","學":"学","習":"习","業":"业","專":"专","誰":"谁","個":"个",
+    "這":"这","樣":"样","時":"时","會":"会","說":"说","話":"话","興":"兴","謝":"谢","對":"对",
+    "沒":"没","關":"关","係":"系","繫":"系","聯":"联","絡":"络","覺":"觉","點":"点","幾":"几",
+    "歲":"岁","裡":"里","裏":"里","來":"来","從":"从","邊":"边","頭":"头","長":"长","讀":"读",
+    "書":"书","園":"园","課":"课","難":"难","簡":"简","單":"单","復":"复","雜":"杂","們":"们",
+    "妳":"你","為":"为","訴":"诉","聽":"听","問":"问","題":"题","幫":"帮","轉":"转","達":"达",
+    "饋":"馈","頁":"页","師":"师","親":"亲","戚":"戚","夥":"伙","訪":"访","稱":"称","縣":"县",
+    "區":"区","國":"国","際":"际","語":"语","數":"数","計":"计","機":"机","電":"电","醫":"医",
+    "劃":"划","標":"标","夢":"梦","職":"职","愛":"爱","運":"运","動":"动","閱":"阅","設":"设",
+    "實":"实","據":"据","網":"网","開":"开","發":"发","錄":"录","內":"内","顏":"颜","圖":"图",
+    "樂":"乐","遊":"游","戲":"戏","劇":"剧","週":"周","試":"试","績":"绩","堅":"坚","認":"认",
+    "細":"细","慣":"惯","滿":"满","諾":"诺","證":"证","規":"规","礎":"础","積":"积","線":"线",
+    "陣":"阵","組":"组","極":"极","導":"导","編":"编","郵":"邮","覆":"复","請":"请","評":"评",
+    "順":"顺","財":"财","萬":"万","講":"讲","兒":"儿","當":"当","見":"见","後":"后","畢":"毕",
+    "討":"讨","論":"论","資":"资","訊":"讯","灣":"湾","陸":"陆","體":"体","驗":"验","嗎":"吗",
+    "喔":"哦","唷":"哟","來":"来","衞":"卫","衛":"卫","產":"产","觀":"观","歸":"归","類":"类",
+    "讓":"让","願":"愿","應":"应","該":"该","處":"处","風":"风","齊":"齐","歲":"岁","豐":"丰"
+  };
+  function toSimplified(str) {
+    let out = "";
+    for (const ch of str) out += (T2S[ch] || ch);
+    return out;
+  }
+  /* 归一化：返回 { spaced, tight, lower } ——
+     spaced/tight 都参与匹配：英文关键词用 spaced（保留词间空格），
+     中文关键词用 tight（「在 吗」→「在吗」）。 */
+  function normalizeInput(raw) {
+    let t = toSimplified(String(raw == null ? "" : raw));
+    t = t.replace(/[\uFF01-\uFF5E]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0)); // 全角→半角
+    t = t.replace(/[\u3000\u00A0\u2007\u202F]/g, " ");
+    t = t.replace(/[。，、！？；：…·~～,\.!\?;:'"“”‘’`^(){}\[\]【】<>《》〈〉「」『』_\-—–=+*\/\\|@#$%&]/g, " ");
+    t = t.replace(/\s+/g, " ").trim();
+    return { spaced: t, tight: t.replace(/\s+/g, ""), lower: t.toLowerCase() };
+  }
+
   const rules = [
-    { re: /(你好|您好|hi|hello|嗨|哈喽|在吗|hey|good (morning|afternoon|evening))/i,
+    { id: "greeting",
+      re: /(你好|您好|哈喽|嗨|在吗|早上好|中午好|晚上好|hello|hi|hey|howdy|greetings|good (morning|afternoon|evening)|how are you\b|how r u)/i,
       a: () => tx(`你好呀 👋 我是 ${me.name} 的数字分身。你可以问我：他是谁、在做什么、有什么特点、兴趣爱好，或者学校专业。`,
                   `Hi there 👋 I'm ${me.name}'s digital twin. You can ask me who he is, what he's up to, what his strengths are, what he's into, or about his school and major.`) },
-    { re: /(你是谁|你是哪位|你叫什么|怎么称呼你|介绍(一下|下)?你(?!们)|介绍你自己|who are you|who r u|introduce yourself|about you)/i,
+    { id: "identity",
+      re: /(你是谁|你是哪位|你叫什么|怎么称呼你|介绍(一下|下)?你(?!们)|介绍你自己|自我介绍|who are you|who r u|what are you\b|introduce yourself|about you|tell me about yourself|your name)/i,
       a: () => tx(`我是 ${me.name} 的数字分身。${me.name} 是 ${me.school} ${me.major} 专业的学生，你可以把我当成一个"能在你没空时，用他的方式回答问题"的小助理。`,
-                  `I'm the digital twin of ${me.name}. ${me.name} is a student of ${me.major} at ${me.school}. Think of me as a little assistant who can "answer questions his way when he's busy".`) },
-    { re: /(总结|概括|一句话|简单介绍|介绍一下他|介绍一下自己|summar|in one sentence|brief|tl;?dr)/i,
+                  `I'm the digital twin of ${me.name}. ${me.name} is a student of ${me.major} at ${me.school}. Think of me as a little assistant who can "answer questions his way when he's busy".`),
+      v: [
+        () => tx(`又见面啦 👋 再说一次：我是 ${me.name} 的数字分身，在这个页面上替他回答问题。他在 ${me.school} 读 ${me.major}。`,
+                 `We meet again 👋 Once more: I'm ${me.name}'s digital twin, answering for him on this page. He studies ${me.major} at ${me.school}.`),
+        () => tx(`我 = ${me.name} 的规则式数字分身（不联网、只在本地按预设回答）。想了解他本人，往下看「关于我」那一节最全。`,
+                 `I'm a rule-based digital twin of ${me.name} (offline, answering from a local script). For the full picture, see the "About" section below.`)
+      ] },
+    { id: "summary",
+      re: /(总结|概括|一句话|简单介绍|介绍一下他|介绍一下自己|简单说说|summar|summary|in one sentence|brief|tl;?dr|overview|describe him)/i,
       a: () => tx(`一句话版：${me.name}，${me.school} ${me.major} 在读，一个「${me.trait}」的大学生，平时喜欢 ${me.interests.join("、")}。`,
-                  `In one line: ${me.name}, studying ${me.major} at ${me.school} — a student who likes to make complex things simple, into ${interestsText()}.`) },
-    { re: /(学校|专业|哪个大学|哪所大学|在哪上学|读什么|school|major|university|college|what do you study)/i,
+                  `In one line: ${me.name}, studying ${me.major} at ${me.school} — a student who likes to make complex things simple, into ${interestsText()}.`),
+      v: [
+        () => tx(`再概括一次：${me.name}，${me.school} ${me.major} 在读，喜欢把复杂问题拆开、讲清楚。`,
+                 `Once more: ${me.name}, studying ${me.major} at ${me.school}, someone who likes to break complex problems down and explain them clearly.`)
+      ] },
+    { id: "school",
+      re: /(学校|专业|哪个大学|哪所大学|在哪上学|读什么|什么学院|学院|school|university|college|major|campus|degree|where do you study|what do you study|which school|where does he study)/i,
       a: () => tx(`我目前就读于 ${me.school}，专业是 ${me.major}。😊`,
-                  `I'm currently at ${me.school}, studying ${me.major}. 😊`) },
-    { re: /(你在干什么|在干嘛|最近做什么|最近在忙|最近怎么样|what are you doing|what's up|whats up|how are you|what have you been)/i,
+                  `I'm currently at ${me.school}, studying ${me.major}. 😊`),
+      v: [
+        () => tx(`再答一遍：${me.school}，${me.major} 专业 —— 大概就是医学和工程交叉的那一块。`,
+                 `Again: ${me.school}, majoring in ${me.major} — roughly where medicine meets engineering.`)
+      ] },
+    { id: "doing",
+      re: /(你在干什么|在干嘛|干什么呢|最近做什么|最近在忙|最近怎么样|忙什么|what are you doing|what's up|whats up|how are you doing|how'?s it going|how is it going|what have you been|what are you up to|busy lately)/i,
       a: () => tx(`我最近主要在${me.doing}，同时在学习怎么更好地运用 AI 来帮自己。上课、做项目、练习，都希望踏实完成。`,
-                  `Lately I've mostly been ${me.doing}, and also learning how to use AI better to help myself. Classes, projects, practice — I try to get them done properly.`) },
-    { re: /(你的特点|你的优点|你的特色|记忆点|特别之处|有什么特别|strength|strengths|what makes you|special about)/i,
+                  `Lately I've mostly been ${me.doing}, and also learning how to use AI better to help myself. Classes, projects, practice — I try to get them done properly.`),
+      v: [
+        () => tx(`最近还是老三样：上课、做项目、练球。也一直在琢磨怎么把 AI 用得更顺手。`,
+                 `Still the same three: classes, projects, and practice — plus figuring out how to use AI more smoothly.`)
+      ] },
+    { id: "traits",
+      re: /(你的特点|你的优点|你的特色|记忆点|特别之处|有什么特别|性格|是什么样的人|strength|strengths|what makes you|special about|personality|character|your best quality)/i,
       a: () => tx(`我最明显的特点就是「${me.trait}」。遇到复杂的问题，我习惯先拆成小块、抓住最核心的那一点，再用简单清楚的方式讲出来。`,
-                  `What stands out most is that I like to make complex things simple. When something is complicated, I break it into small pieces, grab the one point that matters most, and explain it in plain terms.`) },
-    { re: /(兴趣|爱好|喜欢什么|玩什么|运动|interest|hobby|hobbies|sport|free time)/i,
+                  `What stands out most is that I like to make complex things simple. When something is complicated, I break it into small pieces, grab the one point that matters most, and explain it in plain terms.`),
+      v: [
+        () => tx(`还是那句：喜欢把复杂的东西讲简单 —— 先拆小块、抓重点，再用人话讲出来。`,
+                 `Same as before: I like making complex things simple — break it down, find the point, say it plainly.`)
+      ] },
+    { id: "interests",
+      re: /(兴趣|爱好|喜欢什么|喜欢做什么|玩什么|运动|平时干嘛|业余|interest|interests|hobby|hobbies|sport|free time|fun|what do you like|spare time)/i,
       a: () => tx(`我的兴趣是 ${me.interests.join("、")}。打羽毛球和乒乓球让我放松、保持活力，阅读则让我安静下来、开阔思路。`,
-                  `I'm into ${interestsText()}. Badminton and table tennis help me relax and stay active, while reading quiets my mind and opens up new ideas.`) },
-    { re: /(技能|会什么|会些什么|编程|英语|擅长|拿手|skill|skills|program|coding|good at)/i,
+                  `I'm into ${interestsText()}. Badminton and table tennis help me relax and stay active, while reading quiets my mind and opens up new ideas.`),
+      v: [
+        () => tx(`还是那几样：${me.interests.join("、")}。球类让我动起来，阅读让我静下来。`,
+                 `Same three: ${interestsText()}. Racket sports keep me moving, reading keeps me calm.`)
+      ] },
+    { id: "skills",
+      re: /(技能|会什么|会些什么|会哪些|编程|英语|擅长|拿手|skill|skills|program|coding|good at|can you do|technical)/i,
       a: () => tx(`我正在学习一些基础技能：编程和英语。页面「技能」区里留了熟练程度的空位，等我有把握了会补上真实水平。`,
-                  `I'm working on some basics right now: programming and English. The Skills section leaves room for real proficiency levels, and I'll fill them in once I'm confident.`) },
-    { re: /(目标|计划|打算|未来|规划|方向|goal|goals|plan|plans|future|direction)/i,
+                  `I'm working on some basics right now: programming and English. The Skills section leaves room for real proficiency levels, and I'll fill them in once I'm confident.`),
+      v: [
+        () => tx(`重复一下：目前是编程和英语在补基础，页面「技能」区会随课程进度更新。`,
+                 `To repeat: right now I'm building basics in programming and English; the Skills section updates as I go.`)
+      ] },
+    { id: "goals",
+      re: /(目标|计划|打算|未来|规划|方向|以后|将来|想干嘛|想做什么|想从事|职业|梦想|goal|goals|plan|plans|future|direction|dream|aim|career|what.s next|what do you want to do|what do you want to be|do later)/i,
       a: () => tx(`关于学习目标和规划，页面里我留了「学习记录 / 目标」的空位，正在慢慢补充。等想清楚了，我会第一时间更新在这里。`,
-                  `On goals and plans: the "Learning log / goals" section on this page is where I'm filling things in little by little. Once I've thought it through, I'll update it there first.`) },
-    { re: /(联系|邮箱|微信|电话|怎么找你|合作|contact|e-?mail|phone|wechat|reach you|collaborat)/i,
+                  `On goals and plans: the "Learning log / goals" section on this page is where I'm filling things in little by little. Once I've thought it through, I'll update it there first.`),
+      v: [
+        () => tx(`目标这块答案还是一样：页面「学习记录 / 目标」区留了空位，想清楚了我会写上去。`,
+                 `Same answer on goals: the "Learning log / goals" section has room reserved — I'll fill it in once it's clear.`)
+      ] },
+    { id: "contact",
+      re: /(联系|邮箱|微信|电话|手机号|怎么找你|怎么联系|合作|勾搭|contact|e-?mail|phone|wechat|reach you|collaborat|get in touch|connect)/i,
       a: () => tx(`可以用公开方式联系 ${me.name}：邮箱 3026445032@tju.edu.cn，电话 19582446693。也欢迎先在这里留言，我会把问题转达给他。`,
                   `You can reach ${me.name} publicly by email: 3026445032@tju.edu.cn, or phone: 19582446693. Feel free to leave a message here too — I'll pass it on to him.`) },
-    { re: /(大学生|学生|上学|几年级|student|undergrad|which year|freshman|sophomore)/i,
+    { id: "student",
+      re: /(大学生|学生|上学|几年级|大几|student|undergrad|which year|freshman|sophomore|junior|senior)/i,
       a: () => tx(`是的，我现在是 ${me.school} ${me.major} 的大学生，正在${me.doing}。学习之余我最喜欢 ${me.interests.join("、")}。`,
                   `Yes — I'm a ${me.major} student at ${me.school}, currently ${me.doing}. Outside of study, what I enjoy most is ${interestsText()}.`) },
-    { re: /(谢谢|感谢|多谢|thx|thanks|thank you)/i,
+    { id: "thanks",
+      re: /(谢谢|感谢|多谢|辛苦|thank|thanks|thx|appreciate)/i,
       a: () => tx(`不客气～ 还有想了解的随时问我 😊`,
                   `No problem — ask me anytime 😊`) },
-    { re: /(再见|拜拜|bye|下次聊|see you|goodbye)/i,
+    { id: "bye",
+      re: /(再见|拜拜|下次聊|先这样|bye|goodbye|see you|see ya|talk later|catch you later)/i,
       a: () => tx(`好呀，随时回来找我聊。祝你今天顺利 👋`,
-                  `Sure, come back and chat anytime. Have a great day 👋`) }
+                  `Sure, come back and chat anytime. Have a great day 👋`) },
+
+    /* ---- v4.5.24 新增「人设卡片」：常见追问不再冷场 ----
+       ⚠️ 这些属于本人未在页面公开的信息，分身不作臆测，统一给"暂未公开 + 可转达"的诚实回答。 */
+    { id: "age",
+      re: /(多大了|多大|几岁|年龄|哪年出生|什么时候出生|生日|how old|your age|what.s your age|when were you born)/i,
+      a: () => tx(`这个我不好替他答 —— 年龄属于个人信息，他还没在页面上公开。你可以在下方「访客反馈」留言问他本人，我帮你转达 😊`,
+                  `That one I'd rather not guess — his age isn't published on this page. Leave a note in the Feedback form below and I'll pass it on to him. 😊`) },
+    { id: "hometown",
+      re: /(哪里人|哪儿人|哪里的人|老家|家乡|来自哪里|什么地方人|where are you from|where is he from|hometown|which city)/i,
+      a: () => tx(`家乡这块他还没在页面上写过，我就不替他编了。想认识一下的话，去下方「访客反馈」留个言，我帮你转达 😊`,
+                  `He hasn't written about his hometown on this page, so I won't make one up. Drop a note in the Feedback form below and I'll pass it on. 😊`) },
+    { id: "zodiac",
+      re: /(星座|属什么|生肖|血型|zodiac|star sign|chinese zodiac|blood type)/i,
+      a: () => tx(`星座 / 生肖这类他也还没公开过，我就不猜了。你可以在下方「访客反馈」里问他 😊`,
+                  `Zodiac details aren't published either, so I won't guess. You can ask him via the Feedback form below. 😊`) },
+    { id: "grades",
+      re: /(成绩怎么样|考得怎么样|学得怎么样|考了多少|多少分|成绩|分数|绩点|排名|gpa|how are your grades|your grades|grades?\b|exam result|ranking|score)/i,
+      a: () => tx(`成绩他没晒出来 —— 他更在意有没有真的把东西弄懂，而不是分数本身。想聊聊学习的话，欢迎在下方「访客反馈」留言 😊`,
+                  `He doesn't put grades on display — what matters to him is really understanding things, not the number itself. Happy to talk study tips via the Feedback form below. 😊`) }
   ];
 
-  /* v4.5.23q：命中多条时按"命中片段长度"打分取最高（越长越具体）；同分保留靠前规则。 */
-  function matchRule(t) {
+  /* 衔接话术（仅在重复提问的第 2 次起追加，避免改变首次回答） */
+  const BRIDGE_ZH = "还想了解别的吗？也可以看看页面里的「技能」和「学习目标」区 😊";
+  const BRIDGE_EN = 'Anything else you\'d like to know? You can also check the "Skills" and "Goals" sections. 😊';
+
+  /* 多轮状态（重置 / 切语言时清空） */
+  let repCount = {};       // 每个话题被问过几次
+  let recentTopics = [];   // 最近话题（保留最近 6 个）
+  function resetChatState() { repCount = {}; recentTopics.length = 0; }
+
+  /* 命中多条时按"命中片段长度"打分取最高（越长越具体）；同分保留靠前规则。 */
+  function matchRule(text) {
+    const N = normalizeInput(text);
     let best = null, bestLen = -1;
     for (const r of rules) {
-      const m = t.match(r.re);
+      const m = N.lower.match(r.re) || N.spaced.match(r.re) || N.tight.match(r.re);
       if (!m) continue;
       if (m[0].length > bestLen) { best = r; bestLen = m[0].length; }
     }
     return best;
   }
 
-  function reply(text) {
-    const t = (text || "").trim();
-    const r = matchRule(t);
-    if (r) return typeof r.a === "function" ? r.a() : r.a;
-    /* v4.5.23q 兜底：不再回显用户原文（旧版照抄输入，长/怪内容观感差），改为引导式提问建议 */
-    if (LANG === "en") {
-      return `(Digital twin v2 · still learning) I'm not confident enough to answer that one for ${me.name} yet — try "who are you / what are you up to / your strengths / your interests / your school and major" and I'll do my best. 😊`;
+  /* 一次性算完回答 + 是否兜底（send 需要据此决定要不要挂"帮我转达"按钮） */
+  function answerFor(text, opts) {
+    const turn = !!(opts && opts.turn);
+    const r = matchRule(text);
+    if (r) {
+      let out;
+      if (turn) {
+        const n = (repCount[r.id] = (repCount[r.id] || 0) + 1);
+        out = (n > 1 && r.v) ? r.v[(n - 2) % r.v.length]() : (typeof r.a === "function" ? r.a() : r.a);
+        if (n > 1) out += "\n\n" + tx(BRIDGE_ZH, BRIDGE_EN);
+        recentTopics.push(r.id); if (recentTopics.length > 6) recentTopics.shift();
+      } else {
+        out = (typeof r.a === "function" ? r.a() : r.a);
+      }
+      return { text: out, fallback: false };
     }
-    return `（数字分身 v2 · 还在学习中）这个问题我还没把握替他回答，你可以问我"你是谁 / 在做什么 / 有什么特点 / 什么兴趣 / 哪个学校专业"，我会尽力答好。😊`;
+    return { text: fallbackText(), fallback: true };
+  }
+  /* reply(text)：纯函数视角的问答（不推进多轮状态）——测试与外部调用都用它 */
+  function reply(text) { return answerFor(text).text; }
+
+  /* 兜底：不回显原文，改为引导 + 转达闭环 */
+  function fallbackText() {
+    if (LANG === "en") {
+      return `(Digital twin v2 · still learning) I'm not confident enough to answer that one for ${me.name} yet — but I can pass it on to him. Tap "📨 Send it to 刘一鸣" below, or try "who are you / what are you up to / your strengths / your interests / your school and major". 😊`;
+    }
+    return `（数字分身 v2 · 还在学习中）这个问题我还没把握替他回答 —— 不过我可以帮你转达给 ${me.name}。点下面的「📨 帮我转达」去留言，或者问我「你是谁 / 在做什么 / 有什么特点 / 什么兴趣 / 哪个学校专业」。😊`;
   }
 
+  /* v4.5.24 转达闭环：把问题预填进已有的「访客反馈」表单并滚动过去 */
+  function forwardToFeedback(raw) {
+    const q = String(raw == null ? "" : raw).trim();
+    const ta = document.getElementById("fb-msg");
+    const line = tx(`【来自数字分身】想请教一下：${q}`, `[via the AI twin] A question I'd like to ask: ${q}`);
+    if (ta) {
+      const cur = (ta.value || "").trim();
+      ta.value = cur ? (cur + "\n" + line) : line;
+      try { ta.dispatchEvent(new Event("input", { bubbles: true })); } catch (e) {}
+    }
+    const sec = document.getElementById("feedback");
+    if (sec && sec.scrollIntoView) sec.scrollIntoView({ behavior: "smooth", block: "start" });
+    setTimeout(function () {
+      if (!ta) return;
+      try { ta.focus({ preventScroll: true }); } catch (e) { ta.focus(); }
+      ta.classList.add("flash");
+      setTimeout(function () { ta.classList.remove("flash"); }, 1800);
+    }, 520);
+  }
+
+
   const msgs = document.getElementById("msgs");
-  function add(cls, text) {
+  /* 24 小时制手写时间戳：toLocaleTimeString 在中文环境会输出"上午/下午"，
+     会污染 EN 态的中文残留扫描，所以自己拼 HH:MM。 */
+  function nowHM() {
+    const d = new Date(), p = n => String(n).padStart(2, "0");
+    return d.getHours() + ":" + p(d.getMinutes());
+  }
+  /* add(cls, text, acts)：acts 为可选的动作按钮 [{label, onClick}]（如兜底时的"帮我转达"） */
+  function add(cls, text, acts) {
     const m = document.createElement("div");
     m.className = "msg " + cls;
+    if (cls === "ai") {
+      const av = document.createElement("div");
+      av.className = "av-mini"; av.setAttribute("aria-hidden", "true");
+      av.textContent = "刘";
+      m.appendChild(av);
+    }
+    const col = document.createElement("div");
+    col.className = "msg-col";
     const b = document.createElement("div");
     b.className = "bubble"; b.textContent = text;
-    m.appendChild(b); msgs.appendChild(m);
+    col.appendChild(b);
+    if (acts && acts.length) {
+      const box = document.createElement("div");
+      box.className = "msg-acts";
+      acts.forEach(a => {
+        const btn = document.createElement("button");
+        btn.type = "button"; btn.className = "act-chip";
+        btn.textContent = a.label;
+        btn.addEventListener("click", () => { try { a.onClick(); } catch (e) {} });
+        box.appendChild(btn);
+      });
+      col.appendChild(box);
+    }
+    const t = document.createElement("div");
+    t.className = "time"; t.textContent = nowHM();
+    col.appendChild(t);
+    m.appendChild(col); msgs.appendChild(m);
     msgs.scrollTop = msgs.scrollHeight;
   }
 
@@ -2762,7 +2991,17 @@ header.hero.card{overflow:visible}
     pendingReply = setTimeout(() => {
       pendingReply = 0;
       if (session !== chatSession) return;   // 会话已失效（重置/切语言）：丢弃这次回复
-      removeTyping(); add("ai", reply(v)); busy = false;
+      removeTyping();
+      const res = answerFor(v, { turn: true });   // 真实对话轮次：允许重复提问换同义回答
+      if (res.fallback) {
+        add("ai", res.text, [{
+          label: tx("📨 帮我转达", "📨 Send it to 刘一鸣"),
+          onClick: () => forwardToFeedback(v)
+        }]);
+      } else {
+        add("ai", res.text);
+      }
+      busy = false;
     }, delay);
   }
 
@@ -2771,24 +3010,83 @@ header.hero.card{overflow:visible}
                  `Hi, I'm ${me.name}'s digital twin 👋\nAsk me anything you'd like to know.`));
   }
 
-  document.querySelectorAll("#suggest button").forEach(btn => {
-    // data-q 是"规范中文问题"：按钮显示文字会随语言变，但发送内容不变，保证规则一定命中
-    // 第二个参数让气泡显示按钮上的文字（EN 用户看到的是英文）。
-    btn.addEventListener("click", () => send(btn.getAttribute("data-q") || btn.textContent, btn.textContent));
+  /* v4.5.24 建议问题区：两批轮换 + 已问标记（✓）；data-q 恒为"规范中文问题"，
+     显示文字按当前语言渲染 —— 换语言必须重渲染（见 onLangChange）。
+     注意：这些按钮必须是 #suggest 的直接子节点且 data-q 含中文（i18n 测试硬约束），
+     所以"换一批"按钮放在 #suggest 之外的 .suggest-wrap 里。 */
+  const SUGGEST_BATCHES = [
+    /* 首批 = 页面原有的 8 条（保持与改前版一致的可见文本，data-q 即按钮文字） */
+    [
+      { q: "你是谁", zh: "你是谁", en: "Who are you" },
+      { q: "你在干什么", zh: "你在干什么", en: "What are you up to" },
+      { q: "你的特点", zh: "你的特点", en: "Your strengths" },
+      { q: "你的兴趣", zh: "你的兴趣", en: "Your interests" },
+      { q: "你的学校专业", zh: "你的学校专业", en: "School & major" },
+      { q: "你的技能", zh: "你的技能", en: "Your skills" },
+      { q: "你的学习目标", zh: "你的学习目标", en: "Your goals" },
+      { q: "怎么联系你", zh: "怎么联系你", en: "How to reach you" }
+    ],
+    [
+      { q: "你多大了", zh: "你多大了", en: "How old are you" },
+      { q: "你是哪里人", zh: "你是哪里人", en: "Where are you from" },
+      { q: "你是什么星座", zh: "你是什么星座", en: "What's your zodiac sign" },
+      { q: "你在学校成绩怎么样", zh: "你在学校成绩怎么样", en: "How are your grades" },
+      { q: "你以后想干嘛", zh: "你以后想干嘛", en: "What do you want to do later" },
+      { q: "你能用一句话介绍自己吗", zh: "你能用一句话介绍自己吗", en: "Describe yourself in one line" },
+      { q: "你喜欢什么运动", zh: "你喜欢什么运动", en: "What sports do you like" },
+      { q: "怎么联系你", zh: "怎么联系你", en: "How can I reach you" }
+    ]
+  ];
+  let batchIdx = 0;
+  const askedQ = new Set();
+  const suggestEl = document.getElementById("suggest");
+  function renderSuggest() {
+    if (!suggestEl) return;
+    suggestEl.innerHTML = "";
+    SUGGEST_BATCHES[batchIdx].forEach(item => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.setAttribute("data-q", item.q);
+      const asked = askedQ.has(item.q);
+      if (asked) {
+        const mk = document.createElement("span");
+        mk.className = "mark"; mk.setAttribute("aria-hidden", "true");
+        mk.textContent = "✓";
+        btn.appendChild(mk);
+        btn.classList.add("asked"); btn.setAttribute("aria-pressed", "true");
+      }
+      btn.appendChild(document.createTextNode(tx(item.zh, item.en)));
+      const label = tx(item.zh, item.en);
+      btn.addEventListener("click", () => {
+        askedQ.add(item.q);
+        send(item.q, label);      // data-q=中文命中规则；气泡按当前语言显示
+        renderSuggest();          // 立刻补上"已问"标记
+      });
+      suggestEl.appendChild(btn);
+    });
+  }
+  const moreBtn = document.getElementById("suggestMore");
+  if (moreBtn) moreBtn.addEventListener("click", () => {
+    batchIdx = (batchIdx + 1) % SUGGEST_BATCHES.length;
+    renderSuggest();
   });
 
   document.getElementById("reset").addEventListener("click", () => {
-    cancelPending(); msgs.innerHTML = ""; busy = false; greet();
+    cancelPending(); resetChatState(); askedQ.clear();
+    msgs.innerHTML = ""; busy = false; renderSuggest(); greet();
   });
 
   // 开场白
+  renderSuggest();
   greet();
 
-  // 切换语言后重放开场白（旧消息是旧语言，直接清掉最干净）
+  // 切换语言后重放开场白（旧消息是旧语言，直接清掉最干净），并重渲染建议按钮文案
   onLangChange(function () {
     cancelPending();
+    resetChatState();
     msgs.innerHTML = "";
     busy = false;
+    renderSuggest();
     greet();
   });
 

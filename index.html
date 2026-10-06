@@ -2255,7 +2255,7 @@ header.hero.card{overflow:visible}
           </div>
           <div class="chat-input">
             <label class="sr-only" for="q">向数字分身提问</label>
-            <input id="q" placeholder="试着问我一个问题…" autocomplete="off"
+            <input id="q" placeholder="试着问我一个问题…" autocomplete="off" maxlength="200"
                    onkeydown="if(event.key==='Enter')send()" />
             <button type="button" onclick="send()" aria-label="发送问题">发送</button>
           </div>
@@ -2650,21 +2650,23 @@ header.hero.card{overflow:visible}
     return tx("羽毛球、乒乓球、阅读", "badminton, table tennis and reading");
   }
 
-  // 规则式知识库：命中即返回，越具体的规则越靠前
-  // 双语（v4.5.19）：re 同时收录中英关键词，英文访客自由输入也能命中；回答用 tx() 按当前语言输出。
+  /* 规则式知识库（v4.5.23q 打分制）：命中多条时按"命中片段长度"打分取最高——片段越长越具体；
+     同分时数组靠前者优先。泛化规则（问候/身份/概述）前置，避免被更靠后的具体规则抢先命中
+     （旧版"数组顺序即优先级"会让"你是谁、你是哪个学校的"被学校规则答非所问）。
+     双语（v4.5.19）：re 同时收录中英关键词，英文访客自由输入也能命中；回答用 tx() 按当前语言输出。 */
   const rules = [
     { re: /(你好|您好|hi|hello|嗨|哈喽|在吗|hey|good (morning|afternoon|evening))/i,
       a: () => tx(`你好呀 👋 我是 ${me.name} 的数字分身。你可以问我：他是谁、在做什么、有什么特点、兴趣爱好，或者学校专业。`,
                   `Hi there 👋 I'm ${me.name}'s digital twin. You can ask me who he is, what he's up to, what his strengths are, what he's into, or about his school and major.`) },
-    { re: /(学校|专业|哪个大学|哪所大学|在哪上学|读什么|school|major|university|college|what do you study)/i,
-      a: () => tx(`我目前就读于 ${me.school}，专业是 ${me.major}。😊`,
-                  `I'm currently at ${me.school}, studying ${me.major}. 😊`) },
-    { re: /(你是谁|介绍.*你|你是谁啊|你叫什么|who are you|who r u|introduce yourself|about you)/i,
+    { re: /(你是谁|你是哪位|你叫什么|怎么称呼你|介绍(一下|下)?你(?!们)|介绍你自己|who are you|who r u|introduce yourself|about you)/i,
       a: () => tx(`我是 ${me.name} 的数字分身。${me.name} 是 ${me.school} ${me.major} 专业的学生，你可以把我当成一个"能在你没空时，用他的方式回答问题"的小助理。`,
                   `I'm the digital twin of ${me.name}. ${me.name} is a student of ${me.major} at ${me.school}. Think of me as a little assistant who can "answer questions his way when he's busy".`) },
     { re: /(总结|概括|一句话|简单介绍|介绍一下他|介绍一下自己|summar|in one sentence|brief|tl;?dr)/i,
       a: () => tx(`一句话版：${me.name}，${me.school} ${me.major} 在读，一个「${me.trait}」的大学生，平时喜欢 ${me.interests.join("、")}。`,
                   `In one line: ${me.name}, studying ${me.major} at ${me.school} — a student who likes to make complex things simple, into ${interestsText()}.`) },
+    { re: /(学校|专业|哪个大学|哪所大学|在哪上学|读什么|school|major|university|college|what do you study)/i,
+      a: () => tx(`我目前就读于 ${me.school}，专业是 ${me.major}。😊`,
+                  `I'm currently at ${me.school}, studying ${me.major}. 😊`) },
     { re: /(你在干什么|在干嘛|最近做什么|最近在忙|最近怎么样|what are you doing|what's up|whats up|how are you|what have you been)/i,
       a: () => tx(`我最近主要在${me.doing}，同时在学习怎么更好地运用 AI 来帮自己。上课、做项目、练习，都希望踏实完成。`,
                   `Lately I've mostly been ${me.doing}, and also learning how to use AI better to help myself. Classes, projects, practice — I try to get them done properly.`) },
@@ -2694,15 +2696,26 @@ header.hero.card{overflow:visible}
                   `Sure, come back and chat anytime. Have a great day 👋`) }
   ];
 
+  /* v4.5.23q：命中多条时按"命中片段长度"打分取最高（越长越具体）；同分保留靠前规则。 */
+  function matchRule(t) {
+    let best = null, bestLen = -1;
+    for (const r of rules) {
+      const m = t.match(r.re);
+      if (!m) continue;
+      if (m[0].length > bestLen) { best = r; bestLen = m[0].length; }
+    }
+    return best;
+  }
+
   function reply(text) {
     const t = (text || "").trim();
-    for (const r of rules) {
-      if (r.re.test(t)) return typeof r.a === "function" ? r.a() : r.a;
-    }
+    const r = matchRule(t);
+    if (r) return typeof r.a === "function" ? r.a() : r.a;
+    /* v4.5.23q 兜底：不再回显用户原文（旧版照抄输入，长/怪内容观感差），改为引导式提问建议 */
     if (LANG === "en") {
-      return `(Digital twin v2 · still learning) On "${t}" — my owner ${me.name} has his own answer. You can ask me "who are you / what are you up to / your strengths / your interests / your school and major" and I'll do my best. 😊`;
+      return `(Digital twin v2 · still learning) I'm not confident enough to answer that one for ${me.name} yet — try "who are you / what are you up to / your strengths / your interests / your school and major" and I'll do my best. 😊`;
     }
-    return `（数字分身 v2 · 还在学习中）关于「${t}」，我的主人 ${me.name} 有他自己的答案。你可以问我"你是谁 / 在做什么 / 有什么特点 / 什么兴趣 / 哪个学校专业"，我会尽力回答。😊`;
+    return `（数字分身 v2 · 还在学习中）这个问题我还没把握替他回答，你可以问我"你是谁 / 在做什么 / 有什么特点 / 什么兴趣 / 哪个学校专业"，我会尽力答好。😊`;
   }
 
   const msgs = document.getElementById("msgs");
@@ -2725,6 +2738,15 @@ header.hero.card{overflow:visible}
   function removeTyping() { const t = document.getElementById("typing"); if (t) t.remove(); }
 
   let busy = false;
+  /* v4.5.23q：挂起回复可取消——存定时器 id + 会话版本号。
+     重置/切语言时 cancelPending() 清掉定时器并让旧回调失效，
+     避免旧回复在窗口清空后凭空追加，或 busy 提前释放造成消息交错。 */
+  let pendingReply = 0;
+  let chatSession = 0;
+  function cancelPending() {
+    if (pendingReply) { clearTimeout(pendingReply); pendingReply = 0; }
+    chatSession++;
+  }
   function send(text, shown) {
     const input = document.getElementById("q");
     const v = (text ?? input.value).trim();
@@ -2736,7 +2758,12 @@ header.hero.card{overflow:visible}
     busy = true;
     addTyping();
     const delay = 420 + Math.min(900, v.length * 45);
-    setTimeout(() => { removeTyping(); add("ai", reply(v)); busy = false; }, delay);
+    const session = chatSession;
+    pendingReply = setTimeout(() => {
+      pendingReply = 0;
+      if (session !== chatSession) return;   // 会话已失效（重置/切语言）：丢弃这次回复
+      removeTyping(); add("ai", reply(v)); busy = false;
+    }, delay);
   }
 
   function greet() {
@@ -2751,7 +2778,7 @@ header.hero.card{overflow:visible}
   });
 
   document.getElementById("reset").addEventListener("click", () => {
-    msgs.innerHTML = ""; busy = false; greet();
+    cancelPending(); msgs.innerHTML = ""; busy = false; greet();
   });
 
   // 开场白
@@ -2759,6 +2786,7 @@ header.hero.card{overflow:visible}
 
   // 切换语言后重放开场白（旧消息是旧语言，直接清掉最干净）
   onLangChange(function () {
+    cancelPending();
     msgs.innerHTML = "";
     busy = false;
     greet();

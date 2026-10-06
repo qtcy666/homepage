@@ -464,101 +464,50 @@
 
   /* ---------- Hero ---------- */
   .hero{
-    /* v4.5.23 消空位：文字块实际墨迹只有 ~330px 宽（姓名/简介/按钮都短），
-       文字列再宽也只会把中缝撑大。但又不能把文字列硬收窄到 400px 以内——
-       EN 的 tagline "🎓 Tianjin University · Intelligent Medical Engineering"
-       连带头像占位共需 388+126=514px，收窄会让它折成两行（zh 203px 不受影响，
-       所以这是 EN 独有回归）。故文字列固定 minmax(340px,530px)（保住 EN 单行），
-       改由配图向左伸进文字列右侧的空档（见 .hero-bci 的 -140px），
-       中缝由 340px 收到 ~59px（到可见墨迹）。 */
-    display:grid;grid-template-columns:minmax(340px,530px) minmax(0,1fr);
-    gap:34px;align-items:center;padding:28px 36px 20px;
-    /* v4.5.23e：图出血放大后文字按比例放大（h1/hi/hi-sub/meta/按钮 ≈+15~20%），
-       并收紧下半间隙——底 padding 36→20、与下一区块间距(.card margin-bottom 44)→28。
-       tagline 字号刻意不动：EN 芯片 389px+头像占位 126 已顶满 530px 列宽，放大必折行。 */
-    margin-bottom:28px;
+    /* v4.5.27 Hero 重做（去魔法数字版）：不再用 space-between + 视口 calc 公式去"对齐图顶"，
+       两列布局 = 文字列 minmax(0,1fr) + 图卡列 min(520px,44%)，整体 align-items:center 垂直居中。
+       gap:48px 即"图文间距"（验收口径 40–56px）。
+       ⚠ 44% 是 EN tagline 单行守卫：EN 芯片 "…Tianjin University · Intelligent Medical Engineering"
+         实测 389px；wrap 内容宽 1132（≥1228 视口）时 44% = 498（图卡 498 宽），
+         960 视口内容宽 912 时 44% = 401 → 文字列 463 ≥ 389 ✓。
+         若按固定 minmax(0,520px) 收窄，960 视口文字列只剩 344 < 389 → EN 折行（回归）。
+         44% 与 520px 由 min() 连续切换（内容宽 ≥1183 起封顶 520），无断点跳变。
+       ⚠ 横向 padding 保持 0：文件末尾「去方框·第1层」的 .card{padding-left/right:0} 统一管辖，
+         内容必须与顶部导航同一栏线（纵向 36px 由本行给定）。 */
+    display:grid;grid-template-columns:minmax(0,1fr) minmax(0,min(520px,44%));
+    gap:48px;align-items:center;padding:36px 0;
   }
-  /* v4.5.23h：文字在图的高度范围内【均匀分布】——.hero-main 拉满整行高（=图高），
-     6 个直接子元素（姓名行/tagline/介绍/欢迎语/副提示/按钮）space-between 均分间隙
-     （zh/1280 实测每隙 ~78px，从图顶均匀铺到图底）。
-     .hero-hello 用 display:contents 透明化：DOM 保留（不破坏任何选择器/测试引用），
-     其子元素直接参与 hero-main 的分布；tagline/meta 已从 avatar 右列提为直接子元素。
-     桌面端各元素 margin-top 归零（间距全由 space-between 分配），
-     手机端（≤900）恢复原 margin 自然间距、单列布局不变。 */
-  .hero-main{align-self:stretch;display:flex;flex-direction:column;justify-content:space-between;
-    align-items:flex-start}   /* ⚠ 不拉伸子项宽度：否则 tagline 芯片被拉成整列宽，淡星云-芯片断言必崩 */
-  .hero-hello{display:contents}
-  @media (min-width:901px){
-    /* 最高点与照片顶部对齐（v4.5.23o 三次修正后的最终口径）：
-       素材纵向逐行"可见像素宽度"分析——y0~100 全是 1~7px 的零星细线（闪电波纹/
-       连接线），大脑球体主体从 y104 起跳（可见像素 7→95、最长连续段 61）。
-       人眼感知的"图片顶部"= 大脑主体顶 y104/804，此前的 y30（淡星云）和
-       y48（细线上端）口径均偏小 → 头像曾高出大脑顶 45~81px。
-       显示偏移 = 104/1140 × 图宽（宽高比恒定，与语言无关）：
-         901~1180：图宽 = vw−388（rail=vw−612，左伸 200+24）→ pt = 9.123vw − 35.4px
-         ≥1180：  图宽 = 0.5vw+202（rail 568 + 224 + (vw−1180)/2）→ pt = 4.5615vw + 18.4px
-       两式在 1180 处同为 72.2px，连续；全视口精确（替代此前固定 pt 只能
-       单视口校准的局限，en 专属 pt 也一并废弃——公式语言无关）。
-       v4.5.23j：字的高度和图片一样——space-between 拉满整行高（=图高），底=图底。
-       （行间距归零规则移到主样式表末尾——放这里压不过后文 .tagline 等的 margin-top） */
-    .hero-main{padding-top:calc(9.123vw - 35.4px);justify-content:space-between}
-    /* en 图左伸 98（图宽 = vw−490，比 zh 窄 102）→ 偏移公式常数不同；
-       min() 钳制：en 超窄视口（901~922）图高 < 内容 265+pt 会溢出，
-       牺牲对齐保底（间隙 ≥3px/隙）。 */
-    html[data-lang="en"] .hero-main{
-      padding-top:min(calc(9.123vw - 44.7px), calc(70.5vw - 625.45px));
-    }
-  }
-  @media (min-width:1180px){
-    /* v4.5.23p：行间距收紧——space-between（拉满图高底贴图底）改为固定 gap：
-       zh 40px / en 28px（en 图矮 72px，gap 40 在 1180 视口会溢出 9px）；
-       顶对齐 calc 不动；底部自然留白（zh/1280 约 52px），字块高度不再强制=图高
-       （用户已确认行间距优先）。901~1179 仍 space-between 自适应防溢出。 */
-    .hero-main{padding-top:calc(4.5615vw + 18.4px);justify-content:flex-start;gap:40px}
-    html[data-lang="en"] .hero-main{padding-top:calc(4.5615vw + 9.1px);gap:28px}
-  }
+  /* v4.5.27：文字块恢复自然行距——删除 space-between「均匀分布」与两处视口 padding-top calc 公式。
+     间距来源 = flex gap 14px + 各元素自带 margin-top（.tagline 14 / .hero-meta 14 / .hero-hello 24），
+     整块 justify-content:center 在行内垂直居中（对齐由 .hero 的 align-items:center 给行高）。
+     取代关系：v4.5.23h「拉满整行高、6 个元素均分（zh/1280 每隙 ~78px）」与
+     v4.5.23o/23p 的图顶对齐公式（9.123vw−35.4 / 4.5615vw+18.4，含 en 专属式）全部作废。
+     ⚠ 仍不拉伸子项宽度（align-items:flex-start）：否则 tagline 芯片被拉成整列宽。 */
+  .hero-main{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:14px}
+  /* v4.5.27：.hero-hello 由 display:contents 改回 block——欢迎语+副提示+两个按钮成组，
+     自己的 margin-top:24px（见 ~650 行）才生效；原 contents 是为参与 space-between 分布而透明化。 */
+  .hero-hello{display:block}
   .hero-top{display:flex;align-items:center;gap:20px}
-   /* Hero 右侧脑机接口配图（v4.5.23）：素材已按亮度键出 alpha（深色底完全透明，
-      不存在图片矩形边界），再叠 mix-blend-mode:screen 让深色像素"等于不存在"
-      （screen 与黑=保留背景），于是只有发光的大脑本身浮在卡片星空上——实测图片四边
-      "内-外"亮度台阶 ≤2 级，肉眼看不出边界；若改用 drop-shadow 会在亮星云处压出
-      一圈暗斑，故不用阴影。
-      v4.5.23 变化：① 素材换成 1200x794 的**紧致裁剪**版（alpha>16 占比 35.4%→46.9%），
-      发光体直接顶到图框边缘，图框不再读成"空槽位"。② 图框右缘贴栏线
-      （justify-self:end），宽度按语言定量、允许超出所在网格列向左溢出，把文字右侧
-      空档吃掉（v4.5.22 中缝 340px → 淡星云轻搭芯片尾部）。
-      尺寸依据（均相对栏左，与视口宽度无关；实测来自 hero_bci_check，"大脑行带"
-      口径=素材上 8%~48% 行带内逐列最大可见度 alpha×亮度）：
-      素材（v4，1140x804）左缘 6.5% 处淡起、15.4% 处见"发光核心"；右缘已按可见度
-      自适应收边（裁到主体末列+12px 并做 30px alpha 渐隐羽化），发光主体顶到图框
-      右边、无切断台阶（≈0.5 亮度级）——右侧不再有空白带（v3 素材右侧 6% 真空+4% 极淡）。
-      图框左缘的淡星云允许轻搭 tagline 芯片尾部 ≤20px、发光核心距芯片 ≥20px
-      （具体净空见 .hero-bci 处 v4.5.23d 注释）。
-      窄屏（≤900px）媒体查询里 width:auto 复位，自动落到文字下方居中。 */
+   /* Hero 右侧脑机接口配图（v4.5.27）：由"出血 + mix-blend-mode:screen 融入星空"改为
+      **规整圆角图卡**——出血宽度 / 负 margin / 按语言的左伸宽度（zh +200、en +98）全部删除，
+      图卡不再穿过 wrap 内边距去贴视口右缘，右缘与栏线右缘对齐（justify-self:end）。
+      图卡语言与 .chat-box 同一套：1px var(--line) 描边 + rgba(255,255,255,.04) 底 + 圆角 + overflow:hidden，
+      与页面「去方框」层不冲突（那层只撤 .card 大区块与 .sec-fig 区块配图，面板类仍带框）。
+      pointer-events:none 保留：图不参与交互、不挡文字选择。
+      ⚠ 素材本身仍是亮度键出 alpha 的透明 webp（深底完全透明），在 4% 面板底上直接可见；
+        mix-blend-mode 已移除，图不再"等于不存在"，而是明确读成一张图卡。
+      窄屏（≤900px）由媒体查询复位为 max-width:420px + 居中（见 ~1140 行）。 */
    .hero-bci{
-     /* v4.5.23d 出血版：图框右缘不再贴内容栏线，而是穿过 .wrap 的右内边距与
-        居中留白，一直贴到**视口右缘**（bleed）——右侧零空白，配图再大一圈：
-          margin-right = -(wrap右padding 24) - max(0, (100vw-1180px)/2 居中留白)
-        （.wrap{max-width:1180px;margin:auto;padding:24px}，两段在 1180px 处连续。）
-        ⚠ width 必须同样叠加出血量——否则大屏下图只会右移、不会变大
-        （margin-right 只挪位置，尺寸全由 width 决定）。
-        v4.5.23l 缩图：zh 左伸 296→200（1280 图 938→842，−10.2%，右缘仍贴视口、
-        从左侧收窄，中缝淡星云-芯片净空 126→~216px）；en 保持 98 不缩——
-        en 图本身已比 zh 小 21%（740 vs 842），且 960 视口图高 331 vs 文字块
-        内容 296 余量仅 31px，再缩 space-between 会负间隙溢出。
-          zh 图框左缘 ≈ 栏左+364（width:calc(100% + 200px)）
-          en 图框左缘 ≈ 栏左+466（width:calc(100% + 98px)）
-        注意 html 已加 overflow-x:clip——常驻滚动条环境下 100vw 含滚动条宽，
-        出血可能溢出 1 个滚动条宽度，clip 负责剪掉而不出横向滚动条。 */
-     position:relative;max-width:none;
-     width:calc(100% + 200px + 24px + max(0px, (100vw - 1180px)/2));
-     margin-right:calc(-24px - max(0px, (100vw - 1180px)/2));
+     position:relative;width:100%;max-width:520px;margin:0;
      justify-self:end;align-self:center;pointer-events:none;
+     border:1px solid var(--line);border-radius:20px;overflow:hidden;
+     background:rgba(255,255,255,.04);padding:8px;
    }
-   html[data-lang="en"] .hero-bci{width:calc(100% + 98px + 24px + max(0px, (100vw - 1180px)/2))}
   .hero-bci img{
-    display:block;width:100%;height:auto;
-    mix-blend-mode:screen;
+    /* v4.5.27：移除 mix-blend-mode:screen（原用于让深色像素"等于不存在"、把大脑融进星空；
+       现在图是容器里的一张实图，混合模式只会让它在 4% 面板底上发灰）。
+       圆角 14px 与图卡 20px 形成内层层次（图卡 padding 8px）。 */
+    display:block;width:100%;height:auto;border-radius:14px;
     opacity:0;transform:translateY(16px) scale(.985);
     transition:opacity .95s var(--ease-out) .2s,transform 1.1s var(--ease-spring) .2s;
   }
@@ -1141,11 +1090,12 @@
     .split,.split.twin-split{grid-template-columns:1fr;gap:24px}
     .split.flip .sec-fig{order:0}
     .sec-fig{min-height:220px}
-    .hero{grid-template-columns:1fr;gap:26px;padding:30px 26px}
-    .hero-main{align-self:auto;margin-bottom:0}
-    /* 单列布局：配图回到文字下方居中，必须把按语言的左伸宽度彻底复位
-       （选择器权重需 ≥ html[data-lang="en"] .hero-bci，故同样带 html[data-lang]） */
-    html[data-lang] .hero-bci{width:auto;max-width:360px;margin:2px auto 0;justify-self:center}
+    .hero{grid-template-columns:1fr;gap:28px;padding:30px 0}
+    .hero-main{align-self:auto;margin-bottom:0;justify-content:flex-start}
+    /* 单列布局：图卡落到文字下方居中。v4.5.27 起不再需要 html[data-lang] 提权——
+       按语言的出血宽度覆盖已随出血版一并删除，普通 .hero-bci（此处更靠后）即可压过
+       桌面 .hero-bci{max-width:520px}。 */
+    .hero-bci{width:100%;max-width:420px;margin:0 auto;justify-self:center}
     .hero-fig{min-height:240px}
     .card{padding:26px 24px}
   }
@@ -1357,12 +1307,9 @@
 
   .card{text-shadow:0 1px 2px rgba(2,4,10,.45)}
 
-  /* v4.5.23i：hero 均匀分布——桌面端子项 margin-top 归零（间距全由 space-between/gap 分配）。
-     ⚠ 必须放在主样式表最后：中部 ~606 行的 .tagline{margin-top:14px} 等靠后且同为 (0,1,0)，
-       原来写在 ~492 行的归零行压不过它们（间隙混入 +14/+8）；此处 (0,2,0) + 最后位置双保险。 */
-  @media (min-width:901px){
-    .hero .hero-main > *,.hero .hero-hello > *{margin-top:0}
-  }
+  /* v4.5.27：原「桌面端 hero 子项 margin-top 归零（配合 space-between 均匀分布）」整段删除——
+     现在正是靠 .tagline/.hero-meta/.hero-hello 各自的 margin-top 生成自然行距，
+     这里不能再有任何归零覆盖（否则行距塌成纯 gap 14px）。 */
 </style>
 <style id="starnight-1-sky">
 /* 更蓝的深夜空：只覆盖 body 的 background-image。

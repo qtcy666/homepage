@@ -2195,6 +2195,55 @@ header.hero.card{overflow:visible}
 @keyframes iconSpin{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){.i-spin{animation:none}}
 </style>
+<style id="v4535">
+/* ==================================================================
+   v4.5.35：三张新卡（专业术语 / 常用资源 / 专注番茄钟）+ 页脚动态行
+   ------------------------------------------------------------------
+   · 全部使用新类名（.term-* / .res-* / .pomo-* / .foot-meta），
+     不改 .card-head / .chip / .contact / .ci / .fc-pick 的既有规则，
+     也不新增 emoji 或 svg.i 到被计数的分组里（计数口径只多 3 个卡头徽标）。
+   · 横向安全：网格子项一律 min-width:0 + 长文案 overflow-wrap:anywhere，
+     620px 以下回落单列（与 .info / .contacts 同口径）。标题行只用短句，
+     不用 nowrap —— 门会逐视口（390~1440）检查 docW <= cliW。
+   · 番茄钟只改 :disabled / .done 两个视觉态，文案固定不变（恒定，不进词典）。
+   ================================================================== */
+.term-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px}
+.term-box{min-width:0;padding:12px 14px;border-radius:14px;background:rgba(255,255,255,.05);
+  border:1px solid var(--line);transition:border-color var(--dur-base) var(--ease-out)}
+.term-box:hover{border-color:rgba(157,196,255,.34)}
+.term-box .tm{font-size:14px;font-weight:800;color:var(--text-strong);letter-spacing:.2px}
+.term-box .td{font-size:13px;color:var(--text-soft);line-height:1.75;margin-top:5px;overflow-wrap:anywhere}
+
+.res-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px}
+.res-box{min-width:0;display:block;text-decoration:none;padding:12px 14px;border-radius:14px;
+  background:rgba(255,255,255,.05);border:1px solid var(--line);
+  transition:transform var(--dur-base) var(--ease-out),border-color var(--dur-base) var(--ease-out)}
+.res-box:hover{transform:translateY(-1px);border-color:rgba(157,196,255,.36)}
+.res-box .rn{display:flex;align-items:center;gap:6px;font-size:13.5px;font-weight:800;color:var(--text-link)}
+/* 外链指示：纯 CSS 生成内容（不产生文本节点 ⇒ 不参与 i18n 采集与残留扫描） */
+.res-box .rn::after{content:"↗";margin-left:auto;font-size:12px;opacity:.7}
+.res-box .rd{display:block;font-size:12.5px;color:var(--text-soft);line-height:1.7;margin-top:4px;overflow-wrap:anywhere}
+
+.pomo{display:flex;flex-direction:column;align-items:center;gap:16px;padding:4px 0 2px}
+.pomo-read{display:flex;flex-direction:column;align-items:center;gap:6px}
+.pomo-time{font-size:clamp(42px,10vw,64px);font-weight:800;line-height:1.06;letter-spacing:2px;
+  color:var(--text-strong);font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
+.pomo-time.done{color:var(--accent)}
+.pomo-state{font-size:12px;color:var(--text-muted);text-align:center}
+.pomo-btns{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+.pomo-btns .btn{padding:11px 22px;font-size:14px}
+.pomo-btns .btn[disabled]{opacity:.55;cursor:default;transform:none;filter:saturate(.7)}
+
+/* 页脚动态行：时间 + 每日一句。数字用等宽数字，秒跳动时整行不抖 */
+.foot-meta{margin-top:2px;font-variant-numeric:tabular-nums}
+.foot-meta .ft{color:var(--text-link);font-weight:700;letter-spacing:.4px}
+.foot-meta .fs{color:var(--text-soft)}
+
+@media (max-width:620px){
+  .term-grid,.res-grid{grid-template-columns:1fr}
+  .pomo-time{letter-spacing:1px}
+}
+</style>
 </head>
 <body>
 
@@ -2485,6 +2534,53 @@ header.hero.card{overflow:visible}
     </div>
   </section>
 
+  <!-- v4.5.35 专业术语：8 个常遇到的词 + 一句大白话 -->
+  <section class="card reveal" id="terms">
+    <div class="card-head">
+      <div class="ico"><svg class="i" aria-hidden="true" focusable="false"><use href="#i-book"/></svg></div>
+      <h2>专业术语</h2>
+      <div class="sub">8 个常遇到的词 · 一句大白话讲清</div>
+    </div>
+    <div class="split">
+      <div class="sec-body">
+        <div class="term-grid">
+          <div class="term-box">
+            <div class="tm">智能医学工程</div>
+            <div class="td">用计算机和人工智能帮忙看病、做医学研究的新工科专业。</div>
+          </div>
+          <div class="term-box">
+            <div class="tm">脑机接口</div>
+            <div class="td">让大脑和机器直接互通，想着就能控制设备。</div>
+          </div>
+          <div class="term-box">
+            <div class="tm">机器学习</div>
+            <div class="td">不写死规则，让电脑从大量例子里自己总结规律。</div>
+          </div>
+          <div class="term-box">
+            <div class="tm">医学影像</div>
+            <div class="td">CT、MRI 拍出来的透视照片，用算法帮医生更快看懂。</div>
+          </div>
+          <div class="term-box">
+            <div class="tm">生物医学信号</div>
+            <div class="td">心电、脑电这类身体发出的电信号，用来判断健康状态。</div>
+          </div>
+          <div class="term-box">
+            <div class="tm">算法</div>
+            <div class="td">解决问题的固定步骤，像菜谱：照着做就能出结果。</div>
+          </div>
+          <div class="term-box">
+            <div class="tm">数据科学</div>
+            <div class="td">从一大堆数据里找出有用规律的手艺。</div>
+          </div>
+          <div class="term-box">
+            <div class="tm">人工智能</div>
+            <div class="td">让机器做原本需要人动脑才能完成的事。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- 联系方式 -->
   <section class="card reveal" id="contact">
     <div class="card-head">
@@ -2506,6 +2602,45 @@ header.hero.card{overflow:visible}
             <div class="ci"><svg class="i" aria-hidden="true" focusable="false"><use href="#i-link"/></svg></div>
             <div><div class="cl">其他</div><div class="cv">欢迎通过上方邮箱或电话联系</div></div>
           </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- v4.5.35 常用资源：6 个公开站点（全部新窗口打开，页面自身不发请求） -->
+  <section class="card reveal" id="res">
+    <div class="card-head">
+      <div class="ico"><svg class="i" aria-hidden="true" focusable="false"><use href="#i-link"/></svg></div>
+      <h2>常用资源</h2>
+      <div class="sub">我常翻的 6 个站 · 都能免费看</div>
+    </div>
+    <div class="split">
+      <div class="sec-body">
+        <div class="res-grid">
+          <a class="res-box" href="https://docs.python.org/zh-cn/3/tutorial/" target="_blank" rel="noopener noreferrer">
+            <span class="rn">Python 官方教程</span>
+            <span class="rd">从零开始的中文入门教程，配着课一起看。</span>
+          </a>
+          <a class="res-box" href="https://developer.mozilla.org/zh-CN/" target="_blank" rel="noopener noreferrer">
+            <span class="rn">MDN Web 文档</span>
+            <span class="rd">网页三件套最全的参考书，查语法很准。</span>
+          </a>
+          <a class="res-box" href="https://arxiv.org/" target="_blank" rel="noopener noreferrer">
+            <span class="rn">arXiv 论文库</span>
+            <span class="rd">免费看最新论文预印本，多数是英文。</span>
+          </a>
+          <a class="res-box" href="https://www.icourse163.org/" target="_blank" rel="noopener noreferrer">
+            <span class="rn">中国大学 MOOC</span>
+            <span class="rd">高校公开课，基础课查漏补缺用。</span>
+          </a>
+          <a class="res-box" href="https://github.com/" target="_blank" rel="noopener noreferrer">
+            <span class="rn">GitHub</span>
+            <span class="rd">看别人怎么写代码，也放自己的练习。</span>
+          </a>
+          <a class="res-box" href="https://www.kaggle.com/" target="_blank" rel="noopener noreferrer">
+            <span class="rn">Kaggle</span>
+            <span class="rd">数据科学练手的数据集和小比赛。</span>
+          </a>
         </div>
       </div>
     </div>
@@ -2543,6 +2678,29 @@ header.hero.card{overflow:visible}
             <input id="q" placeholder="试着问我一个问题…" autocomplete="off" maxlength="200"
                    onkeydown="if(event.key==='Enter' && !event.isComposing && event.keyCode!==229)send()" />
             <button type="button" onclick="send()" aria-label="发送问题">发送</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- v4.5.35 专注番茄钟：25:00 倒数，纯前端计时（不联网、不写 localStorage） -->
+  <section class="card reveal" id="pomo">
+    <div class="card-head">
+      <div class="ico"><svg class="i" aria-hidden="true" focusable="false"><use href="#i-loader"/></svg></div>
+      <h2>专注番茄钟</h2>
+      <div class="sub">25 分钟一段 · 到点自动停</div>
+    </div>
+    <div class="split">
+      <div class="sec-body">
+        <div class="pomo">
+          <div class="pomo-read">
+            <div class="pomo-time" id="pomoTime" role="timer">25:00</div>
+            <div class="pomo-state">点开始计时；想停下或重来，点重置。</div>
+          </div>
+          <div class="pomo-btns">
+            <button type="button" class="btn primary" id="pomoStart">开始</button>
+            <button type="button" class="btn ghost" id="pomoReset">重置</button>
           </div>
         </div>
       </div>
@@ -2630,6 +2788,9 @@ header.hero.card{overflow:visible}
 
   <footer>
     <div>© 刘一鸣 · <span class="ver">V4</span> · 由 Vibe Coding 从 V1 开始打磨</div>
+    <!-- v4.5.35：时间会走 + 每天换一句（内容由页脚脚本按当前语言写入，
+         刻意不放静态中文 —— 免得静态节点被 _collect() 收走、英文态残留） -->
+    <div class="foot-meta" id="footMeta"><span class="ft" id="footClock"></span> · <span class="fs" id="footLine"></span></div>
     <div>本页访客反馈可免登录提交，最终存于 Supabase（受 RLS 保护）；数字分身目前为前端规则式模拟（不联网、不收集数据）。</div>
   </footer>
 </div>
@@ -2800,7 +2961,63 @@ header.hero.card{overflow:visible}
     /* ---- 页脚 ---- */
     "· 由 Vibe Coding 从 V1 开始打磨": "· crafted from V1 with Vibe Coding",
     "本页访客反馈可免登录提交，最终存于 Supabase（受 RLS 保护）；数字分身目前为前端规则式模拟（不联网、不收集数据）。":
-      "Visitor feedback on this page needs no sign-in and is stored in Supabase (protected by RLS). The AI twin is currently a front-end, rule-based simulation — no network calls, no data collection."
+      "Visitor feedback on this page needs no sign-in and is stored in Supabase (protected by RLS). The AI twin is currently a front-end, rule-based simulation — no network calls, no data collection.",
+
+    /* ---- v4.5.35 专业术语（8 词 + 大白话）---- */
+    "专业术语": "Glossary",
+    "8 个常遇到的词 · 一句大白话讲清": "8 words I keep meeting — each in one plain sentence",
+    "智能医学工程": "Intelligent Medical Engineering",
+    "用计算机和人工智能帮忙看病、做医学研究的新工科专业。":
+      "A newer engineering major: using computers and AI to help with diagnosis and medical research.",
+    "脑机接口": "Brain-computer interface",
+    "让大脑和机器直接互通，想着就能控制设备。":
+      "Letting the brain and a machine talk directly, so a thought can drive a device.",
+    "机器学习": "Machine learning",
+    "不写死规则，让电脑从大量例子里自己总结规律。":
+      "Instead of hard-coded rules, the computer finds the patterns itself from lots of examples.",
+    "医学影像": "Medical imaging",
+    "CT、MRI 拍出来的透视照片，用算法帮医生更快看懂。":
+      "The see-through pictures taken by CT and MRI, with algorithms helping doctors read them faster.",
+    "生物医学信号": "Biomedical signals",
+    "心电、脑电这类身体发出的电信号，用来判断健康状态。":
+      "Electrical signals the body gives off, such as ECG and EEG, used to judge how healthy someone is.",
+    "算法": "Algorithm",
+    "解决问题的固定步骤，像菜谱：照着做就能出结果。":
+      "A fixed set of steps that solves a problem — like a recipe: follow it and you get the result.",
+    "数据科学": "Data science",
+    "从一大堆数据里找出有用规律的手艺。":
+      "The craft of finding useful patterns inside a big pile of data.",
+    "人工智能": "Artificial intelligence",
+    "让机器做原本需要人动脑才能完成的事。":
+      "Getting machines to do things that used to take a human brain.",
+
+    /* ---- v4.5.35 常用资源（6 个公开站点）---- */
+    "常用资源": "Useful resources",
+    "我常翻的 6 个站 · 都能免费看": "6 sites I look at often — all free",
+    "Python 官方教程": "Python official tutorial",
+    "从零开始的中文入门教程，配着课一起看。":
+      "A from-scratch tutorial in Chinese, good to read alongside coursework.",
+    "MDN Web 文档": "MDN Web Docs",
+    "网页三件套最全的参考书，查语法很准。":
+      "The fullest reference for HTML, CSS and JavaScript — reliable for checking syntax.",
+    "arXiv 论文库": "arXiv",
+    "免费看最新论文预印本，多数是英文。":
+      "Free access to the newest preprint papers, mostly written in English.",
+    "中国大学 MOOC": "Chinese University MOOC",
+    "高校公开课，基础课查漏补缺用。":
+      "Open courses from universities — handy for filling gaps in the basics.",
+    "看别人怎么写代码，也放自己的练习。":
+      "See how other people write code, and keep my own practice here.",
+    "数据科学练手的数据集和小比赛。":
+      "Datasets and small competitions for practising data science.",
+
+    /* ---- v4.5.35 专注番茄钟 ---- */
+    "专注番茄钟": "Focus timer",
+    "25 分钟一段 · 到点自动停": "One 25-minute block — it stops on its own",
+    "点开始计时；想停下或重来，点重置。":
+      "Click Start to begin; click Reset to stop or start over.",
+    "开始": "Start",
+    "重置": "Reset"
   };
 
   let LANG = (function () {
@@ -4185,6 +4402,110 @@ header.hero.card{overflow:visible}
     cta.addEventListener('pointerleave', resetAll);
     window.addEventListener('scroll', resetAll, { passive: true });
     window.addEventListener('resize', resetAll);
+  })();
+</script>
+
+<script>
+  /* ==================================================================
+     v4.5.35 页脚动态行：时间会走 + 每天换一句
+     ------------------------------------------------------------------
+     · 文案由本脚本按当前语言写入，HTML 里不放静态中文：
+       静态中文节点会被 _collect() 收进快照，句子每天变 ⇒ 快照立刻过期。
+     · 注册 onLangChange：切换语言时重画（顺序在主脚本 applyLang 之后）。
+     · 只读 Date、只写两个 textContent；不写 localStorage、不发请求。
+     · 秒数变化不会抖行：.foot-meta 用 tabular-nums（见 <style id="v4535">）。
+     ================================================================== */
+  (function () {
+    var clock = document.getElementById("footClock");
+    var line = document.getElementById("footLine");
+    if (!clock || !line) return;
+
+    /* 每日一句：中英成对（脚本自己按语言取，不走 _collect() 词典路径） */
+    var DAILY = [
+      ["今天也慢慢来", "Take it slow today too"],
+      ["一次只做一件事", "One thing at a time"],
+      ["先把眼前这一步走稳", "Steady the next step first"],
+      ["想不清楚就先写下来", "If it is unclear, write it down"],
+      ["复杂的事，拆小就不难", "Break big things up and they get easy"],
+      ["学一点，就赚一点", "Every bit you learn counts"],
+      ["累了就歇一会儿", "Rest a while when you are tired"],
+      ["慢一点，但别停", "Slower is fine — just do not stop"],
+      ["今天过好比想太多更要紧", "A good today beats too much thinking"],
+      ["允许自己只完成一半", "It is OK to finish only half"]
+    ];
+
+    function pad(n) { return (n < 10 ? "0" : "") + n; }
+    /* 当前语言以 <html data-lang> 为准（主脚本 applyLang 写的），
+       不依赖跨 <script> 的词法作用域，也不会与它抢状态 */
+    function isEn() { return document.documentElement.getAttribute("data-lang") === "en"; }
+    /* 本地日历日序号（按天取模 ⇒ 同一天刷新页面句子不变，跨天自动换） */
+    function dayIndex() {
+      var d = new Date();
+      var local = d.getTime() - d.getTimezoneOffset() * 60000;
+      return Math.floor(local / 86400000) % DAILY.length;
+    }
+    function paint() {
+      var d = new Date();
+      clock.textContent = pad(d.getHours()) + ":" + pad(d.getMinutes()) + ":" + pad(d.getSeconds());
+      var pair = DAILY[(dayIndex() + DAILY.length) % DAILY.length];
+      line.textContent = (isEn()) ? pair[1] : pair[0];
+    }
+
+    paint();
+    setInterval(paint, 1000);
+    if (typeof onLangChange === "function") onLangChange(paint);
+  })();
+</script>
+
+<script>
+  /* ==================================================================
+     v4.5.35 专注番茄钟：25:00 倒数（纯前端、不联网、不写盘）
+     ------------------------------------------------------------------
+     · 计时中「开始」置 disabled，按钮文案始终不变（不产生动态中文 ⇒
+       不参与 i18n 快照；英文态靠词典把「开始 / 重置」翻成 Start / Reset）。
+     · 到点自动停：数字停在 00:00，并给读数加 .done（只换颜色，不改文案）。
+     · 不写 localStorage（线上套件要求键集合恒为 ["lang"]）。
+     ================================================================== */
+  (function () {
+    var readout = document.getElementById("pomoTime");
+    var btnStart = document.getElementById("pomoStart");
+    var btnReset = document.getElementById("pomoReset");
+    if (!readout || !btnStart || !btnReset) return;
+
+    var TOTAL = 25 * 60;
+    var left = TOTAL;
+    var timer = null;
+
+    function fmt(s) {
+      var m = Math.floor(s / 60), r = s % 60;
+      return (m < 10 ? "0" : "") + m + ":" + (r < 10 ? "0" : "") + r;
+    }
+    function paint() {
+      readout.textContent = fmt(left);
+      readout.classList.toggle("done", left === 0);
+    }
+    function stop() {
+      if (timer) { clearInterval(timer); timer = null; }
+      btnStart.disabled = false;
+    }
+
+    btnStart.addEventListener("click", function () {
+      if (timer) return;                 // 已在走：按钮本就是 disabled，双保险
+      btnStart.disabled = true;
+      timer = setInterval(function () {
+        left--;
+        if (left <= 0) { left = 0; paint(); stop(); return; }
+        paint();
+      }, 1000);
+    });
+
+    btnReset.addEventListener("click", function () {
+      stop();
+      left = TOTAL;
+      paint();
+    });
+
+    paint();
   })();
 </script>
 </body>

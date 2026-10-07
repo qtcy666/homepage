@@ -2397,25 +2397,9 @@ header.hero.card{overflow:visible}
         </form>
 
         <div class="fb-viewer" id="fbViewer">
-          <div class="fb-viewer-head">
-            <button type="button" class="btn ghost" id="fbViewerToggle">🔐 查看反馈（作者）</button>
-            <span class="fb-viewer-hint" id="fbViewerHint">仅作者可见，需口令</span>
-          </div>
-          <div class="fb-viewer-body" id="fbViewerBody" hidden>
-            <form class="fb-lock" id="fbLock">
-              <label for="fb-viewer-pwd">访问口令</label>
-              <div class="fb-lock-input">
-                <input type="password" id="fb-viewer-pwd" placeholder="请输入口令" autocomplete="off" />
-                <button type="submit" class="btn primary">解锁</button>
-              </div>
-              <div class="fb-field-error" id="fbViewerErr"></div>
-            </form>
-            <div class="fb-viewer-toolbar" hidden id="fbViewerToolbar">
-              <span class="fb-viewer-count" id="fbViewerCount"></span>
-              <button type="button" class="btn ghost small" id="fbViewerReload">↻ 刷新</button>
-            </div>
-            <div class="fb-viewer-list" id="fbViewerList"></div>
-          </div>
+          <!-- v4.5.31 安全修复：原「查看反馈」面板含明文口令 + 匿名直读，已停用。
+               反馈数据改为仅在 Supabase 后台查看（service 角色，绕过 RLS）。 -->
+          <div class="fb-viewer-hint" style="line-height:1.8">🔒 为保护访客隐私，反馈已不再在本页读取。<br>请到 Supabase 后台 → Table Editor → <code>feedback</code> 查看。</div>
         </div>
       </div>
     </div>
@@ -2589,6 +2573,12 @@ header.hero.card{overflow:visible}
     "请输入口令": "Enter password",
     "解锁": "Unlock",
     "↻ 刷新": "↻ Refresh",
+    /* v4.5.31：查看器停用后的静态提示（英文态须有译文，否则 EN 扫描判中文残留） */
+    "🔒 为保护访客隐私，反馈已不再在本页读取。":
+      "🔒 To protect visitor privacy, feedback is no longer read on this page.",
+    "请到 Supabase 后台 → Table Editor →":
+      "Open your Supabase dashboard → Table Editor → ",
+    "查看。": " to view them.",
 
     /* ---- 页脚 ---- */
     "· 由 Vibe Coding 从 V1 开始打磨": "· crafted from V1 with Vibe Coding",
@@ -3865,7 +3855,7 @@ header.hero.card{overflow:visible}
           const headers = {
             "apikey": SUPABASE_ANON_KEY,
             "Content-Type": "application/json",
-            "Prefer": "return=representation"
+            "Prefer": "return=minimal"   // v4.5.31：只写不回读 —— 开 RLS 后匿名无 SELECT 权限，回读会失败
           };
           if (/^eyJ/i.test(SUPABASE_ANON_KEY)) {
             headers["Authorization"] = "Bearer " + SUPABASE_ANON_KEY;
@@ -3914,144 +3904,11 @@ header.hero.card{overflow:visible}
     }
   })();
 
-  /* ---------- 查看反馈（作者面板 · 前端口令校验 + 匿名直读） ---------- */
-  (function () {
-    // 口令在前端比对（V3 起验证过的稳妥方案；读取走 Supabase 匿名直读）。
-    // 说明：早期曾改为调用服务器端 Edge Function 校验，但该函数在线上未部署
-    // （返回 404），导致"校验中"卡住；经确认回退为前端口令比对方案。
-    const VIEWER_PWD = "Liu080202";
-    // 与反馈提交区共用同一 Supabase 项目；这里在独立 IIFE 内各自声明（避免跨作用域引用）
-    const SUPABASE_URL = "https://pgzwxnnnrnwqeoahrpoc.supabase.co";
-    const SUPABASE_ANON_KEY = "sb_publishable_u2YnD8QOwDjRnRUjmZeaFQ_IUUL8I2y";
-
-    const toggle = document.getElementById("fbViewerToggle");
-    const body = document.getElementById("fbViewerBody");
-    if (!toggle || !body) return;
-
-    const errEl = document.getElementById("fbViewerErr");
-    const pwdInput = document.getElementById("fb-viewer-pwd");
-    const lockForm = document.getElementById("fbLock");
-    const listEl = document.getElementById("fbViewerList");
-    const toolbar = document.getElementById("fbViewerToolbar");
-    const countEl = document.getElementById("fbViewerCount");
-
-    let unlocked = false;
-
-    /* 展开/收起按钮的文字同时取决于"展开状态"和"当前语言"，单独同步。
-       （语言切换时 applyLang 会先按静态词典把它改回"查看反馈"，再跑 onLangChange 回调修正，故这里必须重设） */
-    function syncToggle() {
-      toggle.textContent = body.hidden
-        ? tx("🔐 查看反馈（作者）", "🔐 View feedback (author)")
-        : tx("🙈 收起反馈", "🙈 Hide feedback");
-    }
-
-    toggle.addEventListener("click", function () {
-      const show = body.hidden;
-      body.hidden = !show;
-      syncToggle();
-      toggle.scrollIntoView({ block: "nearest", behavior: "smooth" });
-      if (show && unlocked) load();
-    });
-
-    // 切换语言：修正按钮文字；若已解锁且面板展开，按新语言重绘列表
-    onLangChange(function () {
-      syncToggle();
-      errEl.textContent = "";                 // 同样是瞬时提示，避免留下旧语言
-      if (unlocked && !body.hidden) load();
-    });
-
-    lockForm.addEventListener("submit", async function (e) {
-      e.preventDefault();
-      const v = (pwdInput.value || "").trim();
-      if (!v) {
-        errEl.textContent = tx("请输入口令。", "Please enter the password.");
-        pwdInput.select();
-        return;
-      }
-      errEl.textContent = tx("⏳ 校验中…", "⏳ Checking…");
-      try {
-        // 前端比对口令（与任务 21 方案一致）
-        if (v !== VIEWER_PWD) {
-          errEl.textContent = tx("口令不正确，请重试。", "Wrong password — please try again.");
-          errEl.className = "fb-status err";
-          pwdInput.select();
-          return;
-        }
-        errEl.textContent = "";
-        unlocked = true;
-        lockForm.hidden = true;
-        toolbar.hidden = false;
-        load();
-      } catch (err) {
-        console.error(err);
-        errEl.textContent = tx("⚠️ 校验失败：", "⚠️ Check failed: ") + String(err && err.message || err);
-      }
-    });
-
-    document.getElementById("fbViewerReload").addEventListener("click", load);
-
-    function esc(s) {
-      return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
-        return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
-      });
-    }
-
-    function stars(n) {
-      n = Number(n) || 0;
-      return "★".repeat(Math.max(0, Math.min(5, n))) + "☆".repeat(Math.max(0, 5 - Math.min(5, n)));
-    }
-
-    function fmtTime(iso) {
-      if (!iso) return "-";
-      const d = new Date(iso);
-      const p = function (x) { return String(x).padStart(2, "0"); };
-      return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate())
-        + " " + p(d.getHours()) + ":" + p(d.getMinutes()) + ":" + p(d.getSeconds());
-    }
-
-    async function load() {
-      listEl.innerHTML = '<div class="fv-empty">' + tx("⏳ 加载中…", "⏳ Loading…") + '</div>';
-      try {
-        const headers = { "apikey": SUPABASE_ANON_KEY };
-        if (/^eyJ/i.test(SUPABASE_ANON_KEY)) headers["Authorization"] = "Bearer " + SUPABASE_ANON_KEY;
-        const res = await fetch(
-          SUPABASE_URL.replace(/\/$/, "") + "/rest/v1/feedback?select=*&order=created_at.desc",
-          { headers: headers }
-        );
-        if (!res.ok) throw new Error("HTTP " + res.status);
-        const rows = await res.json();
-        countEl.textContent = tx("共 " + rows.length + " 条反馈",
-                                 rows.length + (rows.length === 1 ? " entry" : " entries"));
-        if (!rows.length) {
-          listEl.innerHTML = '<div class="fv-empty">' + tx("还没有收到任何反馈。", "No feedback yet.") + '</div>';
-          return;
-        }
-        listEl.innerHTML = rows.map(function (r) {
-          const devTag = (r.device === "手机端")
-            ? '<span class="tag dev-mobile">📱 ' + esc(tr(r.device || "手机端")) + '</span>'
-            : '<span class="tag dev-desktop">💻 ' + esc(tr(r.device || "电脑端")) + '</span>';
-          return '<div class="fv-item">'
-            + '<div class="fv-top"><span class="fv-time">🕒 ' + esc(fmtTime(r.created_at)) + '</span><span class="fv-tags">' + devTag + '</span></div>'
-            + '<div class="fv-tags">'
-            + '<span class="tag">' + esc(tr(r.relation || "暂无")) + '</span>'
-            + '<span class="tag">' + esc(tr(r.category || "其他")) + '</span>'
-            + '</div>'
-            + '<p class="fv-msg">' + esc(r.message) + '</p>'
-            + '<div class="fv-meta">'
-            + (r.nickname ? "👤 " + esc(r.nickname) + " · " : "")
-            + (r.contact ? "✉️ " + esc(r.contact) + " · " : "")
-            + '<span class="fv-rating">' + stars(r.rating) + '</span>'
-            /* 库里的枚举值（关系 / 类型 / 设备）保持中文存储，只在显示时翻译 */
-            + (r.rating ? tx("（" + r.rating + " 星）", "(" + r.rating + " / 5)") : tx("（未评分）", "(no rating)"))
-            + '</div>'
-            + '</div>';
-        }).join("");
-      } catch (err) {
-        console.error(err);
-        listEl.innerHTML = '<div class="fv-empty">' + tx("⚠️ 加载失败：", "⚠️ Load failed: ") + esc(err.message) + '</div>';
-      }
-    }
-  })();
+  /* ---------- 反馈查看入口 · v4.5.31 已停用前端读取 ----------
+     原因：原实现用公开 anon key 匿名直读 feedback 表（实测可读全部记录），
+     源码里的明文口令不参与鉴权、形同虚设，反而制造"假防护"。
+     现由数据库 RLS 兜底：匿名无 SELECT 权限，页面不再读取任何反馈。
+     查看反馈 → Supabase 后台 → Table Editor → feedback            */
 
   // ---------- 任务32：Hero 按钮磁吸（CSS 变量 + transform；监听绑在 .hero-cta 父容器） ----------
   (function () {

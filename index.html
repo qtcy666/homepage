@@ -107,9 +107,18 @@
     66% {transform:translate3d(94vw,62vh,0);   animation-timing-function:cubic-bezier(.6,.05,.65,.2)}
     100%{transform:translate3d(128vw,90vh,0)}
   }
-  /* 星点层：两层不同周期的星野叠加，错开重复感（取代原来的 32px 格纹） */
-  body::before{
-    content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;
+  /* 星点层：两层不同周期的星野叠加，错开重复感（取代原来的 32px 格纹）
+     【v4.5.37】由单层 body::before 拆成 .starfield > i 两层结构：
+       · 外层 .starfield 只承担「滚动视差位移 + 覆盖补偿缩放」（transform 写在 v4537 样式块），
+       · 内层 i 原样保留星点图案、inset:-90px 余量与 starDrift+starBreath 动画。
+     只有外层动，内层动画两不相干；顶部（scrollY=0）外层 transform 为恒等
+     ⇒ 像素与拆前逐像素一致（门 / 全相位 / 截图的量测口径不变）。 */
+  .starfield{
+    position:fixed;inset:0;z-index:-1;pointer-events:none;
+    will-change:transform;
+  }
+  .starfield > i{
+    position:absolute;display:block;
     background-image:
       radial-gradient(1.4px 1.4px at 12% 18%,rgba(214,234,255,.85),transparent 60%),
       radial-gradient(1px 1px     at 34% 41%,rgba(150,196,255,.62),transparent 60%),
@@ -147,6 +156,9 @@
   .aurora{
     position:fixed;inset:0;z-index:-2;overflow:hidden;
     pointer-events:none;isolation:isolate;
+    will-change:transform;
+    /* v4.5.37 滚动视差（0.05×）：--aur 默认 0px ⇒ 恒等变换，顶部像素不变 */
+    transform:translate3d(0,var(--aur,0px),0);
   }
   .aurora i{
     position:absolute;border-radius:50%;
@@ -288,14 +300,14 @@
      同特异性下写在前面的媒体查询会被反向覆盖。 */
   @media (max-width:768px){
      /* 手机上只保留 starBreath（仅 opacity，不吃性能），位移类动画全停 */
-     body::before{animation:starBreath 14s ease-in-out infinite alternate;will-change:opacity}
+     .starfield > i{animation:starBreath 14s ease-in-out infinite alternate;will-change:opacity}
      .wrap::before{animation:none;will-change:auto}
      .wrap::after{animation:none;will-change:auto}
      body::after{animation:none;will-change:auto}
      .skymeteor{animation:none;will-change:auto}
    }
    @media (prefers-reduced-motion:reduce){
-     body::before{animation:none!important;will-change:auto}
+     .starfield > i{animation:none!important;will-change:auto}
      .wrap::before{animation:none!important;will-change:auto}
      .wrap::after{animation:none!important;will-change:auto}
      body::after{animation:none!important;will-change:auto}
@@ -1445,8 +1457,11 @@ body{
 }
 </style>
 <style id="starnight-2-css-stars">
-/* body::before 8 档 → 16 档（487px×8 + 311px×8）；mask / inset / 动画全部沿用原值 */
-body::before{
+/* 星点层 8 档 → 16 档（487px×8 + 311px×8）；mask / inset / 动画全部沿用原值
+   【v4.5.37】选择器由 body::before 改为 .starfield > i（视差外壳的内层）。
+   本块与基础块、#starnight-6-stars 必须落在同一元素上：文案与样式块的先后顺序不变，
+   级联结果才与改造前逐像素一致（否则会多出一层星点，背景变亮、对比度被击穿）。 */
+.starfield > i{
   background-image:
     radial-gradient(1.4px 1.4px at 12% 18%,rgba(152,214,255,.85),transparent 60%),
     radial-gradient(1px 1px at 34% 41%,rgba(112,184,255,.62),transparent 60%),
@@ -1704,8 +1719,9 @@ body{
    （与 487 / 311 互不整除，进一步错开重复感）。
    .wrap::after 12 档 → 18 档：这一层必须【全部】保持 271px 周期，
    否则 starFlow「上移 271px」的无缝循环会在接缝处露馅。
-   inset / mask / opacity / 动画一律沿用原值，这里只重写两条 background-* 列表。 */
-body::before{
+   inset / mask / opacity / 动画一律沿用原值，这里只重写两条 background-* 列表。
+   【v4.5.37】同 #starnight-2-css-stars：选择器改 .starfield > i，保持级联顺序不变。 */
+.starfield > i{
   background-image:
     radial-gradient(1.4px 1.4px at 12% 18%,rgba(152,214,255,.85),transparent 60%),
     radial-gradient(1px 1px at 34% 41%,rgba(112,184,255,.62),transparent 60%),
@@ -2232,6 +2248,81 @@ header.hero.card{overflow:visible}
   .term-grid,.res-grid{grid-template-columns:1fr}
 }
 </style>
+<style id="v4537">
+/* ==================================================================
+   v4.5.37 · 第 1 批「酷效果」：滚动视差星空 + 章节标题流光
+   ------------------------------------------------------------------
+   ① 滚动视差（纵深）
+      背景本就有多层，这里让它们速度错开：
+        · 星野照片层  background-attachment:fixed ⇒ 0×（最远，本来就不动）
+        · 星点层 .starfield                      ⇒ 缓动位移，上限 150px（本块）
+        · 极光层   .aurora                       ⇒ 更慢更浅，上限 60px（本块）
+        · 正文                                   ⇒ 1×
+      ★ 只用 transform（合成器线程），绝不用 background-position 做滚动动画：
+        全屏层每帧重绘是旧版卡顿的根因（见上方 .skymeteor 处说明）。
+      ★ 位移由 JS 写进 --par / --parS / --aur（与进度条同一个 rAF 帧，不新增监听器）；
+        scrollY=0 时三者是 0px / 1 / 0px ⇒ 恒等变换，门·全相位·截图的量测口径与旧版一致。
+      ★ .starfield 内层外扩只有 90px（要盖住 starDrift 的 62px），纯位移会露边，
+        所以位移多少就补多少缩放：--parS = 1+2|y|/H，覆盖面积恒 ≥ 视口。
+   ② 章节标题流光（.card-head h2）
+      · 底色层用 currentColor ⇒ 6 个区块原有色相（--c-moon/--c-cyan/--c-violet/
+        --c-mint/--c-ice/--c-gold；第 04/06 区块用继承色）自动生效，不必逐区块重写；
+      · 高光层是一条 100deg 白色斜带，靠 background-position 扫过（文字盒很小，重绘可忽略）；
+      · 必须用 -webkit-text-fill-color:transparent（不能用 color:transparent），
+        否则 currentColor 一并失效，标题与序号会整片变透明；
+      · ::before（01–08 序号）单独把 fill 恢复成 currentColor，序号仍是实色；
+      · 整段包在 @supports 内：不支持背景裁字的浏览器根本不进这段，标题照旧显示。
+   ================================================================== */
+
+/* ① 视差：位移 + 覆盖补偿缩放（transform-origin 居中，缩放才会对称外扩） */
+.starfield{
+  transform-origin:50% 50%;
+  transform:translate3d(0,var(--par,0px),0) scale(var(--parS,1));
+}
+
+/* ② 标题流光 */
+@supports (-webkit-background-clip:text) or (background-clip:text){
+  .card-head h2{
+    background-image:
+      linear-gradient(currentColor,currentColor),
+      linear-gradient(100deg,transparent 40%,rgba(255,255,255,.62) 50%,transparent 60%);
+    background-size:100% 100%,220% 100%;
+    background-repeat:no-repeat,no-repeat;
+    background-position:0 0,-58% 50%;
+    -webkit-background-clip:text;background-clip:text;
+    -webkit-text-fill-color:transparent;
+    animation:h2shine 7.6s linear infinite;
+  }
+  /* 序号是 h2::before：text-fill 会从 h2 继承 ⇒ 这里单独恢复成实色 */
+  .card-head h2::before{-webkit-text-fill-color:currentColor}
+  /* 相邻区块错相位，避免整屏标题同时亮（负延时 = 起手就落在周期中段） */
+  #skills .card-head h2{animation-delay:-1.3s}
+  #goals .card-head h2{animation-delay:-2.6s}
+  #terms .card-head h2{animation-delay:-3.9s}
+  #contact .card-head h2{animation-delay:-5.2s}
+  #res .card-head h2{animation-delay:-6.5s}
+  #twin .card-head h2{animation-delay:-7.8s}
+  #feedback .card-head h2{animation-delay:-9.1s}
+  /* 高光带从文字左外侧扫到右外侧：size 220% 时可视窗口覆盖层的
+     [1.2P%, 1.2P%+45.5%]，P 由 -58% 走到 86% 正好完整穿过一次 */
+  @keyframes h2shine{
+    from{background-position:0 0,-58% 50%}
+    to  {background-position:0 0,86% 50%}
+  }
+}
+
+/* ③ 减弱动效：视差由 JS 清零（此处再兜底恒等），流光停掉、底色层恢复实色文字绘制 */
+@media (prefers-reduced-motion:reduce){
+  .starfield{transform:none}
+  .aurora{transform:none}
+  .card-head h2{
+    animation:none;
+    background-image:linear-gradient(currentColor,currentColor);
+    background-size:100% 100%;background-position:0 0;
+    -webkit-text-fill-color:currentColor; /* 交还给普通文字绘制，不依赖背景裁字 */
+  }
+}
+</style>
 </head>
 <body>
 
@@ -2348,6 +2439,8 @@ header.hero.card{overflow:visible}
 
 <!-- 极光背景层：3 个径向渐变光斑，内容之下，纯 CSS 漂移 -->
 <div class="aurora" aria-hidden="true"><i class="b1"></i><i class="b2"></i><i class="b3"></i><i class="b4"></i><i class="b5"></i></div>
+<!-- 星点层外壳（v4.5.37）：滚动视差位移/补偿缩放作用于本层，星点图案与动画在内层 i 上 -->
+<div class="starfield" aria-hidden="true"><i></i></div>
 
 <!-- 主体页流星层：独立窄条元素，translate3d 合成器动画（GPU 贴片移动），替代原先全屏 background-position 动画导致的每帧整层重绘 -->
 <i class="skymeteor" aria-hidden="true"></i>
@@ -3595,6 +3688,26 @@ header.hero.card{overflow:visible}
   let pending = false;
   // 进度条 scaleX / 环形 dashoffset / 显隐 / 60% 实心：全部在 requestAnimationFrame 帧内统一绘制。
   // scroll 事件只排队（passive），不直接改样式；避免高频直接写入与掉帧。
+  /* 滚动视差（v4.5.37）：星点层、极光层随滚动滑移（星野照片层是 fixed 0×，正文 1×）。
+     与进度条共用同一个 rAF 帧，只写 CSS 变量、不直接写 transform —— 位移全在合成器线程完成。
+     曲线用指数缓动 1-e^(-scrollY/EASE)：起手明显、之后持续微动、天然有上限，
+     比“固定倍率 + 夹紧”好（后者滚过首屏就彻底不动了）。
+     reduced-motion 下一律清零（背景保持静止）。 */
+  const PAR_STAR_A = 150, PAR_STAR_EASE = 700;  // 星点层：位移上限 150px（视口矮时按 0.18×高再收）
+  const PAR_AUR_A = 60, PAR_AUR_EASE = 1400;    // 极光层：更慢更浅，上限 60px
+  const reduceMQ = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
+  const parRoot = document.documentElement;
+  function paintParallax() {
+    const off = !!(reduceMQ && reduceMQ.matches);
+    const h = window.innerHeight || 1;
+    const sy = off ? 0 : (window.scrollY || 0);
+    const ys = -Math.min(PAR_STAR_A, 0.18 * h) * (1 - Math.exp(-sy / PAR_STAR_EASE));
+    const ya = -Math.min(PAR_AUR_A, 0.07 * h) * (1 - Math.exp(-sy / PAR_AUR_EASE));
+    parRoot.style.setProperty('--par', ys.toFixed(1) + 'px');
+    // 覆盖补偿：位移 y 之外再按 1+2|y|/H 放大，内层 90px 余量被漂移吃掉后仍铺满视口
+    parRoot.style.setProperty('--parS', (1 + 2 * Math.abs(ys) / h).toFixed(4));
+    parRoot.style.setProperty('--aur', ya.toFixed(1) + 'px');
+  }
   function paintProgress() {
     pending = false;
     const max = document.documentElement.scrollHeight - window.innerHeight;
@@ -3604,6 +3717,7 @@ header.hero.card{overflow:visible}
     const show = window.scrollY > 380;
     toTop.classList.toggle('show', show);
     toTop.classList.toggle('solid', show && ratio >= 0.6); // 超过 60%：半透明 → 实心
+    paintParallax(); // 同一帧内顺带刷新背景视差（只写 CSS 变量）
   }
   function queue() {
     if (pending) return;
@@ -3635,6 +3749,7 @@ header.hero.card{overflow:visible}
   window.addEventListener('scroll', queue, { passive: true });
   window.addEventListener('resize', queue);
   window.addEventListener('load', queue); // 图片/字体加载完页面高度可能变化
+  if (reduceMQ && reduceMQ.addEventListener) reduceMQ.addEventListener('change', queue); // 系统切换减弱动效时立即归零/复位
   queue();
 
   toTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));

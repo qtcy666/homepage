@@ -2950,10 +2950,12 @@ header.hero.card{overflow:visible}
 
   const msgs = document.getElementById("msgs");
   /* 24 小时制手写时间戳：toLocaleTimeString 在中文环境会输出"上午/下午"，
-     会污染 EN 态的中文残留扫描，所以自己拼 HH:MM。 */
+     会污染 EN 态的中文残留扫描，所以自己拼 HH:MM。
+     v4.5.30：小时此前漏了补零（getHours() 直接拼），0:00~9:59 会显示成 9:37 而不是 09:37，
+     与上游注释「自己拼 HH:MM」和线上自检的正则 \d{2}:\d{2} 都不符 —— 补上 p()。 */
   function nowHM() {
     const d = new Date(), p = n => String(n).padStart(2, "0");
-    return d.getHours() + ":" + p(d.getMinutes());
+    return p(d.getHours()) + ":" + p(d.getMinutes());
   }
   /* add(cls, text, acts)：acts 为可选的动作按钮 [{label, onClick}]（如兜底时的"帮我转达"） */
   function add(cls, text, acts) {

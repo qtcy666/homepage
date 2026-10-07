@@ -2137,6 +2137,64 @@ header.hero.card{overflow:visible}
   .tagline{white-space:nowrap}
 }
 </style>
+<style id="display-font">
+/* ===== v4.5.34 · 标题 display 字体（自托管 WOFF2 子集，零第三方请求）=====
+   动机：全站此前只有一套系统无衬线栈，标题只能靠字重/字号拉层次（「缺少个性」）。
+
+   作用域：.gate-kicker / .gate-inner h1 / .hero h1 / .tagline / .card-head h2
+     刻意不含 .card-head .sub（12px 中文衬线会发糊），由此形成
+     「显示体（衬线，标题/卡头） vs 辅助体（黑体，正文与侧标签）」的层次对比。
+
+   字体来源与体积：Playfair Display 20.8KB（拉丁）+ Noto Serif SC 15.8KB（中文 55 字子集），
+     均 OFL 1.1，构建与重建流程见 .opencode/skills/homepage-display-fonts/SKILL.md。
+
+   ⚠ 只声明 font-family，不动 font-size / line-height / letter-spacing / 字重：
+     本块排在 head 内所有样式块之后，靠"更靠后"压过同特异性既有规则。
+   ⚠ 标题文案若新增汉字，必须重跑 homepage-display-fonts 脚本重建子集，
+     否则该字会静默回退为系统字体（脚本内置缺字自检，非零退出）。 */
+@font-face{
+  font-family:"Playfair Display";font-style:normal;font-weight:400 900;font-display:swap;
+  src:url('assets/fonts/display-latin.woff2') format('woff2');
+}
+@font-face{
+  font-family:"Noto Serif SC Display";font-style:normal;font-weight:400 900;font-display:swap;
+  src:url('assets/fonts/display-cjk.woff2') format('woff2');
+}
+:root{
+  --font-display:"Playfair Display","Noto Serif SC Display",Georgia,"Songti SC","SimSun",serif;
+}
+.gate-kicker,.gate-inner h1,.hero h1,.tagline,.card-head h2{font-family:var(--font-display)}
+</style>
+<style id="icons-linear">
+/* ===== v4.5.34 · UI 图标统一为线性 SVG（弃用 emoji）=====
+   动机：emoji 由系统字体渲染，Windows / Android / macOS 各一套字形（用户反馈"图标不统一"），
+        且颜色不受主题控制。
+   做法：内联 sprite —— symbol 定义在 body 里的 <svg class="svg-defs"> 中（#i-*），
+        零额外请求；颜色跟随 currentColor，尺寸用 em，视觉由 stroke 统一。
+   边界：UI 图标（卡头徽标 / 联系方式 / 爱好标签 / 表单选项 / 按钮 / 状态提示 / 隐私提示）全部换 .i；
+        数字分身对话文案（#msgs 内的 👋 等）属于"语气"，刻意保留 emoji。
+   ⚠ stroke 宽度按 24×24 网格给 1.75 单位，缩放后视觉约 1.5–1.6px；改 viewBox 需同步改这里。 */
+.i{
+  width:1em;height:1em;display:inline-block;vertical-align:-.14em;flex:none;
+  fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;
+}
+/* 卡头徽标：42px 圆角块（grid 居中）内放 22px 图标（此前是 font-size:20px 的 emoji） */
+.card-head .ico .i{width:22px;height:22px}
+/* 联系方式：36px 圆角块（grid 居中）内放 19px 图标 */
+.contact .ci .i{width:19px;height:19px}
+/* 爱好标签：13px 文字配 1.05em 图标 */
+.chip .i{width:1.05em;height:1.05em;margin-right:5px;vertical-align:-.16em}
+/* 表单选项：label 不是 flex，间距靠 margin */
+.fc-pick .i{margin-right:6px;vertical-align:-.18em}
+/* 反馈隐私提示行首锁形图标 */
+.fb-viewer-hint .i{margin-right:5px;vertical-align:-.16em}
+/* 问候语行内图标：与文字基线对齐（间距由 HTML 里的空格承担） */
+.hi .i{vertical-align:-.2em}
+/* 按钮带 .btn → 已是 inline-flex + gap:6px，图标间距自动 */
+.i-spin{animation:iconSpin 1s linear infinite}
+@keyframes iconSpin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.i-spin{animation:none}}
+</style>
 </head>
 <body>
 
@@ -2148,6 +2206,106 @@ header.hero.card{overflow:visible}
       <feGaussianBlur in="n" stdDeviation="1.5" result="nb"/>
       <feDisplacementMap in="SourceGraphic" in2="nb" scale="42" xChannelSelector="R" yChannelSelector="G"/>
     </filter>
+
+    <!-- ===== v4.5.34 · 线性图标 sprite =====
+         24×24 网格；fill / stroke / stroke-width / cap / join 全部由 .i 类统一给，
+         颜色跟随 currentColor，因此这里只写几何，不写颜色。
+         全部为装饰性图标：使用处均带 aria-hidden="true"，语义由相邻文字承担。
+         id 命名对应原 emoji：grad=🎓 hand=👋 monitor=💻 target=🎯 mail=✉️📧 bot=🤖 message=💬
+         shuttle=🏸 paddle=🏓 book=📚 phone=📞 link=🔗 bulb=💡 help=❓ handshake=🤝 star=🌟
+         mobile=📱 lock=🔒 loader=⏳ check=✅ alert=⚠️ -->
+    <symbol id="i-grad" viewBox="0 0 24 24">
+      <path d="M2.2 9.4 12 4.8l9.8 4.6L12 14 2.2 9.4Z"/>
+      <path d="M6.2 11.6V16c0 1.5 2.6 2.6 5.8 2.6s5.8-1.1 5.8-2.6v-4.4"/>
+      <path d="M21.4 9.8v4.6"/>
+    </symbol>
+    <symbol id="i-hand" viewBox="0 0 24 24">
+      <path d="M8 12.8V7.6a1.5 1.5 0 0 1 3 0v4.4"/>
+      <path d="M11 12V6.1a1.5 1.5 0 0 1 3 0V12"/>
+      <path d="M14 12V7.4a1.5 1.5 0 0 1 3 0V12"/>
+      <path d="M17 12.2v4.2c0 2.4-1.6 3.9-3.9 3.9h-.6c-2 0-3.4-1-4.3-2.7l-1.4-2.6a1.55 1.55 0 0 1 2.5-1.8l.7.8"/>
+    </symbol>
+    <symbol id="i-monitor" viewBox="0 0 24 24">
+      <rect x="3" y="4.6" width="18" height="12" rx="2.2"/>
+      <path d="M8.6 20h6.8M12 16.6V20"/>
+    </symbol>
+    <symbol id="i-target" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="8.6"/>
+      <circle cx="12" cy="12" r="4.6"/>
+      <circle cx="12" cy="12" r="1.15" fill="currentColor" stroke="none"/>
+    </symbol>
+    <symbol id="i-mail" viewBox="0 0 24 24">
+      <rect x="2.9" y="4.9" width="18.2" height="14.2" rx="2.4"/>
+      <path d="m3.4 6.8 8.6 6.2 8.6-6.2"/>
+    </symbol>
+    <symbol id="i-bot" viewBox="0 0 24 24">
+      <rect x="4.4" y="8" width="15.2" height="11.2" rx="3.4"/>
+      <path d="M12 4.6V8"/>
+      <circle cx="12" cy="3.7" r="1.1"/>
+      <path d="M9.2 12.6h.02M14.8 12.6h.02"/>
+      <path d="M9.6 16.2h4.8"/>
+    </symbol>
+    <symbol id="i-message" viewBox="0 0 24 24">
+      <path d="M20.6 11.8c0 4-3.85 7.2-8.6 7.2-1.06 0-2.07-.17-3-.49L4.2 20.6l1.55-3.5c-1.1-1.3-1.75-2.9-1.75-4.6 0-4 3.85-7.2 8.6-7.2s8 3.2 8 7.2Z"/>
+    </symbol>
+    <symbol id="i-shuttle" viewBox="0 0 24 24">
+      <circle cx="12" cy="18.4" r="2.1"/>
+      <path d="M10.6 16.6 6.3 5.2M12 16.3V4.4M13.4 16.6 17.7 5.2"/>
+      <path d="M6.9 11.2h10.2"/>
+    </symbol>
+    <symbol id="i-paddle" viewBox="0 0 24 24">
+      <circle cx="14.6" cy="9.4" r="5.6"/>
+      <path d="m10.7 13.4-5.4 6"/>
+    </symbol>
+    <symbol id="i-book" viewBox="0 0 24 24">
+      <path d="M12 7.4C10.4 5.9 8.3 5.4 5.3 5.4H3.6v13h1.7c3 0 5.1.5 6.7 2 1.6-1.5 3.7-2 6.7-2h1.7v-13h-1.7c-3 0-5.1.5-6.7 2Z"/>
+      <path d="M12 7.4v13"/>
+    </symbol>
+    <symbol id="i-phone" viewBox="0 0 24 24">
+      <path d="M6.9 3.6h2.3l1.5 4-2.1 1.6c.85 2.4 2.2 3.75 4.6 4.6l1.6-2.1 4 1.5v2.3c0 1.4-1.15 2.5-2.55 2.5C10.6 17.6 6.4 13.4 6.4 6.15c0-1.4 1.1-2.55 2.5-2.55Z"/>
+    </symbol>
+    <symbol id="i-link" viewBox="0 0 24 24">
+      <path d="M9.6 14.4 14.4 9.6"/>
+      <path d="M11.2 7.6 12.7 6.1a3.6 3.6 0 0 1 5.1 5.1l-1.5 1.5"/>
+      <path d="M12.8 16.4 11.3 17.9A3.6 3.6 0 0 1 6.2 12.8l1.5-1.5"/>
+    </symbol>
+    <symbol id="i-bulb" viewBox="0 0 24 24">
+      <path d="M12 3.5a5.6 5.6 0 0 1 3.3 10.1c-.6.45-.8 1-.8 1.75H9.5c0-.75-.2-1.3-.8-1.75A5.6 5.6 0 0 1 12 3.5Z"/>
+      <path d="M9.7 17.9h4.6M10.6 20.4h2.8"/>
+    </symbol>
+    <symbol id="i-help" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="8.6"/>
+      <path d="M9.6 9.6a2.55 2.55 0 1 1 3.4 2.5c-.65.28-.95.85-.95 1.55v.5"/>
+      <path d="M12 17.1h.02"/>
+    </symbol>
+    <symbol id="i-handshake" viewBox="0 0 24 24">
+      <path d="M3.6 11.4 7.4 7.6a2.4 2.4 0 0 1 3.4 0l1.2 1.2 1.2-1.2a2.4 2.4 0 0 1 3.4 0l3.8 3.8"/>
+      <path d="m3.6 11.4 2.6 2.6a2.4 2.4 0 0 0 3.4 0l.9-.9.9.9a2.4 2.4 0 0 0 3.4 0l2.6-2.6"/>
+      <path d="M9.9 13.4 12 15.5M14.1 13.4 12 15.5"/>
+    </symbol>
+    <symbol id="i-star" viewBox="0 0 24 24">
+      <path d="M12 3.7 14.6 9l5.9.85-4.25 4.15 1 5.85L12 17l-5.25 2.85 1-5.85L3.5 9.85 9.4 9 12 3.7Z"/>
+    </symbol>
+    <symbol id="i-mobile" viewBox="0 0 24 24">
+      <rect x="6.6" y="2.9" width="10.8" height="18.2" rx="2.6"/>
+      <path d="M10.8 18.4h2.4"/>
+    </symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24">
+      <rect x="4.6" y="10.4" width="14.8" height="10.2" rx="2.6"/>
+      <path d="M8.2 10.4V7.8a3.8 3.8 0 0 1 7.6 0v2.6"/>
+      <path d="M12 14.4v2.4"/>
+    </symbol>
+    <symbol id="i-loader" viewBox="0 0 24 24">
+      <path d="M12 3.4v3.3M12 17.3v3.3M20.6 12h-3.3M6.7 12H3.4M18.1 5.9l-2.3 2.3M8.2 15.8l-2.3 2.3M18.1 18.1l-2.3-2.3M8.2 8.2 5.9 5.9"/>
+    </symbol>
+    <symbol id="i-check" viewBox="0 0 24 24">
+      <path d="M20.2 6.4 9.6 17.6 4 11.9"/>
+    </symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24">
+      <path d="M12 3.6 21.4 20H2.6L12 3.6Z"/>
+      <path d="M12 9.6v4.6"/>
+      <path d="M12 17.4h.02"/>
+    </symbol>
   </defs>
 </svg>
 
@@ -2220,13 +2378,13 @@ header.hero.card{overflow:visible}
         </div>
         <h1 aria-label="刘一鸣"><span class="ch">刘</span><span class="ch">一</span><span class="ch">鸣</span></h1>
       </div>
-      <span class="tagline">🎓 天津大学 · 智能医学工程</span>
+      <span class="tagline"><svg class="i" aria-hidden="true" focusable="false"><use href="#i-grad"/></svg>天津大学 · 智能医学工程</span>
       <div class="hero-meta">把复杂问题简单化 · 大学生</div>
       <div class="hero-hello">
-        <div class="hi">你好呀，欢迎来到我的主页 👋</div>
+        <div class="hi">你好呀，欢迎来到我的主页 <svg class="i" aria-hidden="true" focusable="false"><use href="#i-hand"/></svg></div>
         <div class="hi-sub">下方可以和我聊聊，这是我的"数字分身"。</div>
         <div class="hero-cta">
-          <a class="btn primary" href="#twin">🤖 和数字分身聊聊</a>
+          <a class="btn primary" href="#twin"><svg class="i" aria-hidden="true" focusable="false"><use href="#i-bot"/></svg>和数字分身聊聊</a>
           <a class="btn ghost" href="#skills">看看我的技能</a>
         </div>
       </div>
@@ -2243,7 +2401,7 @@ header.hero.card{overflow:visible}
   <!-- 关于我 -->
   <section class="card reveal" id="about">
     <div class="card-head">
-      <div class="ico">👋</div>
+      <div class="ico"><svg class="i" aria-hidden="true" focusable="false"><use href="#i-hand"/></svg></div>
       <h2>关于我</h2>
     </div>
     <div class="split">
@@ -2253,9 +2411,9 @@ header.hero.card{overflow:visible}
           <div class="kv"><div class="k">性格</div><div class="v">踏实、有耐心，喜欢先把事情弄明白再动手，不太爱把话说满。</div></div>
           <div class="kv"><div class="k">兴趣爱好</div>
             <div class="chips">
-              <span class="chip">🏸 羽毛球</span>
-              <span class="chip">🏓 乒乓球</span>
-              <span class="chip">📚 阅读</span>
+              <span class="chip"><svg class="i" aria-hidden="true" focusable="false"><use href="#i-shuttle"/></svg>羽毛球</span>
+              <span class="chip"><svg class="i" aria-hidden="true" focusable="false"><use href="#i-paddle"/></svg>乒乓球</span>
+              <span class="chip"><svg class="i" aria-hidden="true" focusable="false"><use href="#i-book"/></svg>阅读</span>
             </div>
           </div>
         </div>
@@ -2266,7 +2424,7 @@ header.hero.card{overflow:visible}
   <!-- 技能 -->
   <section class="card reveal" id="skills">
     <div class="card-head">
-      <div class="ico">💻</div>
+      <div class="ico"><svg class="i" aria-hidden="true" focusable="false"><use href="#i-monitor"/></svg></div>
       <h2>技能</h2>
       <div class="sub">持续更新中</div>
     </div>
@@ -2314,7 +2472,7 @@ header.hero.card{overflow:visible}
   <!-- 学习记录 / 目标 -->
   <section class="card reveal" id="goals">
     <div class="card-head">
-      <div class="ico">🎯</div>
+      <div class="ico"><svg class="i" aria-hidden="true" focusable="false"><use href="#i-target"/></svg></div>
       <h2>学习记录 / 目标</h2>
     </div>
     <div class="split">
@@ -2330,22 +2488,22 @@ header.hero.card{overflow:visible}
   <!-- 联系方式 -->
   <section class="card reveal" id="contact">
     <div class="card-head">
-      <div class="ico">✉️</div>
+      <div class="ico"><svg class="i" aria-hidden="true" focusable="false"><use href="#i-mail"/></svg></div>
       <h2>联系方式</h2>
     </div>
     <div class="split flip">
       <div class="sec-body">
         <div class="contacts">
           <div class="contact">
-            <div class="ci">📧</div>
+            <div class="ci"><svg class="i" aria-hidden="true" focusable="false"><use href="#i-mail"/></svg></div>
             <div><div class="cl">邮箱</div><div class="cv"><a href="mailto:3026445032@tju.edu.cn" class="clink">3026445032@tju.edu.cn</a></div></div>
           </div>
           <div class="contact">
-            <div class="ci">📞</div>
+            <div class="ci"><svg class="i" aria-hidden="true" focusable="false"><use href="#i-phone"/></svg></div>
             <div><div class="cl">电话</div><div class="cv"><a href="tel:19582446693" class="clink">19582446693</a></div></div>
           </div>
           <div class="contact">
-            <div class="ci">🔗</div>
+            <div class="ci"><svg class="i" aria-hidden="true" focusable="false"><use href="#i-link"/></svg></div>
             <div><div class="cl">其他</div><div class="cv">欢迎通过上方邮箱或电话联系</div></div>
           </div>
         </div>
@@ -2356,7 +2514,7 @@ header.hero.card{overflow:visible}
   <!-- 数字分身聊天 -->
   <section class="card reveal" id="twin">
     <div class="card-head">
-      <div class="ico">🤖</div>
+      <div class="ico"><svg class="i" aria-hidden="true" focusable="false"><use href="#i-bot"/></svg></div>
       <h2>数字分身 · 聊聊天</h2>
     </div>
     <div class="split twin-split">
@@ -2394,7 +2552,7 @@ header.hero.card{overflow:visible}
   <!-- 访客反馈 -->
   <section class="card reveal" id="feedback">
     <div class="card-head">
-      <div class="ico">💬</div>
+      <div class="ico"><svg class="i" aria-hidden="true" focusable="false"><use href="#i-message"/></svg></div>
       <h2>访客反馈</h2>
       <div class="sub">无需登录 · 30 秒即可提交</div>
     </div>
@@ -2415,18 +2573,18 @@ header.hero.card{overflow:visible}
           <div class="fb-row">
             <label for="fb-category">反馈类型</label>
             <div class="fb-chips" id="fbCategory" role="radiogroup" aria-label="反馈类型">
-              <label class="fc-pick"><input type="radio" name="category" value="建议" checked />💡 建议</label>
-              <label class="fc-pick"><input type="radio" name="category" value="问题" />❓ 问题</label>
-              <label class="fc-pick"><input type="radio" name="category" value="想认识/合作" />🤝 想认识 / 合作</label>
-              <label class="fc-pick"><input type="radio" name="category" value="夸奖鼓励" />🌟 夸奖鼓励</label>
+              <label class="fc-pick"><input type="radio" name="category" value="建议" checked /><svg class="i" aria-hidden="true" focusable="false"><use href="#i-bulb"/></svg>建议</label>
+              <label class="fc-pick"><input type="radio" name="category" value="问题" /><svg class="i" aria-hidden="true" focusable="false"><use href="#i-help"/></svg>问题</label>
+              <label class="fc-pick"><input type="radio" name="category" value="想认识/合作" /><svg class="i" aria-hidden="true" focusable="false"><use href="#i-handshake"/></svg>想认识 / 合作</label>
+              <label class="fc-pick"><input type="radio" name="category" value="夸奖鼓励" /><svg class="i" aria-hidden="true" focusable="false"><use href="#i-star"/></svg>夸奖鼓励</label>
               <label class="fc-pick"><input type="radio" name="category" value="其他" />其他</label>
             </div>
           </div>
           <div class="fb-row">
             <label>你当前使用的设备<span class="req"> *</span></label>
             <div class="fb-chips" id="fbDevice" role="radiogroup" aria-label="当前使用的设备">
-              <label class="fc-pick"><input type="radio" name="device" value="手机端" />📱 手机端</label>
-              <label class="fc-pick"><input type="radio" name="device" value="电脑端" />💻 电脑端</label>
+              <label class="fc-pick"><input type="radio" name="device" value="手机端" /><svg class="i" aria-hidden="true" focusable="false"><use href="#i-mobile"/></svg>手机端</label>
+              <label class="fc-pick"><input type="radio" name="device" value="电脑端" /><svg class="i" aria-hidden="true" focusable="false"><use href="#i-monitor"/></svg>电脑端</label>
             </div>
           </div>
           <div class="fb-row">
@@ -2455,7 +2613,7 @@ header.hero.card{overflow:visible}
             </div>
           </div>
           <div class="fb-actions">
-            <button type="submit" class="btn primary" id="fbSubmit">✉️ 提交反馈</button>
+            <button type="submit" class="btn primary" id="fbSubmit"><svg class="i" aria-hidden="true" focusable="false"><use href="#i-mail"/></svg>提交反馈</button>
             <span class="fb-note">提交即表示你已阅读以下说明：仅收集你主动填写的少量信息（称呼 / 联系方式可选），用于作者阅读与回复；不收集敏感隐私。</span>
           </div>
           <div class="fb-status" id="fbStatus" role="status" aria-live="polite"></div>
@@ -2464,7 +2622,7 @@ header.hero.card{overflow:visible}
         <div class="fb-viewer" id="fbViewer">
           <!-- v4.5.31 安全修复：原「查看反馈」面板含明文口令 + 匿名直读，已停用。
                反馈数据改为仅在 Supabase 后台查看（service 角色，绕过 RLS）。 -->
-          <div class="fb-viewer-hint" style="line-height:1.8">🔒 为保护访客隐私，反馈已不再在本页读取。<br>请到 Supabase 后台 → Table Editor → <code>feedback</code> 查看。</div>
+          <div class="fb-viewer-hint" style="line-height:1.8"><svg class="i" aria-hidden="true" focusable="false"><use href="#i-lock"/></svg>为保护访客隐私，反馈已不再在本页读取。<br>请到 Supabase 后台 → Table Editor → <code>feedback</code> 查看。</div>
         </div>
       </div>
     </div>
@@ -2514,11 +2672,10 @@ header.hero.card{overflow:visible}
     "回到顶部": "Back to top",
 
     /* ---- Hero ---- */
-    "🎓 天津大学 · 智能医学工程": "🎓 Tianjin University · Intelligent Medical Engineering",
     "把复杂问题简单化 · 大学生": "Simplifying the complex · University student",
-    "你好呀，欢迎来到我的主页 👋": "Hi there, welcome to my homepage 👋",
+    "你好呀，欢迎来到我的主页": "Hi there, welcome to my homepage",
     "下方可以和我聊聊，这是我的\"数字分身\"。": "Scroll down and talk to me — that's my \"digital twin\".",
-    "🤖 和数字分身聊聊": "🤖 Chat with my AI twin",
+    "和数字分身聊聊": "Chat with my AI twin",
     "看看我的技能": "See my skills",
     "脑机接口概念图：发光的神经网络大脑与神经芯片":
       "Brain–computer interface concept art: a glowing neural-network brain linked to a neural chip",
@@ -2531,9 +2688,9 @@ header.hero.card{overflow:visible}
     "踏实、有耐心，喜欢先把事情弄明白再动手，不太爱把话说满。":
       "Grounded and patient. I'd rather understand something properly before I start, and I tend to understate rather than overpromise.",
     "兴趣爱好": "Interests",
-    "🏸 羽毛球": "🏸 Badminton",
-    "🏓 乒乓球": "🏓 Table tennis",
-    "📚 阅读": "📚 Reading",
+    "羽毛球": "Badminton",
+    "乒乓球": "Table tennis",
+    "阅读": "Reading",
 
     /* ---- 技能 ---- */
     "持续更新中": "Still growing",
@@ -2598,14 +2755,9 @@ header.hero.card{overflow:visible}
     "潜在合作伙伴": "Potential partner",
     "其他访客": "Other visitor",
     "反馈类型": "Feedback type",
-    "💡 建议": "💡 Suggestion",
-    "❓ 问题": "❓ Question",
-    "🤝 想认识 / 合作": "🤝 Say hi / collaborate",
-    "🌟 夸奖鼓励": "🌟 Praise",
+    "想认识 / 合作": "Say hi / collaborate",
     "你当前使用的设备": "Your current device",
     "当前使用的设备": "Current device",
-    "📱 手机端": "📱 Mobile",
-    "💻 电脑端": "💻 Desktop",
     /* 数据库里存的是中文枚举值（不改库），仅显示时译 */
     /* v4.5.20 补：关系枚举在 label 处已收录，但「反馈类型」的 4 个裸枚举值漏了，
        作者面板列表里 category 直接取 DB 原值，漏译会在英文态露出中文标签。 */
@@ -2629,7 +2781,7 @@ header.hero.card{overflow:visible}
     "3 星": "3 stars",
     "4 星": "4 stars",
     "5 星": "5 stars",
-    "✉️ 提交反馈": "✉️ Send feedback",
+    "提交反馈": "Send feedback",
     "提交即表示你已阅读以下说明：仅收集你主动填写的少量信息（称呼 / 联系方式可选），用于作者阅读与回复；不收集敏感隐私。":
       "By submitting you acknowledge: only the small amount of information you choose to provide (name and contact are optional) is collected, so the author can read it and reply. No sensitive data is collected.",
     "🔐 查看反馈（作者）": "🔐 View feedback (author)",
@@ -2639,8 +2791,8 @@ header.hero.card{overflow:visible}
     "解锁": "Unlock",
     "↻ 刷新": "↻ Refresh",
     /* v4.5.31：查看器停用后的静态提示（英文态须有译文，否则 EN 扫描判中文残留） */
-    "🔒 为保护访客隐私，反馈已不再在本页读取。":
-      "🔒 To protect visitor privacy, feedback is no longer read on this page.",
+    "为保护访客隐私，反馈已不再在本页读取。":
+      "To protect visitor privacy, feedback is no longer read on this page.",
     "请到 Supabase 后台 → Table Editor →":
       "Open your Supabase dashboard → Table Editor → ",
     "查看。": " to view them.",
@@ -2668,6 +2820,11 @@ header.hero.card{overflow:visible}
   function tr(s) { return LANG === "en" ? (_EN[_norm(s)] === undefined ? s : _EN[_norm(s)]) : s; }
   /* 显式双语对 */
   function tx(zh, en) { return LANG === "en" ? en : zh; }
+  /* v4.5.34：内联图标构造器（配合 <svg class="svg-defs"> 里的 #i-* symbol） */
+  function ico(name, cls) {
+    return '<svg class="' + (cls || "i") + '" aria-hidden="true" focusable="false">' +
+           '<use href="#i-' + name + '"/></svg>';
+  }
 
   const _ATTRS = ["placeholder", "aria-label", "title", "alt"];
   const _texts = [];   // {n, zh} 静态文本节点快照
@@ -3913,7 +4070,7 @@ header.hero.card{overflow:visible}
       const data = validate();
       if (!data) return;
       submitBtn.disabled = true;
-      submitBtn.textContent = tx("⏳ 提交中…", "⏳ Sending…");
+      submitBtn.innerHTML = ico("loader", "i i-spin") + tx("提交中…", "Sending…");
       try {
         if (SUPABASE_URL && SUPABASE_ANON_KEY) {
           // 密钥鉴权：新式 sb_* key 只能放 apikey 头（非 JWT）；旧式 eyJ anon JWT 才额外放 Bearer
@@ -3931,26 +4088,26 @@ header.hero.card{overflow:visible}
             body: JSON.stringify(data)
           });
           if (!res.ok) throw new Error("HTTP " + res.status);
-          setStatus("ok", tx("✅ 提交成功！感谢你的反馈，主人很快会看到。<br>（记录已写入 Supabase `feedback` 表）",
-                             "✅ Sent! Thanks for your feedback — the author will see it soon.<br>(Saved to the Supabase `feedback` table)"));
+          setStatus("ok", ico("check") + tx("提交成功！感谢你的反馈，主人很快会看到。<br>（记录已写入 Supabase `feedback` 表）",
+                             "Sent! Thanks for your feedback — the author will see it soon.<br>(Saved to the Supabase `feedback` table)"));
           trackDemo(false);
         } else {
           // 未配置 Supabase：本地演示模式，数据仅存当前浏览器
           const list = JSON.parse(localStorage.getItem("fb_demo") || "[]");
           list.push({ ...data, savedAt: new Date().toISOString() });
           localStorage.setItem("fb_demo", JSON.stringify(list));
-          setStatus("ok", tx("✅ （演示模式）提交成功！因尚未配置 Supabase，本次记录保存在当前浏览器本地。<br>主人接入后端后即可真正入库。",
-                             "✅ (Demo mode) Sent! Supabase isn't configured yet, so this entry is stored locally in this browser.<br>It will go into the real database once the backend is connected."));
+          setStatus("ok", ico("check") + tx("（演示模式）提交成功！因尚未配置 Supabase，本次记录保存在当前浏览器本地。<br>主人接入后端后即可真正入库。",
+                             "(Demo mode) Sent! Supabase isn't configured yet, so this entry is stored locally in this browser.<br>It will go into the real database once the backend is connected."));
           trackDemo(true);
         }
         form.reset(); rating = 0; paint();
       } catch (err) {
         console.error(err);
-        setStatus("err", tx("⚠️ 提交失败，请稍后再试，或通过其他方式联系主人。（" + err.message + "）",
-                            "⚠️ Sending failed. Please try again later, or reach the author another way. (" + err.message + ")"));
+        setStatus("err", ico("alert") + tx("提交失败，请稍后再试，或通过其他方式联系主人。（" + err.message + "）",
+                            "Sending failed. Please try again later, or reach the author another way. (" + err.message + ")"));
       } finally {
         submitBtn.disabled = false;
-        submitBtn.textContent = tx("✉️ 提交反馈", "✉️ Send feedback");
+        submitBtn.innerHTML = ico("mail") + tx("提交反馈", "Send feedback");
       }
     });
 

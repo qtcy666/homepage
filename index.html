@@ -478,7 +478,10 @@
           文字可读性改由「Hero 文字提亮」承担（见下方 .hero-main .hero-meta 那节）。
           面板四周更无边界 → 背景完全连续。
        ② 配图出血裁切（figure overflow:hidden + img right 负值）——图被面板右缘硬切一刀（人工边界）。
-          改为 overflow:visible + img right:0 + 定宽（v4.5.32 由 58%/上限700px 放大到 68%/上限900px）：图完整落在栏线内，
+          改为 overflow:visible + img right:0 + 定宽（v4.5.32 由 58%/上限700px 放大到 68%/上限900px；
+           v4.5.33 再放大：901~1180px 取 72%/上限900px（可读性刀刃区的唯一稳过档），
+           ≥1181px 改【高度锚】height:100%+width:auto（按原比例恰好铺满面板高，等效 71%→78% 宽）
+           + 全桌面【底锚】bottom:0）：图横向完整落在栏线内，纵向贴面板下沿；
           素材最外圈像素 alpha≈0（实测），发光自然溶进星空。
      ⚠ 面板本身没有底色/描边/圆角：文件末尾「去方框 · 第 1 层」把 .card 的表面整层撤掉了
        （background:none;border:0;border-radius:0）。所以这里不再假设有卡片外框。
@@ -526,15 +529,42 @@
      overflow:visible;
      pointer-events:none;
    }
-   /* 配图：默认/手机在文档流里（宽 100%、上限 480px 居中，figure 由 ≤900 媒体查询复位为 relative）；
-     ≥901px 时绝对定位、垂直居中、right:0 贴栏线内侧、宽 68%、上限 900px —— 完整显示、不再出血裁切。
-     v4.5.32 用户要求"脑机图片再大一点"：桌面 58%（上限700px）→ 68%（上限900px），手机 90%（上限420px）→ 100%（上限480px）。
-     上限 900px 在本站栏宽（≤1132px）下永不触发，只作守卫；1280 下图宽 657→770px（+17%），高 463→543px，
-     仍小于面板高（该档实测 614px），故不出界、无横向溢出（门里 0.66≤图宽/面板宽≤0.70 + 无横向溢出双保险）。
-     可读性不再由任何暗层保护，而由 Hero 文字提亮承担（见下方 v4.5.32 文字色一节），实测最差 ≥4.9:1。
-     mix-blend-mode:screen 保留：素材是亮度键出 alpha 的透明 webp，screen 让脑图与背后星空相加发光，
-     而不是把星空盖住。
-     opacity 终态 .96（简报值）；入场仍是 opacity 0 → .96（transform 从 +16px 归位）。 */
+     /* 配图：默认/手机在文档流里（宽 min(100%,480px) 居中）。
+       ★ v4.5.33 手机档已【整条回滚】（详见 ≤900 媒体查询内注释）：首版曾试过"栏宽+24px 出血"、
+       figure 复位 relative、下方内容上提 44px，虽实测可读（5.20~5.97），但与已发布 v4.5.32 的手机档
+       像素不一致、用户也未看过该形态 ⇒ 撤回，手机档与 v4.5.32 逐字节一致。
+      ≥901px 时绝对定位、【底锚】bottom:0、right:0 贴栏线内侧：
+        901~1180px 宽 72%（上限 900px；栏宽 855→1132 ⇒ 上限永不触发，只作守卫），实测图宽 614→815px；
+        ≥1181px 改用【高度锚】height:100% + width:auto —— 图按原始比例恰好铺满面板高，实测 804×567→879×620px。
+        为什么 ≥1181 不用固定百分比宽：面板高 = clamp(460,48vw,620)，而 80% 宽的图高 639px，
+        在面板尚未到顶的 1181~1291px 区间会把图盒顶到面板顶之上最多 72px（实测 1181 图可见顶 26，
+        已经顶进顶部导航 0~64 的区域）；height:100% 让"图顶贴面板顶、图底贴面板底"成为恒等式。
+        （先用 max-height:100% 试过：Chrome 把宽钉死、只压高 ⇒ 比例 1.4179→1.5975 变形 13%，弃用。）
+      v4.5.32 用户要求"脑机图片再大一点"：桌面 58%（上限700px）→ 68%（上限900px），手机 90%→100%。
+      v4.5.33 用户要求"再大一些、插入第一部份和01间的空隙一部分、减少空白"：
+        图的【大小】按用户定档提到 80%，实测后按档定形：901~1180 取 72%（可读性唯一稳过档），
+         ≥1181 取【高度锚】height:100%+width:auto（实测 803×566→879×620px，等效宽 71%→78%），
+        但 v4.5.33 首版实测（冻结口径 A/B，备份 v4.5.32 同口径）证明【桌面下探 44px 会破 AA】：
+        下探越深脑芯越低、越压主标题行，en 在 1440/1280/1024/960/901 = 3.51/3.70/3.70/2.71/2.21（AA 4.5），
+        zh/901 = 3.43；灵敏度自检（隐藏配图后文字背后 p95 0.361→0.126）证明配图就是致因。
+        逐宽度扫描（68~80% × 下探 0/-11/-22/-33/-44，两次重复逐位一致）确认：
+        · 86% 以上在每个视口都更差（右锚图越宽越横向吃掉文字）⇒ 80% 即上限；
+        · 1440 可承受下探 ≤11px、1280 ≤22px、960/901 只能 0 —— 桌面下探无可行域 ⇒ 取消下探（bottom:0）；
+        · 901/en 是刀刃区，只有 72~74% 稳过（68% 4.19、76% 4.25、80% 3.32）⇒ 窄档取 72%。
+        "减少空白"改由【面板下沿留白】补回（同一媒体查询里）：
+        header.hero.card margin-bottom 44→22、.scroll-cue margin-bottom 22→0 ⇒ 面板与 01 的空白净减 44px
+         （1440 实测：面板底→01 卡片顶 结构距 129→85px、图可见底下沿→01 卡片顶 178→97px），零可读性代价。
+         注：此前本注释写"到 01 标题 180→133px"——那是拿 #about 卡内的 h2 当基准，h2 还带 36px 卡内偏移、
+         且随入场动画（.reveal{translateY(26px)}）浮动，不等于用户实际看到的"空白"，已改用卡片顶基准。
+         注：.scroll-cue 那条覆盖必须写在基础规则【之后】（同特异性 0,1,0，否则被基规压回）。
+         边界实测（门会逐条校验）：图盒底 = 面板底（±6）；≥1181 图盒顶 = 面板顶（高度锚），
+         901~1180 图盒顶最多高出面板顶 8.4px（1180 实测 77.6 vs 面板顶 86；图盒含 15/804 透明边，
+         可见内容顶 88.3 仍在面板顶 86 之下 —— 901/1024/960 分别为 121/91.1/94.7）；
+        横向完整落在栏线内，docW == cliW 无横向溢出。
+      ★ 设计禁令：可读性不再由任何暗层保护，而由 Hero 文字提亮承担（见下方 v4.5.32 文字色一节）；
+        绝不加回任何局部暗块/云（用户否决过 v4.5.29 的 .hero-scrim 与「文字柔光」层）。
+      mix-blend-mode:screen 保留：素材是亮度键出 alpha 的透明 webp，screen 让脑图与背后星空相加发光。
+      opacity 终态 .96（简报值）；入场仍是 opacity 0 → .96（transform 从 +16px 归位）。 */
   .hero-bci img{
     display:block;width:min(100%,480px);margin:0 auto;height:auto;
     mix-blend-mode:screen;
@@ -543,20 +573,27 @@
   }
   @media (min-width:901px){
     .hero-bci img{
-      position:absolute;top:50%;right:0;
-      width:min(68%,900px);max-width:none;margin:0;
-      transform:translateY(calc(-50% + 16px)) scale(.985);
+      position:absolute;bottom:0;right:0;
+      width:min(72%,900px);max-width:none;margin:0;
+      transform:translateY(16px) scale(.985);
     }
+    /* v4.5.33：桌面【取消下探】后，"面板与 01 之间的空白"改由面板下沿留白补回 ——
+       实测（冻结口径，AA 门 4.5）桌面下探 44px 会把脑芯压在主标题行上：
+       en 在 1440/1280/1024/960/901 掉到 3.51/3.70/3.70/2.71/2.21、zh/901 掉到 3.43；
+       不下探（bottom:0）时 en 全部回到 4.75/4.93/5.19+/5.2+/4.60。下探是唯一主因，图放大到 80% 本身无害。 */
+    header.hero.card{margin-bottom:22px}
+    /* 注：`.scroll-cue` 的负 margin 覆盖不能写在本块里 —— 基础规则 .scroll-cue{margin:-8px auto 22px}
+       在本块【之后】出现且特异性相同（0,1,0），会被它压回去（实测只减了 hero 那 22px）。
+       该覆盖已挪到基础规则之后，见文件下部 .scroll-cue 基规下方的同名 @media 块。 */
+  }
+  @media (min-width:1181px){
+    .hero-bci img{width:auto;height:100%}
   }
   .card.in .hero-bci img{opacity:.96;transform:none}
-  @media (min-width:901px){
-    .card.in .hero-bci img{transform:translateY(-50%)}
-  }
+  /* v4.5.33：两条 ≥901 的 transform:translateY(-50%) 覆盖（普通态 + reduced-motion）已【整条删除】——
+     配图改底锚（bottom:0）后终态就是 transform:none，不再需要把图"拉回垂直中心"。 */
   @media (prefers-reduced-motion:reduce){
     .hero-bci img{opacity:.96;transform:none;transition:none}
-  }
-  @media (min-width:901px) and (prefers-reduced-motion:reduce){
-    .hero-bci img{transform:translateY(-50%)}
   }
   /* v4.5.32：v4.5.29 的「文字柔光」层（.hero-main::before；radial 深色 + blur，手机档 inset -46/-10、
      桌面档 -64/-72）已【整条删除】——用户反馈首屏"开始信息"背后有一团黑底，就是这一层：
@@ -581,11 +618,17 @@
     display:flex;flex-direction:column;align-items:center;gap:8px;
     margin:-8px auto 22px;width:max-content;pointer-events:none;
   }
+  /* v4.5.33（必须放在上面这条基规【之后】，否则同特异性被压回去）：
+     桌面档把光丝的下边距 22→0，与 header.hero.card margin-bottom 44→22 一起，
+     净减 44px ⇒ 把桌面【取消下探 44px】从面板下沿省掉的空白补回来。
+     手机档不动（实测手机档可见空白 132~135px 本来就是刻意收紧的负边距）。 */
+  @media (min-width:901px){
+    .scroll-cue{margin:-8px auto 0}
+  }
   .scroll-cue .line{
     width:2px;height:56px;border-radius:2px;
     background:linear-gradient(180deg,rgba(37,99,201,.35),rgba(37,99,201,0));
-  }
-  .scroll-cue .dot{
+  }  .scroll-cue .dot{
     width:7px;height:7px;border-radius:50%;
     background:var(--blue-deep);opacity:.55;
     animation:cueDrop 2.4s cubic-bezier(.4,0,.2,1) infinite;
@@ -1171,7 +1214,10 @@
        配图回到文档流（figure 复位 relative、img 复位 static，宽度 100%、上限 480px 居中见基础规则）；
        文字保护改由 Hero 文字提亮承担（v4.5.32 删除柔光层，字色见基础规则那节）。
        横向 padding 保持 0（与顶部导航同栏线），文字与图间距 18px。
-       不做 html[data-lang] 提权：按语言的出血宽度覆盖已随海报版一并删除。 */
+       不做 html[data-lang] 提权：按语言的出血宽度覆盖已随海报版一并删除。
+       v4.5.33：手机档【一字未动】——首版曾试过"横向出血 12px + 负底边距 44px"，
+       实测虽可读（5.20~5.97）但用户从未看过该形态，且与已发布 v4.5.32 的手机档像素不一致，
+       故整条回滚：图文间距 18px、img 100%/上限480px、无负底边距（可见空白保持 v4.5.32 的值）。 */
     .hero-bci{position:relative;inset:auto;margin:18px 0 0}
     .hero-fig{min-height:240px}
     .card{padding:26px 24px}

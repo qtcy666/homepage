@@ -2197,15 +2197,14 @@ header.hero.card{overflow:visible}
 </style>
 <style id="v4535">
 /* ==================================================================
-   v4.5.35：三张新卡（专业术语 / 常用资源 / 专注番茄钟）+ 页脚动态行
+   v4.5.35：两张新卡（专业术语 / 常用资源）+ 页脚动态行
    ------------------------------------------------------------------
-   · 全部使用新类名（.term-* / .res-* / .pomo-* / .foot-meta），
+   · 全部使用新类名（.term-* / .res-* / .foot-meta），
      不改 .card-head / .chip / .contact / .ci / .fc-pick 的既有规则，
-     也不新增 emoji 或 svg.i 到被计数的分组里（计数口径只多 3 个卡头徽标）。
+     也不新增 emoji 或 svg.i 到被计数的分组里（计数口径只多 2 个卡头徽标）。
    · 横向安全：网格子项一律 min-width:0 + 长文案 overflow-wrap:anywhere，
      620px 以下回落单列（与 .info / .contacts 同口径）。标题行只用短句，
      不用 nowrap —— 门会逐视口（390~1440）检查 docW <= cliW。
-   · 番茄钟只改 :disabled / .done 两个视觉态，文案固定不变（恒定，不进词典）。
    ================================================================== */
 .term-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px}
 .term-box{min-width:0;padding:12px 14px;border-radius:14px;background:rgba(255,255,255,.05);
@@ -2224,16 +2223,6 @@ header.hero.card{overflow:visible}
 .res-box .rn::after{content:"↗";margin-left:auto;font-size:12px;opacity:.7}
 .res-box .rd{display:block;font-size:12.5px;color:var(--text-soft);line-height:1.7;margin-top:4px;overflow-wrap:anywhere}
 
-.pomo{display:flex;flex-direction:column;align-items:center;gap:16px;padding:4px 0 2px}
-.pomo-read{display:flex;flex-direction:column;align-items:center;gap:6px}
-.pomo-time{font-size:clamp(42px,10vw,64px);font-weight:800;line-height:1.06;letter-spacing:2px;
-  color:var(--text-strong);font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
-.pomo-time.done{color:var(--accent)}
-.pomo-state{font-size:12px;color:var(--text-muted);text-align:center}
-.pomo-btns{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
-.pomo-btns .btn{padding:11px 22px;font-size:14px}
-.pomo-btns .btn[disabled]{opacity:.55;cursor:default;transform:none;filter:saturate(.7)}
-
 /* 页脚动态行：时间 + 每日一句。数字用等宽数字，秒跳动时整行不抖 */
 .foot-meta{margin-top:2px;font-variant-numeric:tabular-nums}
 .foot-meta .ft{color:var(--text-link);font-weight:700;letter-spacing:.4px}
@@ -2241,7 +2230,6 @@ header.hero.card{overflow:visible}
 
 @media (max-width:620px){
   .term-grid,.res-grid{grid-template-columns:1fr}
-  .pomo-time{letter-spacing:1px}
 }
 </style>
 </head>
@@ -2684,29 +2672,6 @@ header.hero.card{overflow:visible}
     </div>
   </section>
 
-  <!-- v4.5.35 专注番茄钟：25:00 倒数，纯前端计时（不联网、不写 localStorage） -->
-  <section class="card reveal" id="pomo">
-    <div class="card-head">
-      <div class="ico"><svg class="i" aria-hidden="true" focusable="false"><use href="#i-loader"/></svg></div>
-      <h2>专注番茄钟</h2>
-      <div class="sub">25 分钟一段 · 到点自动停</div>
-    </div>
-    <div class="split">
-      <div class="sec-body">
-        <div class="pomo">
-          <div class="pomo-read">
-            <div class="pomo-time" id="pomoTime" role="timer">25:00</div>
-            <div class="pomo-state">点开始计时；想停下或重来，点重置。</div>
-          </div>
-          <div class="pomo-btns">
-            <button type="button" class="btn primary" id="pomoStart">开始</button>
-            <button type="button" class="btn ghost" id="pomoReset">重置</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
   <!-- 访客反馈 -->
   <section class="card reveal" id="feedback">
     <div class="card-head">
@@ -3009,15 +2974,7 @@ header.hero.card{overflow:visible}
     "看别人怎么写代码，也放自己的练习。":
       "See how other people write code, and keep my own practice here.",
     "数据科学练手的数据集和小比赛。":
-      "Datasets and small competitions for practising data science.",
-
-    /* ---- v4.5.35 专注番茄钟 ---- */
-    "专注番茄钟": "Focus timer",
-    "25 分钟一段 · 到点自动停": "One 25-minute block — it stops on its own",
-    "点开始计时；想停下或重来，点重置。":
-      "Click Start to begin; click Reset to stop or start over.",
-    "开始": "Start",
-    "重置": "Reset"
+      "Datasets and small competitions for practising data science."
   };
 
   let LANG = (function () {
@@ -4454,58 +4411,6 @@ header.hero.card{overflow:visible}
     paint();
     setInterval(paint, 1000);
     if (typeof onLangChange === "function") onLangChange(paint);
-  })();
-</script>
-
-<script>
-  /* ==================================================================
-     v4.5.35 专注番茄钟：25:00 倒数（纯前端、不联网、不写盘）
-     ------------------------------------------------------------------
-     · 计时中「开始」置 disabled，按钮文案始终不变（不产生动态中文 ⇒
-       不参与 i18n 快照；英文态靠词典把「开始 / 重置」翻成 Start / Reset）。
-     · 到点自动停：数字停在 00:00，并给读数加 .done（只换颜色，不改文案）。
-     · 不写 localStorage（线上套件要求键集合恒为 ["lang"]）。
-     ================================================================== */
-  (function () {
-    var readout = document.getElementById("pomoTime");
-    var btnStart = document.getElementById("pomoStart");
-    var btnReset = document.getElementById("pomoReset");
-    if (!readout || !btnStart || !btnReset) return;
-
-    var TOTAL = 25 * 60;
-    var left = TOTAL;
-    var timer = null;
-
-    function fmt(s) {
-      var m = Math.floor(s / 60), r = s % 60;
-      return (m < 10 ? "0" : "") + m + ":" + (r < 10 ? "0" : "") + r;
-    }
-    function paint() {
-      readout.textContent = fmt(left);
-      readout.classList.toggle("done", left === 0);
-    }
-    function stop() {
-      if (timer) { clearInterval(timer); timer = null; }
-      btnStart.disabled = false;
-    }
-
-    btnStart.addEventListener("click", function () {
-      if (timer) return;                 // 已在走：按钮本就是 disabled，双保险
-      btnStart.disabled = true;
-      timer = setInterval(function () {
-        left--;
-        if (left <= 0) { left = 0; paint(); stop(); return; }
-        paint();
-      }, 1000);
-    });
-
-    btnReset.addEventListener("click", function () {
-      stop();
-      left = TOTAL;
-      paint();
-    });
-
-    paint();
   })();
 </script>
 </body>

@@ -2323,6 +2323,42 @@ header.hero.card{overflow:visible}
   }
 }
 </style>
+
+<style id="v4538">
+  /* ==================================================================
+     【v4.5.38】每个区块的标题换一档更亮的文字色
+     · 只提亮 .card-head h2 与它的 ::before 序号，**不动 --c-* 变量本身**：
+       --c-moon/--c-cyan/--c-violet/--c-mint/--c-ice/--c-gold 还被
+       .chips .chip / .tagline / .hero-hello .hi / .skills .name /
+       .contact .cv .clink / footer .ver 以及 6 个区块的图标方块复用，
+       改动变量会把这些地方一并改亮，超出"标题"的诉求范围。
+     · 提亮口径：每个色相朝白混 32%（色相不变）。相对亮度提升：
+       cyan +17% / mint +18% / ice +22% / violet +26% / gold +13% / moon +6%
+       —— 压在卡片底（深玻璃）之后，对比度只增不减，是纯增益改动。
+     · 第 04/06 区块（#terms / #res）原本继承 body 的 --text-strong(#e9f1ff)，
+       这里也一并提到同一档 #f2f7ff，保证"每一部分标题"都被提亮且口径一致。
+     · ★ 流光的底色层用 currentColor（见 v4537 块）⇒ 这里只改 color，
+       流光会自动带上新色，流光规则本身不需要任何改动。
+     ================================================================== */
+  :root{
+    --c-moon-hi:#eaf1ff;
+    --c-cyan-hi:#a8e5f6;
+    --c-violet-hi:#d7c9ff;
+    --c-mint-hi:#a8e7d6;
+    --c-ice-hi:#bcdaff;
+    --c-gold-hi:#ffdfaf;
+    --c-plain-hi:#f2f7ff;
+  }
+  /* 8 个区块，逐一对应（顺序同页面 01→08） */
+  #about    .card-head h2,#about    .card-head h2::before{color:var(--c-moon-hi)}
+  #skills   .card-head h2,#skills   .card-head h2::before{color:var(--c-cyan-hi)}
+  #goals    .card-head h2,#goals    .card-head h2::before{color:var(--c-violet-hi)}
+  #terms    .card-head h2,#terms    .card-head h2::before{color:var(--c-plain-hi)}
+  #contact  .card-head h2,#contact  .card-head h2::before{color:var(--c-mint-hi)}
+  #res      .card-head h2,#res      .card-head h2::before{color:var(--c-plain-hi)}
+  #twin     .card-head h2,#twin     .card-head h2::before{color:var(--c-ice-hi)}
+  #feedback .card-head h2,#feedback .card-head h2::before{color:var(--c-gold-hi)}
+</style>
 </head>
 <body>
 

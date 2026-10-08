@@ -2368,6 +2368,34 @@ header.hero.card{overflow:visible}
   #twin     .card-head h2,#twin     .card-head h2::before{color:var(--c-ice-hi)}
   #feedback .card-head h2,#feedback .card-head h2::before{color:var(--c-gold-hi)}
 </style>
+
+<style id="v4541">
+  /* ==================================================================
+     【v4.5.41 · 缺陷修复】章节标题被 text-shadow 整片盖住 ⇒ 渲染成深色剪影
+     ── 病灶（v4.5.37 起潜伏，v4.5.38/39/40 三轮提亮对标题字形一直没生效）──
+     自 v4.5.37 起 .card-head h2 是「流光字」：
+        -webkit-text-fill-color:transparent + background-clip:text
+     而 .card / .card,footer 的 text-shadow 会被 h2 继承（见 .card{text-shadow:…}）。
+     文字绘制顺序是【被裁剪的流光背景】→【text-shadow】→【透明字色】，
+     于是深色阴影整片压在流光填充之上，标题（含 ::before 序号）渲染成深色剪影，
+     用户看到的根本不是 v4.5.38–40 设定的亮色；只有用普通 color 的
+     图标方块/水印数字等处才看得到新色。
+
+     ── 修法（沿用本项目对 clip 字的既有做法）──
+     .hero h1 / 首屏姓名同样是「透明字填充 + 背景裁剪」，它们的处置都是
+     text-shadow:none（见 .hero h1{text-shadow:none}）。这里对章节标题做同样的事，
+     但为保住「压在星幕/极光上仍清晰」的暗色光晕，改用 filter:drop-shadow ——
+     filter 作用在【元素整体渲染结果】之下，不会盖住字形填充，
+     参数与原先继承到的那三层阴影一一对应，观感等价。
+
+     · 只动 .card-head h2（不动 ::before 的独立声明；filter 会自动作用于
+       h2 的伪元素，序号一并获得同款光晕）。
+     · 不改任何颜色变量、不改流光规则，v4540 的配色全部保持生效。 */
+  .card-head h2{
+    text-shadow:none;
+    filter:drop-shadow(0 0 1px rgba(2,5,14,.95)) drop-shadow(0 1px 1px rgba(2,5,14,.8)) drop-shadow(0 1px 2px rgba(2,5,14,.42));
+  }
+</style>
 </head>
 <body>
 

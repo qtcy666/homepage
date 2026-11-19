@@ -2922,7 +2922,7 @@ header.hero.card{overflow:visible}
     <!-- v4.5.35：时间会走 + 每天换一句（内容由页脚脚本按当前语言写入，
          刻意不放静态中文 —— 免得静态节点被 _collect() 收走、英文态残留） -->
     <div class="foot-meta" id="footMeta"><span class="ft" id="footClock"></span> · <span class="fs" id="footLine"></span></div>
-    <div>本页访客反馈可免登录提交，最终存于 Supabase（受 RLS 保护）；数字分身目前为前端规则式模拟（不联网、不收集数据）。</div>
+    <div>本页访客反馈可免登录提交，最终存于 Supabase（受 RLS 保护）；数字分身已接入真实 AI 模型（经后端服务转发，API 密钥仅存于服务端，对话不保存、刷新即清空）。</div>
   </footer>
 </div>
 
@@ -3091,8 +3091,8 @@ header.hero.card{overflow:visible}
 
     /* ---- 页脚 ---- */
     "· 由 Vibe Coding 从 V1 开始打磨": "· crafted from V1 with Vibe Coding",
-    "本页访客反馈可免登录提交，最终存于 Supabase（受 RLS 保护）；数字分身目前为前端规则式模拟（不联网、不收集数据）。":
-      "Visitor feedback on this page needs no sign-in and is stored in Supabase (protected by RLS). The AI twin is currently a front-end, rule-based simulation — no network calls, no data collection.",
+    "本页访客反馈可免登录提交，最终存于 Supabase（受 RLS 保护）；数字分身已接入真实 AI 模型（经后端服务转发，API 密钥仅存于服务端，对话不保存、刷新即清空）。":
+      "Visitor feedback on this page needs no sign-in and is stored in Supabase (protected by RLS). The AI twin now runs on a real AI model via a back-end service — the API key lives only on the server, and conversations are never stored (cleared on refresh).",
 
     /* ---- v4.5.35 专业术语（8 词 + 大白话）---- */
     "专业术语": "Glossary",
@@ -3333,8 +3333,8 @@ header.hero.card{overflow:visible}
       v: [
         () => tx(`又见面啦 👋 再说一次：我是 ${me.name} 的数字分身，在这个页面上替他回答问题。他在 ${me.school} 读 ${me.major}。`,
                  `We meet again 👋 Once more: I'm ${me.name}'s digital twin, answering for him on this page. He studies ${me.major} at ${me.school}.`),
-        () => tx(`我 = ${me.name} 的规则式数字分身（不联网、只在本地按预设回答）。想了解他本人，往下看「关于我」那一节最全。`,
-                 `I'm a rule-based digital twin of ${me.name} (offline, answering from a local script). For the full picture, see the "About" section below.`)
+        () => tx(`我 = ${me.name} 的数字分身（当前按本地预设回答，AI 通道暂不可用）。想了解他本人，往下看「关于我」那一节最全。`,
+                 `I'm a digital twin of ${me.name} (answering from a local script right now — the AI channel is temporarily unavailable). For the full picture, see the "About" section below.`)
       ] },
     { id: "summary",
       re: /(总结|概括|一句话|简单介绍|介绍一下他|介绍一下自己|简单说说|summar|summary|in one sentence|in one line|brief|tl;?dr|overview|describe him|describe yourself)/i,
@@ -3436,7 +3436,29 @@ header.hero.card{overflow:visible}
   /* 多轮状态（重置 / 切语言时清空） */
   let repCount = {};       // 每个话题被问过几次
   let recentTopics = [];   // 最近话题（保留最近 6 个）
-  function resetChatState() { repCount = {}; recentTopics.length = 0; }
+  function resetChatState() { repCount = {}; recentTopics.length = 0; chatHist.length = 0; }
+
+  /* ==================================================================
+     v4.6 真实 AI 模式（可选，默认关闭）：
+     · 把 TWIN_API 设为后端地址即启用（本机 http://localhost:8787，
+       或部署后的国内云函数 URL）；留空 = 维持原规则式模拟。
+     · API key 只在服务端（twin-server 环境变量），前端不接触 key。
+     · 请求失败自动回退规则式模拟，页面永不白屏。
+     · chatHist 为内存态会话上下文（符合「对话不保存，刷新即清空」的既有承诺）。
+     ================================================================== */
+  const TWIN_API = "https://1536555292-07wnjlu6l5.ap-guangzhou.tencentscf.com";
+  let chatHist = [];
+  async function askTwin(q) {
+    const r = await fetch(TWIN_API + "/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question: q, history: chatHist })
+    });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error((j && j.error) || ("HTTP " + r.status));
+    if (!j || !j.reply) throw new Error("后端返回为空");
+    return String(j.reply).trim();
+  }
 
   /* 命中多条时按"命中片段长度"打分取最高（越长越具体）；同分保留靠前规则。 */
   function matchRule(text) {
@@ -3589,11 +3611,28 @@ header.hero.card{overflow:visible}
     addTyping();
     const delay = 420 + Math.min(900, v.length * 45);
     const session = chatSession;
-    pendingReply = setTimeout(() => {
+    pendingReply = setTimeout(async () => {
       pendingReply = 0;
       if (session !== chatSession) return;   // 会话已失效（重置/切语言）：丢弃这次回复
+      /* v4.6 真实 AI 模式：TWIN_API 已配置时优先走后端；请求失败回退规则式，
+         保证旧行为（answerFor + 兜底转达按钮）完全保留。 */
+      let res;
+      if (TWIN_API) {
+        try {
+          chatHist.push({ role: "user", content: v });
+          const reply = await askTwin(v);
+          if (session !== chatSession) return;
+          chatHist.push({ role: "ai", content: reply });
+          res = { text: reply, fallback: false };
+        } catch (e) {
+          if (session !== chatSession) return;
+          chatHist.pop();               // 失败回退：撤销刚才入历史的 user 消息，保持对称
+          res = answerFor(v, { turn: true });
+        }
+      } else {
+        res = answerFor(v, { turn: true });   // 真实对话轮次：允许重复提问换同义回答
+      }
       removeTyping();
-      const res = answerFor(v, { turn: true });   // 真实对话轮次：允许重复提问换同义回答
       if (res.fallback) {
         add("ai", res.text, [{
           label: tx("📨 帮我转达", "📨 Send it to 刘一鸣"),
@@ -3603,7 +3642,7 @@ header.hero.card{overflow:visible}
         add("ai", res.text);
       }
       busy = false;
-    }, delay);
+    }, TWIN_API ? 60 : delay);
   }
 
   function greet() {
